@@ -1,5 +1,6 @@
 package com.medilens.app.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "messages")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +21,6 @@ public class Message {
     @Column(nullable = false)
     ChatRole role;
 
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 

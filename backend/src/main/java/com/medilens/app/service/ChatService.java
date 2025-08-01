@@ -1,6 +1,9 @@
 package com.medilens.app.service;
 
+import com.medilens.app.DTO.ChatDTO;
+import com.medilens.app.exception.NotFoundException;
 import com.medilens.app.model.Chat;
+import com.medilens.app.model.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -8,4 +11,10 @@ import org.springframework.stereotype.Service;
 
 public interface ChatService {
     Long create(String email);
+
+    ChatDTO getChatById(Long id) throws NotFoundException;
+
+    Long updateChat(Long id, Message message) throws NotFoundException;
+
+    void delete(Long id);
 }

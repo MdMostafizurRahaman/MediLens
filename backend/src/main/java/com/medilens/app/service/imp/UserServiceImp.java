@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,8 +79,14 @@ public class UserServiceImp implements UserService {
     public List<ChatDTO> getAllChats(String email) throws NotFoundException {
         User user = userRepository.findByEmailWithChats(email)
                 .orElseThrow(() -> new NotFoundException("user not found ..."));
-        List<Chat> chats = user.getChats();
-        List<ChatDTO> chatsDTO = chats.stream().map(chatService::convertChatDTO).toList();
+
+        List<ChatDTO> chatsDTO = user.getChats().stream()
+                .sorted(Comparator.comparing(Chat::getCreatedAt).reversed()) // sort newest first
+                .map(chatService::convertChatDTO)
+                .peek(chatDTO -> chatDTO.setMessages(null))
+                .toList();
+
         return chatsDTO;
     }
+
 }

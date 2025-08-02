@@ -1,5 +1,6 @@
 package com.medilens.app.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medilens.app.service.imp.UserDetailsServiceImp;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -9,11 +10,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -66,7 +71,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // Token is invalid or expired
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid or expired JWT token\"}");
+
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("message", "Invalid or expired JWT token");
+            errorBody.put("timestamp", LocalDateTime.now().toString());
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            new ObjectMapper().writeValue(response.getWriter(), errorBody);
+
+            response.getWriter().flush();
+        } catch (UsernameNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("timestamp", LocalDateTime.now().toString());
+            errorBody.put("message", "User not found: " + e.getMessage());
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            new ObjectMapper().writeValue(response.getWriter(), errorBody);
+
             response.getWriter().flush();
         }
     }

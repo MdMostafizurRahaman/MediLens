@@ -1,17 +1,24 @@
 package com.medilens.app.service;
 
+import com.medilens.app.DTO.DoctorDTO;
 import com.medilens.app.exception.NotFoundException;
 import com.medilens.app.model.Doctor;
+import com.medilens.app.model.Status;
+import com.medilens.app.model.User;
 
 import javax.print.Doc;
 import java.util.List;
 
 public interface DoctorService {
-    Long save(Doctor doctor);
+    void save(String email, Doctor doctor) throws NotFoundException;
 
-    List<Doctor> getAll();
+    List<DoctorDTO> getAll();
 
-    Doctor getById(Long id) throws NotFoundException;
+    DoctorDTO getDoctorByEmail(String email) throws NotFoundException;
 
-    void delete(Long id);
+    void delete(String email) throws NotFoundException;
+
+    void edit(String email, DoctorDTO doctorDTO) throws NotFoundException;
+
+    void updaeStatus(String email, Status status) throws NotFoundException;
 }

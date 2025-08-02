@@ -1,6 +1,10 @@
-package com.medilens.app.model;
+package com.medilens.app.DTO;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.medilens.app.model.Status;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,16 +12,15 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class Doctor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class DoctorDTO {
+    private String firstName;
+    private String lastName;
+    private String email;
     private List<String> specialization;
 
     private List<String> degree;
@@ -36,9 +39,4 @@ public class Doctor {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
-
-    @OneToOne
-    @JoinColumn(name = "user_email", nullable = false)
-    private User user;
-
 }

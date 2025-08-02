@@ -1,9 +1,6 @@
 package com.medilens.app.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,9 +16,12 @@ public class Doctor {
 
     private String firstName;
     private String lastName;
+
     private List<String> specialization;
+
     private List<String> degree;
-    private String phoneNumber;
+
+    private List<String> phoneNumber;
     private String chamberAddress;
     private String availableTime;
 

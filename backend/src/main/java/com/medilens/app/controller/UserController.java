@@ -7,9 +7,11 @@ import com.medilens.app.model.Chat;
 import com.medilens.app.model.Role;
 import com.medilens.app.model.User;
 import com.medilens.app.service.UserService;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,25 +34,27 @@ public class UserController {
 
     @GetMapping("/all")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.findAll());
+        return ResponseEntity.ok(userService.findAllUsers());
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable String email) throws NotFoundException {
+    public ResponseEntity<UserDTO> getUser(@PathVariable String email) throws NotFoundException, BadRequestException {
 
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
-    @PutMapping("/{email}")
-    public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody User user) throws NotFoundException {
-        user.setEmail(email);
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("")
+    public ResponseEntity<?> updateUser(Authentication auth, @RequestBody User user) throws NotFoundException {
+        user.setEmail(auth.getName());
         user.setRole(Role.ROLE_USER);
         return ResponseEntity.ok(userService.update(user));
     }
 
-    @DeleteMapping("/{email}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String email) throws NotFoundException {
-        userService.delete(email);
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("")
+    public ResponseEntity<?> deleteUser(Authentication auth) throws NotFoundException {
+        userService.delete(auth.getName());
         return ResponseEntity.ok().build();
     }
 

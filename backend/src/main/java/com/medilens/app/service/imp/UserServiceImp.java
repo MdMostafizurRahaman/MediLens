@@ -9,6 +9,7 @@ import com.medilens.app.model.User;
 import com.medilens.app.repository.UserRepository;
 import com.medilens.app.service.ChatService;
 import com.medilens.app.service.UserService;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,11 +37,25 @@ public class UserServiceImp implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public UserDTO getUserByEmail(String email) throws NotFoundException {
+    public UserDTO getUserByEmail(String email) throws NotFoundException, BadRequestException {
         User user = userRepository.getUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("user not found with this email ..."));
+        if (user.getRole() != Role.ROLE_USER) {
+            throw new BadRequestException("this is not a user's email ...");
+        }
         return convertUserDTO(user);
     }
+
+    @Override
+    public UserDTO getAdminByEmail(String email) throws NotFoundException, BadRequestException {
+        User user = userRepository.getUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("user not found with this email ..."));
+        if (user.getRole() != Role.ROLE_ADMIN) {
+            throw new BadRequestException("this is not a admin's email ...");
+        }
+        return convertUserDTO(user);
+    }
+
 
     @Override
     public UserDTO save(User user) {
@@ -54,8 +69,14 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public List<UserDTO> findAll() {
+    public List<UserDTO> findAllUsers() {
         List<User> users = userRepository.findByRole(Role.ROLE_USER);
+        return users.stream().map(this::convertUserDTO).toList();
+    }
+
+    @Override
+    public List<UserDTO> findAllAdmin() {
+        List<User> users = userRepository.findByRole(Role.ROLE_ADMIN);
         return users.stream().map(this::convertUserDTO).toList();
     }
 
@@ -68,6 +89,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserDTO update(User user) {
+        user.setPassword(userRepository.getUserByEmail(user.getEmail()).get().getPassword());
         User useredited = userRepository.save(user);
         return convertUserDTO(useredited);
     }

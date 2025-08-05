@@ -748,17 +748,47 @@ export default function UploadPage() {
               
               {result ? (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {/* Analysis Source Indicator */}
-                  <div className={`alert ${result.analysisSource === 'gemini-enhanced' ? 'alert-success' : 'alert-info'}`}>
+                  {/* Analysis Source Indicator with Quality Assessment */}
+                  <div className={`alert ${
+                    result.analysisSource === 'gemini-enhanced' ? 'alert-success' : 
+                    result.analysisSource === 'error-fallback' ? 'alert-error' : 'alert-warning'
+                  }`}>
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg">🤖</span>
-                      <span className="text-sm">
-                        {result.analysisSource === 'gemini-enhanced' 
-                          ? '✨ Enhanced AI Analysis - Using Fine-tuned Medical Model' 
-                          : '📍 Local Analysis - Basic Pattern Recognition'}
+                      <span className="text-lg">
+                        {result.analysisSource === 'gemini-enhanced' ? '✨' : 
+                         result.analysisSource === 'error-fallback' ? '❌' : '⚠️'}
                       </span>
+                      <div>
+                        <div className="font-semibold">
+                          {result.analysisSource === 'gemini-enhanced' 
+                            ? '🤖 Enhanced AI Analysis - Fine-tuned Medical Model' 
+                            : result.analysisSource === 'error-fallback'
+                            ? '❌ Analysis Failed - Text Quality Too Poor'
+                            : '📍 Local Analysis - Basic Pattern Recognition'}
+                        </div>
+                        {result.textQuality && (
+                          <div className="text-sm opacity-75">
+                            OCR Quality: {result.textQuality === 'poor' ? '🔴 Poor' : 
+                                        result.textQuality === 'fair' ? '🟡 Fair' : 
+                                        result.textQuality === 'good' ? '🟢 Good' : '⚪ Unknown'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Original Text Analysis */}
+                  {result.originalTextAnalysis && (
+                    <div className="alert alert-info">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-lg">💡</span>
+                        <div>
+                          <h4 className="font-semibold">Image Quality Assessment</h4>
+                          <p className="text-sm">{result.originalTextAnalysis}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Comprehensive Summary */}
                   {result.summary && (
@@ -787,9 +817,19 @@ export default function UploadPage() {
                           {result.medications.map((med, index) => (
                             <div key={index} className="card bg-white shadow-sm border-l-4 border-green-400">
                               <div className="card-body p-4">
-                                <h4 className="font-bold text-lg text-green-700">
-                                  {med.name} {med.bangla && `(${med.bangla})`}
-                                </h4>
+                                <div className="flex items-start justify-between">
+                                  <h4 className="font-bold text-lg text-green-700">
+                                    {med.name} {med.bangla && `(${med.bangla})`}
+                                  </h4>
+                                  {med.confidence && (
+                                    <span className={`badge badge-sm ${
+                                      med.confidence === 'high' ? 'badge-success' :
+                                      med.confidence === 'medium' ? 'badge-warning' : 'badge-error'
+                                    }`}>
+                                      {med.confidence} confidence
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="grid md:grid-cols-2 gap-3 mt-2">
                                   <div>
                                     <p className="text-sm text-gray-600">
@@ -801,6 +841,11 @@ export default function UploadPage() {
                                     <p className="text-sm text-gray-600">
                                       <strong>Timing:</strong> {med.timing || 'Not specified'}
                                     </p>
+                                    {med.commonUse && (
+                                      <p className="text-sm text-blue-600">
+                                        <strong>Common Use:</strong> {med.commonUse}
+                                      </p>
+                                    )}
                                   </div>
                                   <div>
                                     {med.instructions && (
@@ -834,9 +879,19 @@ export default function UploadPage() {
                         <div className="space-y-3">
                           {result.diagnosis.map((diag, index) => (
                             <div key={index} className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-400">
-                              <h4 className="font-bold text-lg text-red-700">
-                                {diag.condition} {diag.bangla && `(${diag.bangla})`}
-                              </h4>
+                              <div className="flex items-start justify-between">
+                                <h4 className="font-bold text-lg text-red-700">
+                                  {diag.condition} {diag.bangla && `(${diag.bangla})`}
+                                </h4>
+                                {diag.confidence && (
+                                  <span className={`badge badge-sm ${
+                                    diag.confidence === 'high' ? 'badge-success' :
+                                    diag.confidence === 'medium' ? 'badge-warning' : 'badge-error'
+                                  }`}>
+                                    {diag.confidence} confidence
+                                  </span>
+                                )}
+                              </div>
                               {diag.severity && (
                                 <span className={`badge ${
                                   diag.severity === 'severe' ? 'badge-error' : 
@@ -847,6 +902,11 @@ export default function UploadPage() {
                               )}
                               {diag.description && (
                                 <p className="text-sm text-gray-700 mt-2">{diag.description}</p>
+                              )}
+                              {diag.reasoning && (
+                                <p className="text-xs text-gray-500 mt-2 italic">
+                                  <strong>Reasoning:</strong> {diag.reasoning}
+                                </p>
                               )}
                             </div>
                           ))}

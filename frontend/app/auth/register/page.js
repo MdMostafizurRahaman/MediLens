@@ -8,10 +8,12 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userType: 'user' // user, doctor, admin
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,8 +42,12 @@ export default function RegisterPage() {
     try {
       setError('')
       setLoading(true)
-      await signup(formData.email, formData.password, formData.name)
-      router.push('/upload')
+      await signup(formData.email, formData.password, formData.firstName, formData.lastName, formData.userType)
+      
+      // Show success message and redirect
+      setError('')
+      alert('Account created successfully! Please login to continue.')
+      router.push('/auth/login')
     } catch (error) {
       setError('Failed to create account: ' + error.message)
     } finally {
@@ -75,17 +81,51 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Full Name</span>
+                <span className="label-text">Account Type</span>
               </label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter your full name"
-                className="input input-bordered w-full"
-                value={formData.name}
+              <select
+                name="userType"
+                className="select select-bordered w-full"
+                value={formData.userType}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="user">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">First Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  placeholder="First name"
+                  className="input input-bordered w-full"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Last Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  placeholder="Last name"
+                  className="input input-bordered w-full"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="form-control">

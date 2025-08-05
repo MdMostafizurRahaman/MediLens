@@ -21,8 +21,16 @@ export default function LoginPage() {
     try {
       setError('')
       setLoading(true)
-      await login(email, password)
-      router.push('/upload')
+      const userData = await login(email, password)
+      
+      // Redirect based on user role
+      if (userData.role === 'admin') {
+        router.push('/admin')
+      } else if (userData.role === 'doctor') {
+        router.push('/doctor-profile')
+      } else {
+        router.push('/upload')
+      }
     } catch (error) {
       setError('Failed to log in: ' + error.message)
     } finally {

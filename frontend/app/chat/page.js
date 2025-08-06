@@ -140,20 +140,73 @@ export default function ChatPage() {
       const token = getToken()
       
       // First try the enhanced medical AI
-      const medicalAIResponse = await fetch('/api/medical-chat', {
+      const medicalAIResponse = await fetch('/api/medical-analysis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message,
+          text: message,
           chatHistory: messages.slice(-10) // Send last 10 messages for context
         })
       })
 
       if (medicalAIResponse.ok) {
         const aiResult = await medicalAIResponse.json()
-        if (aiResult.success && aiResult.response) {
+        if (aiResult.success && aiResult.analysis) {
+          // Format the structured analysis as readable text
+          const analysis = aiResult.analysis
+          let formattedResponse = `🩺 **মেডিকেল বিশ্লেষণ:**\n\n`
+          
+          // Patient Info
+          if (analysis.রোগীর_তথ্য) {
+            formattedResponse += `👤 **রোগীর তথ্য:**\n${analysis.রোগীর_তথ্য.শিরোনাম || 'তথ্য পাওয়া যায়নি'}\n\n`
+          }
+          
+          // Diagnosis
+          if (analysis.রোগ_নির্ণয়?.প্রধান_রোগ?.length > 0) {
+            formattedResponse += `🔍 **রোগ নির্ণয়:**\n`
+            analysis.রোগ_নির্ণয়.প্রধান_রোগ.forEach((disease, index) => {
+              formattedResponse += `${index + 1}. ${disease.রোগের_নাম} (${disease.বাংলা_নাম})\n   ${disease.ব্যাখ্যা}\n\n`
+            })
+          }
+          
+          // Medications
+          if (analysis.ওষুধের_তালিকা?.length > 0) {
+            formattedResponse += `💊 **ওষুধের তালিকা:**\n`
+            analysis.ওষুধের_তালিকা.forEach((medicine, index) => {
+              formattedResponse += `${index + 1}. **${medicine.ওষুধের_নাম}**\n`
+              formattedResponse += `   📋 সেবনবিধি: ${medicine.সেবনবিধি} (${medicine.সময়})\n`
+              formattedResponse += `   🎯 কাজ: ${medicine.কাজ}\n`
+              if (medicine.সতর্কতা) {
+                formattedResponse += `   ⚠️ সতর্কতা: ${medicine.সতর্কতা}\n`
+              }
+              formattedResponse += `\n`
+            })
+          }
+          
+          // Medical Advice
+          if (analysis.চিকিৎসা_পরামর্শ) {
+            formattedResponse += `📋 **চিকিৎসা পরামর্শ:**\n`
+            if (analysis.চিকিৎসা_পরামর্শ.সতর্কতা?.length > 0) {
+              formattedResponse += `⚠️ **সতর্কতা:**\n`
+              analysis.চিকিৎসা_পরামর্শ.সতর্কতা.forEach(warning => {
+                formattedResponse += `• ${warning}\n`
+              })
+            }
+            formattedResponse += `\n`
+          }
+          
+          // Emergency Info
+          if (analysis.জরুরি_তথ্য?.length > 0) {
+            formattedResponse += `🚨 **জরুরি তথ্য:**\n`
+            analysis.জরুরি_তথ্য.forEach(info => {
+              formattedResponse += `• ${info.তথ্য}\n  করণীয়: ${info.করণীয়}\n\n`
+            })
+          }
+          
+          formattedResponse += `\n💡 **দ্রষ্টব্য:** এই বিশ্লেষণ তথ্যমূলক উদ্দেশ্যে। চিকিৎসার জন্য অভিজ্ঞ ডাক্তারের পরামর্শ নিন।`
+          
           // Save to backend chat history
           try {
             const messageData = {
@@ -173,31 +226,13 @@ export default function ChatPage() {
             console.log('Backend chat save failed, continuing with AI response')
           }
           
-          return aiResult.response
+          return formattedResponse
         }
       }
       
-      // Fallback to backend if AI fails
-      const messageData = {
-        content: message,
-        role: 'USER'
-      }
+      // Fallback to local enhanced response
+      return getEnhancedLocalResponse(message)
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messageData),
-      })
-
-      if (response.ok) {
-        const chatResponse = await response.json()
-        return chatResponse.botResponse || getEnhancedLocalResponse(message)
-      } else {
-        return getEnhancedLocalResponse(message)
-      }
     } catch (error) {
       console.error('Error sending message:', error)
       return getEnhancedLocalResponse(message)

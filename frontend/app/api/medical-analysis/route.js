@@ -4,25 +4,6 @@ import { NextResponse } from 'next/server'
 // Initialize Gemini AI with environment variable
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
-const SAFETY_SETTINGS = [
-  {
-    category: "HARM_CATEGORY_SEXUAL",
-    threshold: "BLOCK_ONLY_HIGH",
-  },
-  {
-    category: "HARM_CATEGORY_DANGEROUS",
-    threshold: "BLOCK_ONLY_HIGH",
-  },
-  {
-    category: "HARM_CATEGORY_HARASSMENT",
-    threshold: "BLOCK_ONLY_HIGH",
-  },
-  {
-    category: "HARM_CATEGORY_HATE_SPEECH",
-    threshold: "BLOCK_ONLY_HIGH",
-  },
-]
-
 const ENHANCED_MEDICAL_PROMPT = `You are an expert medical AI assistant specializing in Bengali medical communication and prescription analysis. 
 When analyzing medical documents or OCR text from prescriptions, ALWAYS respond with a valid JSON object in this exact structure:
 
@@ -122,8 +103,7 @@ export async function POST(request) {
 
     // Get the Gemini model
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash-002',
-      safetySettings: SAFETY_SETTINGS 
+      model: 'gemini-1.5-flash-002'
     })
 
     let analysisPrompt = ENHANCED_MEDICAL_PROMPT + `\n\nAnalyze this medical text/prescription: "${text}"`

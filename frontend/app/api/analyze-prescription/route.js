@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function POST(request) {
   try {
-    const { text, analysisType } = await request.json()
+    const { text, analysisType, documentType } = await request.json()
 
     if (!text) {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 })
@@ -15,88 +15,119 @@ export async function POST(request) {
     // Get the Gemini model
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-    // Create comprehensive medical analysis prompt optimized for garbled OCR
+    // Enhanced medical analysis prompt for MediLens Advanced System
     const prompt = `
-    You are an expert medical AI trained on 100,000+ medical terms with advanced OCR text interpretation capabilities. You specialize in analyzing prescriptions from Bangladesh and understand both English and Bengali medical terminology.
+    You are MediLens AI - Bangladesh's most advanced medical prescription analysis system. You are trained on 500,000+ medical documents and specialize in Bengali medical terminology with state-of-the-art OCR text correction.
     
-    PRESCRIPTION TEXT TO ANALYZE:
+    DOCUMENT TYPE: ${documentType || 'prescription'}
+    TEXT TO ANALYZE:
     "${text}"
 
-    ANALYSIS FRAMEWORK - Extract information in this exact order:
+    ADVANCED MEDICAL INTELLIGENCE FRAMEWORK:
 
-    1. **DISEASES/CONDITIONS** (রোগ নির্ণয়):
-       - Identify any mentioned diseases, conditions, or diagnoses
-       - Look for patterns like "DM", "HTN", "GERD", disease names
-       - Consider symptoms that suggest specific conditions
-       - Provide Bengali translation for each condition
+    🏥 **DISEASES/CONDITIONS ANALYSIS** (রোগ নির্ণয়):
+       - Detect all medical conditions, diseases, and diagnoses
+       - Recognize abbreviated forms (DM=Diabetes, HTN=Hypertension, IHD=Ischemic Heart Disease)
+       - Cross-reference symptoms with likely conditions
+       - Provide detailed Bengali explanations with severity assessment
+       - Include ICD-10 codes where applicable
 
-    2. **TESTS/INVESTIGATIONS** (পরীক্ষা-নিরীক্ষা):
-       - Find any lab tests mentioned (CBC, RBS, HbA1c, TSH, etc.)
-       - Look for investigation results or recommendations
-       - Include normal ranges and interpretation
-       - Note any pending or recommended tests
+    🧪 **LABORATORY & INVESTIGATIONS** (পরীক্ষা-নিরীক্ষা):
+       - Extract all lab tests (CBC, RBS, HbA1c, lipid profile, TSH, etc.)
+       - Identify imaging studies (X-ray, USG, CT, MRI, ECG, Echo)
+       - Parse test results with normal/abnormal interpretation
+       - Recommend follow-up investigations based on findings
+       - Provide Bengali explanations for each test
 
-    3. **MEDICINES** (ওষুধ):
-       - Extract medication names (handle OCR errors like Co-amoxiclav as "Co amoxiclav")
-       - Identify strength (mg, ml, units)
-       - Determine frequency (OD, BD, TDS, QID or 1+0+0, 1+0+1, etc.)
-       - Find timing (AC, PC, HS - before meal, after meal, bedtime)
-       - Note duration if mentioned
-       - Provide purpose and side effects for each medicine
+    💊 **ADVANCED MEDICATION ANALYSIS** (ওষুধ বিশ্লেষণ):
+       - Smart OCR correction for garbled medicine names
+       - Brand name → Generic name mapping for Bangladesh market
+       - Dosage strength extraction with unit standardization
+       - Frequency parsing (1+0+1, BD, TDS, PRN, SOS patterns)
+       - Drug interaction checking and safety warnings
+       - Purpose, mechanism, and side effects in Bengali
+       - Cost-effective alternatives suggestion
 
-    4. **ADVANCED OCR CORRECTION**:
-       - "Co" + space + medicine name = "Co-" prefix medications
-       - "rng" or "n19" = "mg"
-       - "l" in numbers = "1", "O" in numbers = "0"
-       - "Tab" or "tablet" = Tablet form
-       - Common Bangladesh medicine brand names
-       - Bengali medicine names recognition
+    🔬 **CLINICAL CORRELATION ENGINE**:
+       - Match medications to diagnosed conditions
+       - Identify missing treatments for diagnosed conditions
+       - Detect polypharmacy risks and contraindications
+       - Assess treatment completeness and appropriateness
+       - Generate differential diagnosis from medication patterns
 
-    5. **COMPREHENSIVE MEDICAL INTELLIGENCE**:
-       - Cross-reference medications with likely conditions
-       - Identify treatment patterns (diabetes, hypertension, infection, etc.)
-       - Suggest missing information based on medication combinations
-       - Provide health education in Bengali
+    📊 **COMPREHENSIVE HEALTH ASSESSMENT**:
+       - Vital signs analysis and trends
+       - Risk stratification for chronic diseases
+       - Lifestyle modification recommendations
+       - Emergency red flags identification
+       - Long-term health monitoring plan
 
-    RESPONSE FORMAT (JSON):
+    RESPONSE FORMAT (Structured JSON):
     {
-      "textQuality": "poor/fair/good/excellent",
-      "confidenceScore": "overall analysis confidence 0-100%",
+      "documentInfo": {
+        "type": "${documentType || 'prescription'}",
+        "analysisTimestamp": "${new Date().toISOString()}",
+        "textQuality": "excellent/good/fair/poor",
+        "ocrConfidence": "percentage 0-100%",
+        "languageDetected": "bengali/english/mixed"
+      },
+      
+      "clinicalSummary": {
+        "primaryDiagnosis": "Main condition identified",
+        "secondaryDiagnoses": ["Additional conditions"],
+        "clinicalPicture": "Overall health status assessment in Bengali",
+        "prognosisOutlook": "Expected outcome and recovery timeline"
+      },
       
       "diseases": [
         {
           "condition": "Medical condition name",
           "bangla": "রোগের বাংলা নাম",
+          "icd10Code": "ICD-10 code if applicable",
+          "severity": "mild/moderate/severe/critical",
           "confidence": "high/medium/low",
-          "severity": "mild/moderate/severe",
-          "reasoning": "Why this condition is suspected",
-          "description": "Brief explanation in Bengali"
+          "description": "Detailed explanation in Bengali",
+          "riskFactors": ["Contributing factors"],
+          "complications": ["Potential complications"],
+          "prognosis": "Expected outcome"
         }
       ],
       
       "investigations": [
         {
-          "test": "Test name (e.g., HbA1c, CBC)",
+          "test": "Investigation name",
           "bangla": "পরীক্ষার বাংলা নাম",
+          "category": "blood/urine/imaging/cardiac/other",
           "result": "Test result if mentioned",
-          "normalRange": "Normal range",
-          "interpretation": "Normal/Abnormal with Bengali explanation",
-          "recommendation": "When to repeat or follow up"
+          "normalRange": "Reference range",
+          "interpretation": "Clinical significance",
+          "urgency": "routine/urgent/stat",
+          "cost": "Approximate cost in BDT",
+          "preparation": "Pre-test preparation needed"
         }
       ],
       
       "medications": [
         {
-          "name": "Medicine name (corrected from OCR)",
+          "prescribedName": "Name as written in prescription",
+          "correctedName": "OCR-corrected name",
+          "genericName": "Generic/scientific name",
+          "brandName": "Common brand name in Bangladesh",
           "bangla": "ওষুধের বাংলা নাম",
-          "genericName": "Generic name if different",
-          "strength": "Dosage strength",
+          "strength": "Dosage strength with units",
+          "formulation": "tablet/capsule/syrup/injection",
           "frequency": "How often to take",
-          "timing": "When to take (AC/PC/HS)",
-          "duration": "How long to take",
-          "purpose": "What this medicine treats (in Bengali)",
-          "sideEffects": "Common side effects (in Bengali)",
-          "instructions": "Special instructions (in Bengali)",
+          "timing": "AC/PC/HS/empty stomach",
+          "duration": "Treatment duration",
+          "totalQuantity": "Total amount needed",
+          "purpose": "What this treats (Bengali)",
+          "mechanism": "How it works (Bengali)",
+          "sideEffects": "Common side effects (Bengali)",
+          "contraindications": "When not to use (Bengali)",
+          "interactions": "Drug interactions to avoid",
+          "instructions": "Special instructions (Bengali)",
+          "alternatives": "Cheaper generic alternatives",
+          "importance": "critical/important/supportive",
           "confidence": "high/medium/low"
         }
       ],
@@ -104,50 +135,87 @@ export async function POST(request) {
       "symptoms": [
         {
           "symptom": "Symptom mentioned",
-          "bangla": "উপসর্গের বাংলা নাম",
+          "bangla": "উপসর্গের বাংলা",
           "severity": "mild/moderate/severe",
-          "duration": "How long present"
+          "duration": "How long present",
+          "frequency": "How often occurs",
+          "associatedCondition": "Which disease causes this"
         }
       ],
       
-      "patientInfo": {
+      "patientProfile": {
         "name": "Patient name if found",
-        "age": "Age if found",
-        "gender": "Gender if found",
+        "age": "Age with category (child/adult/elderly)",
+        "gender": "Male/Female",
         "weight": "Weight if mentioned",
-        "allergies": "Any allergies mentioned"
+        "height": "Height if mentioned", 
+        "bmi": "BMI calculation if possible",
+        "allergies": "Known allergies",
+        "chronicConditions": "Long-term diseases",
+        "riskCategory": "low/moderate/high risk patient"
       },
       
       "vitalSigns": {
-        "bloodPressure": "BP reading if found",
-        "pulse": "Pulse rate if found",
-        "temperature": "Temperature if found",
-        "weight": "Weight if found"
+        "bloodPressure": "Systolic/Diastolic with interpretation",
+        "pulse": "Heart rate with rhythm",
+        "temperature": "Body temperature",
+        "respiratoryRate": "Breathing rate",
+        "oxygenSaturation": "SpO2 level",
+        "bloodSugar": "Glucose levels"
       },
       
-      "comprehensiveSummary": "Complete analysis in Bengali covering:\n1. রোগ নির্ণয় (Diseases identified)\n2. প্রয়োজনীয় পরীক্ষা (Required tests)\n3. ওষুধের তালিকা ও নির্দেশনা (Medicine list and instructions)\n4. জীবনযাত্রার পরামর্শ (Lifestyle advice)\n5. ফলো-আপ নির্দেশনা (Follow-up instructions)",
+      "comprehensiveReport": "Complete medical analysis in Bengali covering:\n1. স্বাস্থ্য অবস্থার সারসংক্ষেপ\n2. নির্ণীত রোগসমূহ\n3. প্রয়োজনীয় পরীক্ষা-নিরীক্ষা\n4. ওষুধের বিস্তারিত তালিকা\n5. জীবনযাত্রার পরামর্শ\n6. খাদ্যাভ্যাস নির্দেশনা\n7. ব্যায়াম ও শারীরিক কার্যকলাপ\n8. মানসিক স্বাস্থ্য সহায়তা\n9. ফলো-আপ পরিকল্পনা\n10. জরুরি অবস্থার লক্ষণ",
       
-      "warnings": [
-        "Critical safety warnings in Bengali",
-        "Drug interaction warnings",
-        "When to contact doctor immediately"
+      "treatmentPlan": {
+        "immediate": "Immediate treatment priorities",
+        "shortTerm": "1-4 weeks treatment plan",
+        "longTerm": "Long-term management strategy",
+        "goals": "Treatment objectives",
+        "monitoring": "What to track and when"
+      },
+      
+      "safetyAlerts": [
+        "Critical drug interactions",
+        "Overdose warnings", 
+        "Emergency symptoms to watch for",
+        "When to stop medication immediately"
       ],
       
-      "healthEducation": "Educational content in Bengali about the condition, prevention, and self-care",
+      "healthEducation": "Detailed patient education in Bengali about:\n- Disease understanding\n- Treatment importance\n- Lifestyle modifications\n- Prevention strategies\n- Self-monitoring techniques",
       
-      "followUpPlan": "When to see doctor again, what to monitor, when to do tests",
+      "followUpProtocol": {
+        "nextVisit": "When to see doctor again",
+        "testSchedule": "When to repeat investigations",
+        "emergencyContacts": "When to seek immediate help",
+        "monitoringParameters": "What to track at home"
+      },
       
-      "emergencyInstructions": "When to go to emergency/hospital immediately (in Bengali)"
+      "emergencyGuidance": "Critical warning signs requiring immediate medical attention (Bengali)",
+      
+      "costAnalysis": {
+        "medicationCost": "Estimated monthly medicine cost",
+        "testCost": "Investigation costs",
+        "genericAlternatives": "Money-saving options",
+        "totalTreatmentCost": "Overall treatment expense"
+      },
+      
+      "qualityMetrics": {
+        "analysisCompleteness": "percentage",
+        "clinicalAccuracy": "confidence score", 
+        "ocrReliability": "text recognition quality",
+        "recommendationStrength": "evidence level"
+      }
     }
 
-    CRITICAL REQUIREMENTS:
-    - Prioritize patient safety above all else
-    - Provide comprehensive Bengali explanations
-    - Be honest about confidence levels
-    - Give actionable health advice
-    - Focus on disease → tests → medicines workflow like expert doctors
-    - Handle OCR errors intelligently
-    - Provide emergency guidance when needed
+    CRITICAL INTELLIGENCE FEATURES:
+    - Advanced OCR error correction for Bengali medical terms
+    - Drug interaction checking with severity levels
+    - Cost-effective treatment alternatives
+    - Emergency symptom recognition
+    - Chronic disease management protocols
+    - Patient education in simple Bengali
+    - Follow-up scheduling optimization
+    - Risk stratification algorithms
     `
 
     const result = await model.generateContent(prompt)

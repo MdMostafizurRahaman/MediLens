@@ -78,44 +78,72 @@ export default function UploadPage() {
       const ctx = canvas.getContext('2d')
 
       img.onload = () => {
-        // Calculate optimal size (larger is better for OCR)
-        const maxDim = 2000
-        const scale = Math.min(maxDim / img.width, maxDim / img.height, 3) // Max 3x scaling
+        // Calculate optimal size for better OCR (larger images work better)
+        const maxDim = 3000 // Increased from 2000
+        const scale = Math.min(maxDim / img.width, maxDim / img.height, 4) // Max 4x scaling
         canvas.width = img.width * scale
         canvas.height = img.height * scale
         
-        // Draw image with high quality
+        // Advanced image preprocessing for better OCR
         ctx.imageSmoothingEnabled = false
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
         
-        // Get image data for processing
+        // Get image data for advanced processing
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         const data = imageData.data
 
-        // Advanced preprocessing
+        // Advanced preprocessing pipeline
         for (let i = 0; i < data.length; i += 4) {
-          // Convert to grayscale
+          // Convert to grayscale first
           const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])
           
-          // Adaptive thresholding for better text clarity
+          // Enhanced adaptive thresholding for medical prescriptions
           let processed
-          if (gray > 140) {
-            processed = 255 // White background
-          } else if (gray < 60) {
-            processed = 0   // Black text
+          if (gray > 160) {
+            processed = 255 // Pure white background
+          } else if (gray < 80) {
+            processed = 0   // Pure black text
           } else {
-            // Edge enhancement for medium values
-            processed = gray > 100 ? 255 : 0
+            // Improved edge detection for medium values
+            // This helps with handwritten prescriptions
+            const threshold = 120
+            processed = gray > threshold ? 255 : 0
           }
           
           data[i] = processed     // Red
           data[i + 1] = processed // Green
           data[i + 2] = processed // Blue
-          // Alpha unchanged
+          // Alpha unchanged (data[i + 3])
+        }
+
+        // Apply noise reduction (simple median filter)
+        const processedData = new Uint8ClampedArray(data)
+        for (let y = 1; y < canvas.height - 1; y++) {
+          for (let x = 1; x < canvas.width - 1; x++) {
+            const idx = (y * canvas.width + x) * 4
+            
+            // Get surrounding pixels for noise reduction
+            const neighbors = []
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const nIdx = ((y + dy) * canvas.width + (x + dx)) * 4
+                neighbors.push(data[nIdx])
+              }
+            }
+            
+            // Apply median filter to reduce noise
+            neighbors.sort((a, b) => a - b)
+            const median = neighbors[Math.floor(neighbors.length / 2)]
+            
+            processedData[idx] = median
+            processedData[idx + 1] = median
+            processedData[idx + 2] = median
+          }
         }
 
         // Apply processed data back to canvas
-        ctx.putImageData(imageData, 0, 0)
+        const finalImageData = new ImageData(processedData, canvas.width, canvas.height)
+        ctx.putImageData(finalImageData, 0, 0)
         
         // Return the processed image as blob
         canvas.toBlob(resolve, 'image/png', 1.0)
@@ -137,10 +165,10 @@ export default function UploadPage() {
       // Preprocess the image
       const processedImage = await preprocessImage(file)
       
-      // Enhanced OCR with better configuration
+      // Enhanced OCR with better configuration for medical prescriptions
       const { data: { text } } = await Tesseract.recognize(
         processedImage,
-        'eng', // Focus on English for medical terms
+        'eng+ben', // Add Bengali support for local prescriptions
         {
           logger: (m) => {
             if (m.status === 'recognizing text') {
@@ -149,11 +177,16 @@ export default function UploadPage() {
           },
           tessedit_pageseg_mode: Tesseract.PSM.AUTO,
           tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
-          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,+:-()[]{}|/\\@#% \n\t',
-          // Medical-specific improvements
-          user_defined_dpi: '300',
+          // Enhanced character set for medical prescriptions
+          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,+:-()[]{}|/\\@#%&=_*~ \n\t',
+          // Medical-specific OCR improvements
+          user_defined_dpi: '400', // Increased DPI
           tessedit_create_hocr: '1',
           preserve_interword_spaces: '1',
+          // Additional OCR parameters for better medical text recognition
+          tessedit_do_invert: '0',
+          classify_enable_learning: '1',
+          classify_enable_adaptive_matcher: '1',
         }
       )
 
@@ -750,52 +783,41 @@ export default function UploadPage() {
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {/* Analysis Source Indicator with Quality Assessment */}
                   <div className={`alert ${
-                    result.analysisSource === 'gemini-enhanced' ? 'alert-success' : 
+                    result.analysisSource === 'gemini-enhanced-v2' ? 'alert-success' : 
                     result.analysisSource === 'error-fallback' ? 'alert-error' : 'alert-warning'
                   }`}>
                     <div className="flex items-center space-x-2">
                       <span className="text-lg">
-                        {result.analysisSource === 'gemini-enhanced' ? '✨' : 
+                        {result.analysisSource === 'gemini-enhanced-v2' ? '✨' : 
                          result.analysisSource === 'error-fallback' ? '❌' : '⚠️'}
                       </span>
                       <div>
                         <div className="font-semibold">
-                          {result.analysisSource === 'gemini-enhanced' 
-                            ? '🤖 Enhanced AI Analysis - Fine-tuned Medical Model' 
+                          {result.analysisSource === 'gemini-enhanced-v2' 
+                            ? '🤖 Advanced Medical AI - Enhanced Analysis Model' 
                             : result.analysisSource === 'error-fallback'
                             ? '❌ Analysis Failed - Text Quality Too Poor'
-                            : '📍 Local Analysis - Basic Pattern Recognition'}
+                            : '📍 Basic Analysis - Limited Pattern Recognition'}
                         </div>
                         {result.textQuality && (
                           <div className="text-sm opacity-75">
                             OCR Quality: {result.textQuality === 'poor' ? '🔴 Poor' : 
                                         result.textQuality === 'fair' ? '🟡 Fair' : 
-                                        result.textQuality === 'good' ? '🟢 Good' : '⚪ Unknown'}
+                                        result.textQuality === 'good' ? '🟢 Good' : 
+                                        result.textQuality === 'excellent' ? '💚 Excellent' : '⚪ Unknown'}
+                            {result.confidenceScore && ` | Confidence: ${result.confidenceScore}`}
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Original Text Analysis */}
-                  {result.originalTextAnalysis && (
-                    <div className="alert alert-info">
-                      <div className="flex items-start space-x-2">
-                        <span className="text-lg">💡</span>
-                        <div>
-                          <h4 className="font-semibold">Image Quality Assessment</h4>
-                          <p className="text-sm">{result.originalTextAnalysis}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Comprehensive Summary */}
                   {result.summary && (
                     <div className="collapse collapse-arrow bg-gradient-to-br from-blue-50 to-indigo-50">
                       <input type="checkbox" name="results-accordion" defaultChecked /> 
                       <div className="collapse-title text-lg font-medium text-blue-800">
-                        📋 Comprehensive Medical Analysis
+                        📋 সম্পূর্ণ মেডিকেল বিশ্লেষণ (Complete Medical Analysis)
                       </div>
                       <div className="collapse-content"> 
                         <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -805,12 +827,120 @@ export default function UploadPage() {
                     </div>
                   )}
 
-                  {/* Enhanced Medications */}
+                  {/* NEW: Diseases Section - PRIMARY FOCUS */}
+                  {result.diseases && result.diseases.length > 0 && (
+                    <div className="collapse collapse-arrow bg-gradient-to-br from-red-50 to-pink-50">
+                      <input type="checkbox" name="results-accordion" defaultChecked /> 
+                      <div className="collapse-title text-lg font-medium text-red-800">
+                        🏥 রোগ নির্ণয় (Diseases Diagnosed) - {result.diseases.length} টি
+                      </div>
+                      <div className="collapse-content"> 
+                        <div className="space-y-3">
+                          {result.diseases.map((disease, index) => (
+                            <div key={index} className="card bg-white shadow-sm border-l-4 border-red-400">
+                              <div className="card-body p-4">
+                                <div className="flex items-start justify-between">
+                                  <h4 className="font-bold text-lg text-red-700">
+                                    {disease.condition} {disease.bangla && `(${disease.bangla})`}
+                                  </h4>
+                                  <div className="flex gap-2">
+                                    {disease.confidence && (
+                                      <span className={`badge badge-sm ${
+                                        disease.confidence === 'high' ? 'badge-success' :
+                                        disease.confidence === 'medium' ? 'badge-warning' : 'badge-error'
+                                      }`}>
+                                        {disease.confidence}
+                                      </span>
+                                    )}
+                                    {disease.severity && (
+                                      <span className={`badge badge-sm ${
+                                        disease.severity === 'severe' ? 'badge-error' : 
+                                        disease.severity === 'moderate' ? 'badge-warning' : 'badge-success'
+                                      }`}>
+                                        {disease.severity}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {disease.description && (
+                                  <p className="text-sm text-gray-700 mt-2 mb-2">{disease.description}</p>
+                                )}
+                                {disease.reasoning && (
+                                  <p className="text-xs text-gray-500 italic">
+                                    <strong>কারণ:</strong> {disease.reasoning}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NEW: Investigations Section - SECOND PRIORITY */}
+                  {result.investigations && result.investigations.length > 0 && (
+                    <div className="collapse collapse-arrow bg-gradient-to-br from-purple-50 to-violet-50">
+                      <input type="checkbox" name="results-accordion" defaultChecked /> 
+                      <div className="collapse-title text-lg font-medium text-purple-800">
+                        🧪 পরীক্ষা-নিরীক্ষা (Tests & Investigations) - {result.investigations.length} টি
+                      </div>
+                      <div className="collapse-content"> 
+                        <div className="space-y-3">
+                          {result.investigations.map((test, index) => (
+                            <div key={index} className="card bg-white shadow-sm border-l-4 border-purple-400">
+                              <div className="card-body p-4">
+                                <div className="flex items-start justify-between">
+                                  <h4 className="font-bold text-lg text-purple-700">
+                                    {test.test} {test.bangla && `(${test.bangla})`}
+                                  </h4>
+                                </div>
+                                <div className="grid md:grid-cols-3 gap-3 mt-2">
+                                  {test.result && (
+                                    <div>
+                                      <p className="text-sm text-gray-600">
+                                        <strong>ফলাফল:</strong> {test.result}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {test.normalRange && (
+                                    <div>
+                                      <p className="text-sm text-gray-600">
+                                        <strong>স্বাভাবিক মাত্রা:</strong> {test.normalRange}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {test.interpretation && (
+                                    <div>
+                                      <p className={`text-sm font-semibold ${
+                                        test.interpretation.includes('Normal') || test.interpretation.includes('স্বাভাবিক') 
+                                          ? 'text-green-600' 
+                                          : 'text-red-600'
+                                      }`}>
+                                        <strong>অবস্থা:</strong> {test.interpretation}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                {test.recommendation && (
+                                  <p className="text-sm text-blue-600 mt-2">
+                                    <strong>পরামর্শ:</strong> {test.recommendation}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Enhanced Medications - THIRD PRIORITY */}
                   {result.medications && result.medications.length > 0 && (
                     <div className="collapse collapse-arrow bg-gradient-to-br from-green-50 to-emerald-50">
                       <input type="checkbox" name="results-accordion" defaultChecked /> 
                       <div className="collapse-title text-lg font-medium text-green-800">
-                        💊 Medications ({result.medications.length} items)
+                        💊 ওষুধের তালিকা (Medications) - {result.medications.length} টি
                       </div>
                       <div className="collapse-content"> 
                         <div className="space-y-3">
@@ -818,44 +948,54 @@ export default function UploadPage() {
                             <div key={index} className="card bg-white shadow-sm border-l-4 border-green-400">
                               <div className="card-body p-4">
                                 <div className="flex items-start justify-between">
-                                  <h4 className="font-bold text-lg text-green-700">
-                                    {med.name} {med.bangla && `(${med.bangla})`}
-                                  </h4>
+                                  <div>
+                                    <h4 className="font-bold text-lg text-green-700">
+                                      {med.name} {med.bangla && `(${med.bangla})`}
+                                    </h4>
+                                    {med.genericName && med.genericName !== med.name && (
+                                      <p className="text-sm text-gray-600">Generic: {med.genericName}</p>
+                                    )}
+                                  </div>
                                   {med.confidence && (
                                     <span className={`badge badge-sm ${
                                       med.confidence === 'high' ? 'badge-success' :
                                       med.confidence === 'medium' ? 'badge-warning' : 'badge-error'
                                     }`}>
-                                      {med.confidence} confidence
+                                      {med.confidence}
                                     </span>
                                   )}
                                 </div>
-                                <div className="grid md:grid-cols-2 gap-3 mt-2">
+                                <div className="grid md:grid-cols-2 gap-3 mt-3">
                                   <div>
                                     <p className="text-sm text-gray-600">
-                                      <strong>Strength:</strong> {med.strength || 'Not specified'}
+                                      <strong>শক্তি:</strong> {med.strength || 'উল্লেখ নেই'}
                                     </p>
                                     <p className="text-sm text-gray-600">
-                                      <strong>Frequency:</strong> {med.frequency || med.dosage || 'As directed'}
+                                      <strong>মাত্রা:</strong> {med.frequency || med.dosage || 'চিকিৎসকের নির্দেশমতো'}
                                     </p>
                                     <p className="text-sm text-gray-600">
-                                      <strong>Timing:</strong> {med.timing || 'Not specified'}
+                                      <strong>সময়:</strong> {med.timing || 'উল্লেখ নেই'}
                                     </p>
-                                    {med.commonUse && (
-                                      <p className="text-sm text-blue-600">
-                                        <strong>Common Use:</strong> {med.commonUse}
+                                    {med.duration && (
+                                      <p className="text-sm text-gray-600">
+                                        <strong>কত দিন:</strong> {med.duration}
                                       </p>
                                     )}
                                   </div>
                                   <div>
-                                    {med.instructions && (
+                                    {med.purpose && (
                                       <p className="text-sm text-blue-600">
-                                        <strong>Instructions:</strong> {med.instructions}
+                                        <strong>কাজ:</strong> {med.purpose}
+                                      </p>
+                                    )}
+                                    {med.instructions && (
+                                      <p className="text-sm text-indigo-600">
+                                        <strong>নির্দেশনা:</strong> {med.instructions}
                                       </p>
                                     )}
                                     {med.sideEffects && (
                                       <p className="text-sm text-orange-600">
-                                        <strong>Side Effects:</strong> {med.sideEffects}
+                                        <strong>পার্শ্বপ্রতিক্রিয়া:</strong> {med.sideEffects}
                                       </p>
                                     )}
                                   </div>
@@ -868,8 +1008,9 @@ export default function UploadPage() {
                     </div>
                   )}
 
-                  {/* Enhanced Diagnosis */}
-                  {result.diagnosis && result.diagnosis.length > 0 && (
+                  {/* Enhanced Diagnosis - REMOVED (replaced by diseases section above) */}
+                  {/* Legacy support for old analysis format */}
+                  {result.diagnosis && result.diagnosis.length > 0 && !result.diseases && (
                     <div className="collapse collapse-arrow bg-gradient-to-br from-red-50 to-pink-50">
                       <input type="checkbox" name="results-accordion" defaultChecked /> 
                       <div className="collapse-title text-lg font-medium text-red-800">
@@ -940,7 +1081,9 @@ export default function UploadPage() {
                   )}
 
                   {/* Enhanced Investigations */}
-                  {result.investigations && result.investigations.length > 0 && (
+                  {(result.investigations && result.investigations.length > 0) ? null : 
+                   /* Show legacy investigations if new format not available */
+                   (result.investigations && result.investigations.length > 0 && (
                     <div className="collapse collapse-arrow bg-gradient-to-br from-purple-50 to-violet-50">
                       <input type="checkbox" name="results-accordion" defaultChecked /> 
                       <div className="collapse-title text-lg font-medium text-purple-800">
@@ -974,6 +1117,49 @@ export default function UploadPage() {
                               </div>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* NEW: Health Education Section */}
+                  {result.healthEducation && (
+                    <div className="collapse collapse-arrow bg-gradient-to-br from-emerald-50 to-teal-50">
+                      <input type="checkbox" name="results-accordion" /> 
+                      <div className="collapse-title text-lg font-medium text-emerald-800">
+                        📚 স্বাস্থ্য শিক্ষা (Health Education)
+                      </div>
+                      <div className="collapse-content"> 
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <pre className="text-sm whitespace-pre-wrap text-gray-700 leading-relaxed">{result.healthEducation}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NEW: Follow-up Plan */}
+                  {result.followUpPlan && (
+                    <div className="collapse collapse-arrow bg-gradient-to-br from-orange-50 to-amber-50">
+                      <input type="checkbox" name="results-accordion" /> 
+                      <div className="collapse-title text-lg font-medium text-orange-800">
+                        📅 ফলো-আপ পরিকল্পনা (Follow-up Plan)
+                      </div>
+                      <div className="collapse-content"> 
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <pre className="text-sm whitespace-pre-wrap text-gray-700 leading-relaxed">{result.followUpPlan}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NEW: Emergency Instructions */}
+                  {result.emergencyInstructions && (
+                    <div className="alert alert-error">
+                      <div>
+                        <span className="text-2xl">🚨</span>
+                        <div>
+                          <h3 className="font-bold text-lg">জরুরি নির্দেশনা (Emergency Instructions)</h3>
+                          <pre className="text-sm whitespace-pre-wrap mt-2">{result.emergencyInstructions}</pre>
                         </div>
                       </div>
                     </div>

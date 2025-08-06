@@ -17,87 +17,137 @@ export async function POST(request) {
 
     // Create comprehensive medical analysis prompt optimized for garbled OCR
     const prompt = `
-    You are an expert medical AI trained on 50,000+ medical terms with advanced OCR text interpretation capabilities. 
+    You are an expert medical AI trained on 100,000+ medical terms with advanced OCR text interpretation capabilities. You specialize in analyzing prescriptions from Bangladesh and understand both English and Bengali medical terminology.
     
-    The following text is from a medical prescription that has been processed through OCR and may contain errors, garbled characters, or unclear text. Your task is to intelligently interpret this text and extract meaningful medical information.
-
-    OCR TEXT TO ANALYZE:
+    PRESCRIPTION TEXT TO ANALYZE:
     "${text}"
 
-    ADVANCED ANALYSIS INSTRUCTIONS:
-    1. **OCR Error Correction**: Look for common OCR mistakes like:
-       - "Co" might be "Co-" (prefix for medications)
-       - "mg" might appear as "rng" or "n19"
-       - Numbers may be misread (1 as l, 0 as O)
-       - Medical abbreviations may be corrupted
-    
-    2. **Pattern Recognition**: Identify medical patterns even in garbled text:
-       - Look for medication name patterns (Tab, Cap, Syr)
-       - Dosage patterns (1+1+1, BD, TDS, QID)
-       - Common drug prefixes/suffixes
-       - Bengali medication names
-    
-    3. **Medical Intelligence**: Use medical knowledge to infer:
-       - Common medications for symptoms mentioned
-       - Standard dosages for identified drugs
-       - Typical prescription formats in Bangladesh
-    
-    4. **Comprehensive Extraction**: Even from unclear text, try to identify:
-       - Any recognizable medication names
-       - Dosage instructions
-       - Timing information
-       - Medical conditions or symptoms
-       - Patient information
+    ANALYSIS FRAMEWORK - Extract information in this exact order:
 
-    Please provide analysis in JSON format:
+    1. **DISEASES/CONDITIONS** (রোগ নির্ণয়):
+       - Identify any mentioned diseases, conditions, or diagnoses
+       - Look for patterns like "DM", "HTN", "GERD", disease names
+       - Consider symptoms that suggest specific conditions
+       - Provide Bengali translation for each condition
+
+    2. **TESTS/INVESTIGATIONS** (পরীক্ষা-নিরীক্ষা):
+       - Find any lab tests mentioned (CBC, RBS, HbA1c, TSH, etc.)
+       - Look for investigation results or recommendations
+       - Include normal ranges and interpretation
+       - Note any pending or recommended tests
+
+    3. **MEDICINES** (ওষুধ):
+       - Extract medication names (handle OCR errors like Co-amoxiclav as "Co amoxiclav")
+       - Identify strength (mg, ml, units)
+       - Determine frequency (OD, BD, TDS, QID or 1+0+0, 1+0+1, etc.)
+       - Find timing (AC, PC, HS - before meal, after meal, bedtime)
+       - Note duration if mentioned
+       - Provide purpose and side effects for each medicine
+
+    4. **ADVANCED OCR CORRECTION**:
+       - "Co" + space + medicine name = "Co-" prefix medications
+       - "rng" or "n19" = "mg"
+       - "l" in numbers = "1", "O" in numbers = "0"
+       - "Tab" or "tablet" = Tablet form
+       - Common Bangladesh medicine brand names
+       - Bengali medicine names recognition
+
+    5. **COMPREHENSIVE MEDICAL INTELLIGENCE**:
+       - Cross-reference medications with likely conditions
+       - Identify treatment patterns (diabetes, hypertension, infection, etc.)
+       - Suggest missing information based on medication combinations
+       - Provide health education in Bengali
+
+    RESPONSE FORMAT (JSON):
     {
-      "textQuality": "assessment of OCR quality (poor/fair/good)",
-      "extractedMedications": [
+      "textQuality": "poor/fair/good/excellent",
+      "confidenceScore": "overall analysis confidence 0-100%",
+      
+      "diseases": [
         {
-          "name": "best guess medication name",
+          "condition": "Medical condition name",
+          "bangla": "রোগের বাংলা নাম",
           "confidence": "high/medium/low",
-          "bangla": "Bengali translation",
-          "strength": "dosage strength if identifiable",
-          "frequency": "dosage frequency if identifiable",
-          "timing": "timing instructions",
-          "commonUse": "what this medication is typically used for",
-          "sideEffects": "common side effects in Bengali"
+          "severity": "mild/moderate/severe",
+          "reasoning": "Why this condition is suspected",
+          "description": "Brief explanation in Bengali"
         }
       ],
-      "possibleConditions": [
+      
+      "investigations": [
         {
-          "condition": "likely medical condition based on medications/context",
-          "bangla": "Bengali translation",
-          "confidence": "high/medium/low",
-          "reasoning": "why this condition is suspected"
+          "test": "Test name (e.g., HbA1c, CBC)",
+          "bangla": "পরীক্ষার বাংলা নাম",
+          "result": "Test result if mentioned",
+          "normalRange": "Normal range",
+          "interpretation": "Normal/Abnormal with Bengali explanation",
+          "recommendation": "When to repeat or follow up"
         }
       ],
+      
+      "medications": [
+        {
+          "name": "Medicine name (corrected from OCR)",
+          "bangla": "ওষুধের বাংলা নাম",
+          "genericName": "Generic name if different",
+          "strength": "Dosage strength",
+          "frequency": "How often to take",
+          "timing": "When to take (AC/PC/HS)",
+          "duration": "How long to take",
+          "purpose": "What this medicine treats (in Bengali)",
+          "sideEffects": "Common side effects (in Bengali)",
+          "instructions": "Special instructions (in Bengali)",
+          "confidence": "high/medium/low"
+        }
+      ],
+      
       "symptoms": [
         {
-          "symptom": "any symptoms mentioned or inferred",
-          "bangla": "Bengali translation"
+          "symptom": "Symptom mentioned",
+          "bangla": "উপসর্গের বাংলা নাম",
+          "severity": "mild/moderate/severe",
+          "duration": "How long present"
         }
       ],
+      
       "patientInfo": {
-        "extractedInfo": "any patient details found",
-        "age": "if identifiable",
-        "gender": "if identifiable"
+        "name": "Patient name if found",
+        "age": "Age if found",
+        "gender": "Gender if found",
+        "weight": "Weight if mentioned",
+        "allergies": "Any allergies mentioned"
       },
-      "summary": "Comprehensive Bengali summary explaining what could be determined from this prescription, including:\n- Identified medications and their purposes\n- Likely medical conditions\n- General health advice\n- Important warnings about medication safety\n- Recommendation to consult doctor for unclear prescriptions",
-      "recommendations": [
-        "Specific recommendations in Bengali for the patient",
-        "Safety warnings",
-        "When to consult doctor"
+      
+      "vitalSigns": {
+        "bloodPressure": "BP reading if found",
+        "pulse": "Pulse rate if found",
+        "temperature": "Temperature if found",
+        "weight": "Weight if found"
+      },
+      
+      "comprehensiveSummary": "Complete analysis in Bengali covering:\n1. রোগ নির্ণয় (Diseases identified)\n2. প্রয়োজনীয় পরীক্ষা (Required tests)\n3. ওষুধের তালিকা ও নির্দেশনা (Medicine list and instructions)\n4. জীবনযাত্রার পরামর্শ (Lifestyle advice)\n5. ফলো-আপ নির্দেশনা (Follow-up instructions)",
+      
+      "warnings": [
+        "Critical safety warnings in Bengali",
+        "Drug interaction warnings",
+        "When to contact doctor immediately"
       ],
-      "originalTextAnalysis": "Brief analysis of what made the text difficult to read and suggestions for better image quality"
+      
+      "healthEducation": "Educational content in Bengali about the condition, prevention, and self-care",
+      
+      "followUpPlan": "When to see doctor again, what to monitor, when to do tests",
+      
+      "emergencyInstructions": "When to go to emergency/hospital immediately (in Bengali)"
     }
 
     CRITICAL REQUIREMENTS:
-    - Provide comprehensive Bengali explanations for everything
-    - Include safety warnings about unclear prescriptions
-    - Give general health advice when specific medications can't be identified
-    - Be honest about uncertainty levels
-    - Focus on patient safety above all else
+    - Prioritize patient safety above all else
+    - Provide comprehensive Bengali explanations
+    - Be honest about confidence levels
+    - Give actionable health advice
+    - Focus on disease → tests → medicines workflow like expert doctors
+    - Handle OCR errors intelligently
+    - Provide emergency guidance when needed
     `
 
     const result = await model.generateContent(prompt)
@@ -115,16 +165,20 @@ export async function POST(request) {
         // Transform the response to match our display format
         analysis = {
           textQuality: rawAnalysis.textQuality || 'unknown',
-          medications: rawAnalysis.extractedMedications || [],
-          diagnosis: rawAnalysis.possibleConditions || [],
+          confidenceScore: rawAnalysis.confidenceScore || 'Unknown',
+          diseases: rawAnalysis.diseases || [],
+          medications: rawAnalysis.medications || [],
+          investigations: rawAnalysis.investigations || [],
           symptoms: rawAnalysis.symptoms || [],
-          investigations: [], // Keep empty for now
           patientInfo: rawAnalysis.patientInfo || {},
-          vitalSigns: {}, // Keep empty for now
-          summary: rawAnalysis.summary || 'প্রেসক্রিপশন বিশ্লেষণ সম্পূর্ণ করা যায়নি।',
-          warnings: rawAnalysis.recommendations || ['চিকিৎসকের পরামর্শ অনুযায়ী ওষুধ সেবন করুন'],
+          vitalSigns: rawAnalysis.vitalSigns || {},
+          summary: rawAnalysis.comprehensiveSummary || 'প্রেসক্রিপশন বিশ্লেষণ সম্পূর্ণ করা যায়নি।',
+          warnings: rawAnalysis.warnings || ['চিকিৎসকের পরামর্শ অনুযায়ী ওষুধ সেবন করুন'],
+          healthEducation: rawAnalysis.healthEducation || '',
+          followUpPlan: rawAnalysis.followUpPlan || '',
+          emergencyInstructions: rawAnalysis.emergencyInstructions || '',
           originalTextAnalysis: rawAnalysis.originalTextAnalysis || '',
-          analysisSource: 'gemini-enhanced'
+          analysisSource: 'gemini-enhanced-v2'
         }
       } else {
         // Fallback: create structured response from text

@@ -29,7 +29,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
-
+.env.local
 # Misc
 *.log
 *.tmp

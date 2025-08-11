@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { Camera, Upload, FileText, Loader2, CheckCircle, AlertCircle, Download, Eye, Brain } from 'lucide-react'
+import { Camera, Upload, FileText, Loader2, CheckCircle, AlertCircle, Download, Eye, Brain, FileDown } from 'lucide-react'
 
 const AdvancedPrescriptionAnalyzer = () => {
   const [selectedFile, setSelectedFile] = useState(null)
@@ -13,6 +13,11 @@ const AdvancedPrescriptionAnalyzer = () => {
   const [analysisMethod, setAnalysisMethod] = useState('enhanced-medical') // Default to Enhanced Medical
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
+
+  // Helper function to safely get array data
+  const safeArray = (data) => {
+    return Array.isArray(data) ? data : []
+  }
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0]
@@ -121,7 +126,7 @@ const AdvancedPrescriptionAnalyzer = () => {
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
-  const downloadReport = () => {
+  const downloadReport = async (format = 'json') => {
     if (!analysis) return
 
     const reportData = {
@@ -139,15 +144,543 @@ const AdvancedPrescriptionAnalyzer = () => {
       costAnalysis: analysis.costAnalysis
     }
 
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
+    if (format === 'pdf') {
+      await generatePDFReport(reportData)
+    } else {
+      // JSON Download
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `prescription-analysis-${Date.now()}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }
+
+  const generatePDFReport = async (reportData) => {
+    try {
+      // Create a comprehensive HTML document for PDF
+      const htmlContent = createPrintableHTML(reportData)
+      
+      // Method 1: Try to use window.print() with a new document
+      const printFrame = document.createElement('iframe')
+      printFrame.style.position = 'fixed'
+      printFrame.style.top = '-9999px'
+      printFrame.style.left = '-9999px'
+      printFrame.style.width = '8.5in'
+      printFrame.style.height = '11in'
+      
+      document.body.appendChild(printFrame)
+      
+      const printDocument = printFrame.contentDocument || printFrame.contentWindow.document
+      printDocument.write(htmlContent)
+      printDocument.close()
+      
+      // Focus and print
+      printFrame.contentWindow.focus()
+      
+      setTimeout(() => {
+        try {
+          printFrame.contentWindow.print()
+          // Clean up after printing
+          setTimeout(() => {
+            document.body.removeChild(printFrame)
+          }, 1000)
+        } catch (printError) {
+          console.log('Print method failed, trying alternative...')
+          document.body.removeChild(printFrame)
+          // Fallback to popup method
+          openPrintableWindow(reportData)
+        }
+      }, 500)
+      
+    } catch (error) {
+      console.error('Error generating PDF report:', error)
+      // Final fallback: create a comprehensive text report
+      createTextReport(reportData)
+    }
+  }
+
+  const createPrintableHTML = (reportData) => {
+    return `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>MediLens Prescription Analysis Report</title>
+      <style>
+        @page {
+          margin: 0.75in;
+          size: A4;
+        }
+        @media print {
+          body { 
+            margin: 0; 
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          .no-print { display: none !important; }
+          .page-break { page-break-before: always; }
+          .avoid-break { page-break-inside: avoid; }
+        }
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6; 
+          color: #333;
+          font-size: 14px;
+          margin: 0;
+          padding: 20px;
+        }
+        .header { 
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          color: white; 
+          padding: 30px; 
+          text-align: center; 
+          margin-bottom: 30px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 { 
+          margin: 0 0 10px 0; 
+          font-size: 28px; 
+          font-weight: bold;
+        }
+        .header p { 
+          margin: 5px 0; 
+          opacity: 0.9;
+        }
+        .section { 
+          margin-bottom: 25px; 
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .section-header {
+          background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+          padding: 15px 20px;
+          border-bottom: 2px solid #d1d5db;
+          font-weight: bold;
+          font-size: 18px;
+          color: #1f2937;
+        }
+        .section-content {
+          padding: 20px;
+          background: white;
+        }
+        .patient-grid, .doctor-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 15px;
+        }
+        .info-item {
+          background: #f9fafb;
+          padding: 12px;
+          border-left: 4px solid #3b82f6;
+          border-radius: 4px;
+        }
+        .info-label {
+          font-weight: 600;
+          color: #374151;
+          text-transform: capitalize;
+        }
+        .info-value {
+          color: #111827;
+          margin-top: 4px;
+        }
+        .med-card {
+          background: #fef7ed;
+          border: 1px solid #fed7aa;
+          border-left: 5px solid #ea580c;
+          padding: 20px;
+          margin: 15px 0;
+          border-radius: 6px;
+        }
+        .med-header {
+          font-size: 18px;
+          font-weight: bold;
+          color: #9a3412;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+        }
+        .med-number {
+          background: #ea580c;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 12px;
+          font-weight: bold;
+        }
+        .med-details {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .med-detail {
+          background: white;
+          padding: 8px 12px;
+          border-radius: 4px;
+          border-left: 3px solid #f97316;
+        }
+        .list-item {
+          background: #f0f9ff;
+          border-left: 4px solid #0ea5e9;
+          padding: 12px;
+          margin: 8px 0;
+          border-radius: 4px;
+        }
+        .warning-section {
+          background: #fffbeb;
+          border: 2px solid #f59e0b;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px 0;
+        }
+        .warning-item {
+          background: #fef3c7;
+          border-left: 4px solid #d97706;
+          padding: 12px;
+          margin: 8px 0;
+          border-radius: 4px;
+          display: flex;
+          align-items: flex-start;
+        }
+        .disclaimer {
+          background: #fef2f2;
+          border: 2px solid #dc2626;
+          padding: 25px;
+          border-radius: 8px;
+          margin-top: 30px;
+          text-align: center;
+        }
+        .disclaimer h3 {
+          color: #991b1b;
+          margin-bottom: 15px;
+        }
+        .disclaimer-text {
+          color: #7f1d1d;
+          line-height: 1.7;
+          font-size: 13px;
+        }
+        .timestamp {
+          text-align: right;
+          color: #6b7280;
+          font-size: 12px;
+          margin-bottom: 20px;
+          font-style: italic;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 2px solid #e5e7eb;
+          color: #6b7280;
+          font-size: 12px;
+        }
+        .print-instruction {
+          background: #dbeafe;
+          border: 1px solid #3b82f6;
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-instruction no-print">
+        <strong>📄 How to Save as PDF:</strong><br>
+        Press <kbd>Ctrl+P</kbd> (Windows) or <kbd>Cmd+P</kbd> (Mac) → Choose "Save as PDF" → Click Save
+      </div>
+
+      <div class="header">
+        <h1>🏥 MediLens Prescription Analysis Report</h1>
+        <p>Professional Medical AI Analysis System</p>
+        <p><strong>Analysis Method:</strong> ${reportData.analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI with 50,000+ Medical Terms' : 
+          reportData.analysisMethod === 'gemini-vision' ? 'Google Gemini Vision AI' : 'Google Lens OCR + AI'}</p>
+      </div>
+      
+      <div class="timestamp">Generated: ${new Date(reportData.timestamp).toLocaleString()}</div>
+      
+      ${reportData.patientInfo && Object.keys(reportData.patientInfo).length > 0 ? `
+      <div class="section avoid-break">
+        <div class="section-header">👤 Patient Information</div>
+        <div class="section-content">
+          <div class="patient-grid">
+            ${Object.entries(reportData.patientInfo).map(([key, value]) => 
+              value && key !== 'additionalNotes' ? `
+                <div class="info-item">
+                  <div class="info-label">${key}:</div>
+                  <div class="info-value">${value}</div>
+                </div>
+              ` : ''
+            ).join('')}
+          </div>
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.doctorInfo && Object.keys(reportData.doctorInfo).length > 0 ? `
+      <div class="section avoid-break">
+        <div class="section-header">👨‍⚕️ Doctor Information</div>
+        <div class="section-content">
+          <div class="doctor-grid">
+            ${Object.entries(reportData.doctorInfo).map(([key, value]) => 
+              value ? `
+                <div class="info-item">
+                  <div class="info-label">${key}:</div>
+                  <div class="info-value">${value}</div>
+                </div>
+              ` : ''
+            ).join('')}
+          </div>
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.diagnosis ? `
+      <div class="section avoid-break">
+        <div class="section-header">🔍 Primary Diagnosis</div>
+        <div class="section-content">
+          ${reportData.diagnosis.conditions && Array.isArray(reportData.diagnosis.conditions) && reportData.diagnosis.conditions.length > 0 ? `
+            <h4 style="margin-bottom: 10px; color: #374151;">Conditions:</h4>
+            ${reportData.diagnosis.conditions.map((condition, index) => `
+              <div class="list-item">${index + 1}. ${condition}</div>
+            `).join('')}
+          ` : ''}
+          ${reportData.diagnosis.symptoms && Array.isArray(reportData.diagnosis.symptoms) && reportData.diagnosis.symptoms.length > 0 ? `
+            <h4 style="margin: 20px 0 10px 0; color: #374151;">Symptoms:</h4>
+            ${reportData.diagnosis.symptoms.map(symptom => `
+              <div class="list-item">• ${symptom}</div>
+            `).join('')}
+          ` : ''}
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.medications && Array.isArray(reportData.medications) && reportData.medications.length > 0 ? `
+      <div class="section">
+        <div class="section-header">💊 Prescribed Medications</div>
+        <div class="section-content">
+          ${reportData.medications.map((med, index) => `
+            <div class="med-card avoid-break">
+              <div class="med-header">
+                <div class="med-number">${index + 1}</div>
+                <div>${med.prescribedName || med.correctedName || med.genericName || med.brandName || 
+                       med.name || med.medication || med.drug || med.medicine || `Medication ${index + 1}`}</div>
+                ${med.bangla ? `<div style="font-size: 14px; color: #7f1d1d;">(${med.bangla})</div>` : ''}
+              </div>
+              <div class="med-details">
+                ${med.strength || med.dosage ? `<div class="med-detail"><strong>Strength:</strong> ${med.strength || med.dosage}</div>` : ''}
+                ${med.frequency ? `<div class="med-detail"><strong>Frequency:</strong> ${med.frequency}${med.timing ? ` (${med.timing})` : ''}</div>` : ''}
+                ${med.duration ? `<div class="med-detail"><strong>Duration:</strong> ${med.duration}</div>` : ''}
+                ${med.purpose || med.mechanism ? `<div class="med-detail"><strong>Purpose:</strong> ${med.purpose || med.mechanism}</div>` : ''}
+                ${med.formulation ? `<div class="med-detail"><strong>Type:</strong> ${med.formulation}</div>` : ''}
+                ${med.totalQuantity ? `<div class="med-detail"><strong>Quantity:</strong> ${med.totalQuantity}</div>` : ''}
+                ${med.estimatedCost ? `<div class="med-detail"><strong>Cost:</strong> ${med.estimatedCost} BDT</div>` : ''}
+              </div>
+              ${med.sideEffects ? `<div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 8px; margin-top: 8px; border-radius: 4px;"><strong>Side Effects:</strong> ${med.sideEffects}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.investigations && Array.isArray(reportData.investigations) && reportData.investigations.length > 0 ? `
+      <div class="section avoid-break">
+        <div class="section-header">🔬 Recommended Investigations</div>
+        <div class="section-content">
+          ${reportData.investigations.map((investigation, index) => `
+            <div class="list-item">
+              <strong>${index + 1}. ${investigation.test || investigation}</strong>
+              ${investigation.purpose ? `<br><em style="color: #6b7280;">Purpose: ${investigation.purpose}</em>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.medicalAdvice ? `
+      <div class="section avoid-break">
+        <div class="section-header">👨‍⚕️ Medical Advice</div>
+        <div class="section-content">
+          ${reportData.medicalAdvice.generalCare && Array.isArray(reportData.medicalAdvice.generalCare) && reportData.medicalAdvice.generalCare.length > 0 ? `
+            <h4 style="margin-bottom: 10px; color: #374151;">General Care Instructions:</h4>
+            ${reportData.medicalAdvice.generalCare.map(advice => `
+              <div class="list-item">✓ ${advice}</div>
+            `).join('')}
+          ` : ''}
+          ${reportData.medicalAdvice.followUp && Array.isArray(reportData.medicalAdvice.followUp) && reportData.medicalAdvice.followUp.length > 0 ? `
+            <h4 style="margin: 20px 0 10px 0; color: #374151;">Follow-up Instructions:</h4>
+            ${reportData.medicalAdvice.followUp.map(instruction => `
+              <div class="list-item">📅 ${instruction}</div>
+            `).join('')}
+          ` : ''}
+        </div>
+      </div>
+      ` : ''}
+      
+      ${reportData.safetyWarnings && Array.isArray(reportData.safetyWarnings) && reportData.safetyWarnings.length > 0 ? `
+      <div class="warning-section avoid-break">
+        <h3 style="color: #d97706; margin-bottom: 15px;">⚠️ Safety Warnings</h3>
+        ${reportData.safetyWarnings.map(warning => `
+          <div class="warning-item">
+            <span style="color: #d97706; margin-right: 8px; font-size: 16px;">⚠️</span>
+            <span>${warning}</span>
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
+      
+      <div class="disclaimer avoid-break">
+        <h3>⚠️ Important Medical Disclaimer</h3>
+        <div class="disclaimer-text">
+          <strong>This AI analysis is for informational and educational purposes only.</strong> It is <strong>NOT a substitute</strong> for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider before taking any medication or making medical decisions. In case of medical emergency, seek immediate professional medical attention.
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p><strong>Generated by MediLens AI</strong></p>
+        <p>${new Date().toLocaleDateString()} • Professional Medical Analysis System</p>
+      </div>
+    </body>
+    </html>`
+  }
+
+  const openPrintableWindow = (reportData) => {
+    const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes')
+    if (!printWindow) {
+      alert('Please allow popups for this site to generate PDF reports.')
+      createTextReport(reportData)
+      return
+    }
+    
+    printWindow.document.write(createPrintableHTML(reportData))
+    printWindow.document.close()
+    printWindow.focus()
+    
+    // Auto-trigger print after content loads
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print()
+      }, 500)
+    }
+  }
+
+  const createTextReport = (reportData) => {
+    const textContent = `
+═══════════════════════════════════════════════════
+🏥 MEDILENS PRESCRIPTION ANALYSIS REPORT
+═══════════════════════════════════════════════════
+
+Analysis Method: ${reportData.analysisMethod || 'Enhanced Medical AI'}
+Generated: ${new Date(reportData.timestamp).toLocaleString()}
+
+${reportData.patientInfo && Object.keys(reportData.patientInfo).length > 0 ? `
+👤 PATIENT INFORMATION:
+${'─'.repeat(50)}
+${Object.entries(reportData.patientInfo).map(([key, value]) => 
+  value && key !== 'additionalNotes' ? `${key}: ${value}` : ''
+).filter(Boolean).join('\n')}
+` : ''}
+
+${reportData.doctorInfo && Object.keys(reportData.doctorInfo).length > 0 ? `
+👨‍⚕️ DOCTOR INFORMATION:
+${'─'.repeat(50)}
+${Object.entries(reportData.doctorInfo).map(([key, value]) => 
+  value ? `${key}: ${value}` : ''
+).filter(Boolean).join('\n')}
+` : ''}
+
+${reportData.diagnosis ? `
+🔍 PRIMARY DIAGNOSIS:
+${'─'.repeat(50)}
+${reportData.diagnosis.conditions && Array.isArray(reportData.diagnosis.conditions) ? `
+Conditions:
+${reportData.diagnosis.conditions.map((condition, index) => `  ${index + 1}. ${condition}`).join('\n')}
+` : ''}
+${reportData.diagnosis.symptoms && Array.isArray(reportData.diagnosis.symptoms) ? `
+Symptoms:
+${reportData.diagnosis.symptoms.map(symptom => `  • ${symptom}`).join('\n')}
+` : ''}
+` : ''}
+
+${reportData.medications && Array.isArray(reportData.medications) && reportData.medications.length > 0 ? `
+💊 PRESCRIBED MEDICATIONS:
+${'─'.repeat(50)}
+${reportData.medications.map((med, index) => `
+${index + 1}. ${med.prescribedName || med.correctedName || med.genericName || med.brandName || 
+           med.name || med.medication || med.drug || med.medicine || `Medication ${index + 1}`}
+   ${med.bangla ? `Bengali: ${med.bangla}` : ''}
+   Strength: ${med.strength || med.dosage || 'Not specified'}
+   Frequency: ${med.frequency || 'Not specified'}${med.timing ? ` (${med.timing})` : ''}
+   Duration: ${med.duration || 'Not specified'}
+   Purpose: ${med.purpose || med.mechanism || 'Not specified'}
+   ${med.formulation ? `Type: ${med.formulation}` : ''}
+   ${med.totalQuantity ? `Quantity: ${med.totalQuantity}` : ''}
+   ${med.estimatedCost ? `Cost: ${med.estimatedCost} BDT` : ''}
+`).join('')}
+` : ''}
+
+${reportData.investigations && Array.isArray(reportData.investigations) && reportData.investigations.length > 0 ? `
+🔬 RECOMMENDED INVESTIGATIONS:
+${'─'.repeat(50)}
+${reportData.investigations.map((investigation, index) => `
+${index + 1}. ${investigation.test || investigation}
+   ${investigation.purpose ? `Purpose: ${investigation.purpose}` : ''}
+`).join('')}
+` : ''}
+
+${reportData.medicalAdvice ? `
+👨‍⚕️ MEDICAL ADVICE:
+${'─'.repeat(50)}
+${reportData.medicalAdvice.generalCare && Array.isArray(reportData.medicalAdvice.generalCare) ? `
+General Care:
+${reportData.medicalAdvice.generalCare.map(advice => `  ✓ ${advice}`).join('\n')}
+` : ''}
+${reportData.medicalAdvice.followUp && Array.isArray(reportData.medicalAdvice.followUp) ? `
+Follow-up Instructions:
+${reportData.medicalAdvice.followUp.map(instruction => `  📅 ${instruction}`).join('\n')}
+` : ''}
+` : ''}
+
+${reportData.safetyWarnings && Array.isArray(reportData.safetyWarnings) && reportData.safetyWarnings.length > 0 ? `
+⚠️ SAFETY WARNINGS:
+${'─'.repeat(50)}
+${reportData.safetyWarnings.map(warning => `  ⚠️ ${warning}`).join('\n')}
+` : ''}
+
+⚠️ IMPORTANT DISCLAIMER:
+${'─'.repeat(50)}
+This AI analysis is for informational and educational purposes only. 
+It is NOT a substitute for professional medical advice, diagnosis, or 
+treatment. Always consult with a qualified healthcare provider before 
+taking any medication or making medical decisions. In case of medical 
+emergency, seek immediate professional medical attention.
+
+Generated by MediLens AI • ${new Date().toLocaleDateString()}
+═══════════════════════════════════════════════════
+    `
+    
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `prescription-analysis-${Date.now()}.json`
+    a.download = `prescription-analysis-${Date.now()}.txt`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    
+    alert('PDF generation not supported. Comprehensive text report downloaded instead.')
   }
 
   return (
@@ -344,13 +877,313 @@ const AdvancedPrescriptionAnalyzer = () => {
               বিশ্লেষণ সম্পন্ন ({analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI' : 
                               analysisMethod === 'gemini-vision' ? 'Gemini Vision' : 'Google Lens'})
             </h2>
-            <button
-              onClick={downloadReport}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              রিপোর্ট ডাউনলোড
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => downloadReport('pdf')}
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                title="Opens printable medical report - use browser's print to save as PDF"
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                📄 Print Report
+              </button>
+              <button
+                onClick={() => downloadReport('json')}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                title="Download raw analysis data as JSON file"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                💾 Save Data
+              </button>
+            </div>
+          </div>
+
+          {/* Professional Medical Report Display */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg shadow-lg p-6" id="medical-report">
+            {/* Report Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-lg mb-6">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold mb-2">🏥 MediLens Prescription Analysis Report</h1>
+                <p className="text-blue-100">Professional Medical AI Analysis System</p>
+                <div className="mt-3 text-sm text-blue-200">
+                  <p>Analysis Method: {analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI with 50K+ Medical Terms' : 
+                    analysisMethod === 'gemini-vision' ? 'Google Gemini Vision AI' : 'Google Lens OCR + AI'}</p>
+                  <p>Generated: {new Date().toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Patient Information */}
+            {analysis.patientInformation && (
+              <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center">
+                  👤 Patient Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(analysis.patientInformation).map(([key, value]) => 
+                    value && key !== 'additionalNotes' ? (
+                      <div key={key} className="bg-white p-3 rounded border-l-2 border-green-300">
+                        <span className="font-semibold text-gray-700 capitalize">{key}:</span>
+                        <span className="ml-2 text-gray-900">{value}</span>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Doctor Information */}
+            {analysis.doctorInformation && (
+              <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center">
+                  👨‍⚕️ Doctor Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(analysis.doctorInformation).map(([key, value]) => 
+                    value ? (
+                      <div key={key} className="bg-white p-3 rounded border-l-2 border-purple-300">
+                        <span className="font-semibold text-gray-700 capitalize">{key}:</span>
+                        <span className="ml-2 text-gray-900">{value}</span>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Primary Diagnosis */}
+            {analysis.primaryDiagnosis && (
+              <div className="mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center">
+                  🔍 Primary Diagnosis
+                </h3>
+                {analysis.primaryDiagnosis.conditions && Array.isArray(analysis.primaryDiagnosis.conditions) && analysis.primaryDiagnosis.conditions.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-orange-700 mb-2">Conditions:</h4>
+                    <div className="space-y-2">
+                      {analysis.primaryDiagnosis.conditions.map((condition, index) => (
+                        <div key={index} className="bg-white p-3 rounded border-l-2 border-orange-300 flex items-center">
+                          <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                            {index + 1}
+                          </span>
+                          <span className="text-gray-900">{condition}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {analysis.primaryDiagnosis.symptoms && Array.isArray(analysis.primaryDiagnosis.symptoms) && analysis.primaryDiagnosis.symptoms.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-orange-700 mb-2">Symptoms:</h4>
+                    <div className="space-y-2">
+                      {analysis.primaryDiagnosis.symptoms.map((symptom, index) => (
+                        <div key={index} className="bg-white p-2 rounded border-l-2 border-orange-300">
+                          <span className="text-gray-900">• {symptom}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prescribed Medications */}
+            {analysis.medications && Array.isArray(analysis.medications) && analysis.medications.length > 0 && (
+              <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
+                  💊 Prescribed Medications
+                </h3>
+                <div className="space-y-4">
+                  {analysis.medications.map((medication, index) => (
+                    <div key={index} className="bg-white border border-red-200 rounded-lg p-4 shadow-sm">
+                      <div className="flex items-start mb-3">
+                        <span className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-red-900">
+                            {medication.prescribedName || medication.correctedName || medication.genericName || medication.brandName || 
+                             medication.name || medication.medication || medication.drug || medication.medicine || `Medication ${index + 1}`}
+                          </h4>
+                          {medication.genericName && medication.prescribedName !== medication.genericName && (
+                            <p className="text-sm text-red-700 mt-1">
+                              <strong>Generic:</strong> {medication.genericName}
+                            </p>
+                          )}
+                          {medication.bangla && (
+                            <p className="text-sm text-red-600 mt-1">
+                              <strong>বাংলা:</strong> {medication.bangla}
+                            </p>
+                          )}
+                          {/* Debug info - show all medication properties */}
+                          {process.env.NODE_ENV === 'development' && (
+                            <details className="text-xs text-gray-500 mt-1">
+                              <summary>Debug Info</summary>
+                              <pre>{JSON.stringify(medication, null, 2)}</pre>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ml-11">
+                        {(medication.strength || medication.dosage) && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Strength/Dosage:</span>
+                            <p className="text-gray-900 text-sm">{medication.strength || medication.dosage}</p>
+                          </div>
+                        )}
+                        {medication.frequency && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Frequency:</span>
+                            <p className="text-gray-900 text-sm">{medication.frequency}</p>
+                            {medication.timing && (
+                              <p className="text-gray-700 text-xs">({medication.timing})</p>
+                            )}
+                          </div>
+                        )}
+                        {medication.duration && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Duration:</span>
+                            <p className="text-gray-900 text-sm">{medication.duration}</p>
+                          </div>
+                        )}
+                        {(medication.purpose || medication.mechanism) && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Purpose:</span>
+                            <p className="text-gray-900 text-sm">{medication.purpose || medication.mechanism}</p>
+                          </div>
+                        )}
+                        {medication.formulation && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Type:</span>
+                            <p className="text-gray-900 text-sm capitalize">{medication.formulation}</p>
+                          </div>
+                        )}
+                        {medication.totalQuantity && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Quantity:</span>
+                            <p className="text-gray-900 text-sm">{medication.totalQuantity}</p>
+                          </div>
+                        )}
+                        {medication.estimatedCost && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Est. Cost:</span>
+                            <p className="text-gray-900 text-sm">{medication.estimatedCost} BDT</p>
+                          </div>
+                        )}
+                        {medication.instructions && (
+                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
+                            <span className="font-semibold text-red-700">Instructions:</span>
+                            <p className="text-gray-900 text-sm">{medication.instructions}</p>
+                          </div>
+                        )}
+                      </div>
+                      {medication.sideEffects && (
+                        <div className="mt-3 ml-11 bg-yellow-50 border-l-2 border-yellow-400 p-2 rounded">
+                          <span className="font-semibold text-yellow-700">Side Effects:</span>
+                          <p className="text-yellow-800 text-sm">{medication.sideEffects}</p>
+                        </div>
+                      )}
+                      {medication.alternatives && (
+                        <div className="mt-2 ml-11 bg-green-50 border-l-2 border-green-400 p-2 rounded">
+                          <span className="font-semibold text-green-700">Alternatives:</span>
+                          <p className="text-green-800 text-sm">{medication.alternatives}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recommended Investigations */}
+            {analysis.investigations && Array.isArray(analysis.investigations) && analysis.investigations.length > 0 && (
+              <div className="mb-6 bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-cyan-800 mb-3 flex items-center">
+                  🔬 Recommended Investigations
+                </h3>
+                <div className="space-y-3">
+                  {analysis.investigations.map((investigation, index) => (
+                    <div key={index} className="bg-white p-3 rounded border-l-2 border-cyan-300 flex items-start">
+                      <span className="w-6 h-6 bg-cyan-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-cyan-900">{investigation.test || investigation}</h4>
+                        {investigation.purpose && (
+                          <p className="text-gray-600 text-sm mt-1"><em>Purpose: {investigation.purpose}</em></p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Medical Advice */}
+            {analysis.medicalAdvice && (
+              <div className="mb-6 bg-gradient-to-r from-teal-50 to-emerald-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center">
+                  👨‍⚕️ Medical Advice
+                </h3>
+                {analysis.medicalAdvice.generalCare && Array.isArray(analysis.medicalAdvice.generalCare) && analysis.medicalAdvice.generalCare.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-teal-700 mb-2">General Care Instructions:</h4>
+                    <div className="space-y-2">
+                      {analysis.medicalAdvice.generalCare.map((advice, index) => (
+                        <div key={index} className="bg-white p-3 rounded border-l-2 border-teal-300 flex items-start">
+                          <span className="text-teal-600 mr-2 mt-1">✓</span>
+                          <span className="text-gray-900">{advice}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {analysis.medicalAdvice.followUp && Array.isArray(analysis.medicalAdvice.followUp) && analysis.medicalAdvice.followUp.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-teal-700 mb-2">Follow-up Instructions:</h4>
+                    <div className="space-y-2">
+                      {analysis.medicalAdvice.followUp.map((instruction, index) => (
+                        <div key={index} className="bg-white p-3 rounded border-l-2 border-teal-300 flex items-start">
+                          <span className="text-teal-600 mr-2 mt-1">📅</span>
+                          <span className="text-gray-900">{instruction}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Safety Warnings */}
+            {analysis.safetyWarnings && Array.isArray(analysis.safetyWarnings) && analysis.safetyWarnings.length > 0 && (
+              <div className="mb-6 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold text-yellow-800 mb-3 flex items-center">
+                  ⚠️ Safety Warnings
+                </h3>
+                <div className="space-y-3">
+                  {analysis.safetyWarnings.map((warning, index) => (
+                    <div key={index} className="bg-yellow-100 border border-yellow-300 p-3 rounded flex items-start">
+                      <span className="text-yellow-600 mr-2 mt-1 text-lg">⚠️</span>
+                      <span className="text-yellow-900 font-medium">{warning}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Legal Disclaimer */}
+            <div className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 p-6 rounded-lg">
+              <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
+                ⚠️ Important Medical Disclaimer
+              </h3>
+              <div className="bg-white p-4 rounded border border-red-200">
+                <p className="text-red-900 text-sm leading-relaxed">
+                  This AI analysis is for <strong>informational and educational purposes only</strong>. It is <strong>NOT a substitute</strong> for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider before taking any medication or making medical decisions. In case of medical emergency, seek immediate professional medical attention.
+                </p>
+                <div className="mt-4 text-center">
+                  <p className="text-red-700 font-semibold">Generated by MediLens AI • {new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Image Analysis Quality */}

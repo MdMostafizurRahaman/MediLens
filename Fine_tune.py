@@ -34,32 +34,48 @@ def prepare_training_data(data_path: str, max_examples_per_epoch=12500) -> tuple
     if not Path(data_path).exists():
         raise FileNotFoundError(f"Training data not found at {data_path}")
     
-    df = pd.read_csv(data_path)
-    required_columns = ['Term', 'Explanation', 'Category']
-    if not all(col in df.columns for col in required_columns):
-        raise ValueError(f"Training data must contain columns: {required_columns}")
-    
-    training_examples = []
-    for _, row in df.iterrows():
-        examples = [
-            {
-                "text_input": f"Define the medical term: {row['Term']}",
-                "text_output": f"{row['Explanation']} (Category: {row['Category']})"
-            },
-            {
-                "text_input": f"What category is the medical term '{row['Term']}' in?",
-                "text_output": row['Category']
-            },
-            {
-                "text_input": f"What medical term matches this description: {row['Explanation']}",
-                "text_output": row['Term']
-            }
-        ]
+    # Check if data is JSON or CSV
+    if data_path.endswith('.json'):
+        # Load JSON training data (already processed)
+        with open(data_path, 'r', encoding='utf-8') as f:
+            training_examples = json.load(f)
+            
+        logging.info(f"Loaded {len(training_examples)} pre-processed training examples from JSON")
         
-        # Validate and truncate each example
-        training_examples.extend([
-            validate_and_truncate_example(ex) for ex in examples
-        ])
+    else:
+        # Load CSV data and process it
+        df = pd.read_csv(data_path)
+        required_columns = ['Term', 'Explanation', 'Category']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"Training data must contain columns: {required_columns}")
+        
+        training_examples = []
+        for _, row in df.iterrows():
+            examples = [
+                {
+                    "text_input": f"Define the medical term: {row['Term']}",
+                    "text_output": f"{row['Explanation']} (Category: {row['Category']})"
+                },
+                {
+                    "text_input": f"What category is the medical term '{row['Term']}' in?",
+                    "text_output": row['Category']
+                },
+                {
+                    "text_input": f"What medical term matches this description: {row['Explanation']}",
+                    "text_output": row['Term']
+                }
+            ]
+            
+            # Validate and truncate each example
+            training_examples.extend([
+                validate_and_truncate_example(ex) for ex in examples
+            ])
+        
+        # Save processed data as JSON for future use
+        output_path = Path(data_path).parent / "training_data.json"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(training_examples, f, indent=2)
+        logging.info(f"Saved processed data to {output_path}")
     
     # Calculate recommended epochs to stay under 250,000 total examples
     total_examples = len(training_examples)
@@ -68,14 +84,11 @@ def prepare_training_data(data_path: str, max_examples_per_epoch=12500) -> tuple
     # If we have too many examples even for 1 epoch, subsample
     if total_examples > max_examples_per_epoch:
         logging.warning(f"Subsampling training data from {total_examples} to {max_examples_per_epoch} examples")
-        training_examples = pd.DataFrame(training_examples).sample(n=max_examples_per_epoch).to_dict('records')
+        import random
+        random.seed(42)  # For reproducibility
+        training_examples = random.sample(training_examples, max_examples_per_epoch)
     
-    # Save processed data
-    output_path = Path(data_path).parent / "training_data.json"
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(training_examples, f, indent=2)
-    
-    logging.info(f"Created training data with {len(training_examples)} examples")
+    logging.info(f"Final training data: {len(training_examples)} examples")
     logging.info(f"Recommended epochs: {recommended_epochs}")
     logging.info(f"Sample training example: {training_examples[0]}")
     

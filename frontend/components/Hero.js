@@ -72,6 +72,9 @@ export default function Hero() {
                 <Link href="/upload" className="btn btn-accent btn-lg">
                   Upload Prescription
                 </Link>
+                <Link href="/google-lens-test" className="btn btn-primary btn-lg">
+                  🔬 Try Google Lens AI
+                </Link>
                 <Link href="/chat" className="btn btn-outline btn-lg">
                   Chat with Bot
                 </Link>
@@ -80,6 +83,9 @@ export default function Hero() {
               <>
                 <Link href="/auth/register" className="btn btn-accent btn-lg">
                   Get Started
+                </Link>
+                <Link href="/google-lens-test" className="btn btn-primary btn-lg">
+                  🔬 Try Google Lens AI
                 </Link>
                 <Link href="/auth/login" className="btn btn-outline btn-lg">
                   Login

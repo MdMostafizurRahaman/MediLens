@@ -6,7 +6,7 @@ import Tesseract from 'tesseract.js'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import MedicalReportDisplay from '@/components/MedicalReportDisplay'
-import { Upload, File, Loader2, Eye, Trash2, Download, Share2, FileText, Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { Upload, File, Loader2, Eye, Trash2, Download, Share2, FileText, Image, AlertCircle } from 'lucide-react'
 import pdfToText from 'react-pdftotext'
 
 export default function EnhancedUploadPage() {
@@ -119,35 +119,12 @@ export default function EnhancedUploadPage() {
                 setAnalysisStep(`🔍 টেক্সট শনাক্তকরণ: ${progressPercent}%`)
               }
             },
-            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,-+/(): ত্ত্বাআইউএওকখগঘঙচছজঝঞটঠডঢণপফবভমযরলশষসহড়ঢ়য়ৎৗং ঃ',
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO
           }
         )
         
-        setProgress(100)
-        setAnalysisStep('✅ টেক্সট প্রক্রিয়াকরণ সম্পূর্ণ!')
-        
-        // Apply basic corrections using training data
-        const basicCorrections = {
-          'rng': 'mg',
-          'rnl': 'ml',
-          'tahlet': 'tablet',
-          'capsul': 'capsule',
-          'syrap': 'syrup',
-          'moming': 'morning',
-          'evemng': 'evening',
-          'nigth': 'night',
-          'daly': 'daily'
-        }
-        
-        let correctedText = text
-        Object.entries(basicCorrections).forEach(([mistake, correction]) => {
-          const regex = new RegExp(`\\b${mistake}\\b`, 'gi')
-          correctedText = correctedText.replace(regex, correction)
-        })
-        
-        resolve(correctedText)
-        
+        resolve(text)
       } catch (error) {
         reject(error)
       }
@@ -399,7 +376,7 @@ export default function EnhancedUploadPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   {selectedFile.type.startsWith('image/') ? (
-                    <ImageIcon className="h-8 w-8 text-blue-500" />
+                    <Image className="h-8 w-8 text-blue-500" />
                   ) : (
                     <FileText className="h-8 w-8 text-red-500" />
                   )}

@@ -19,6 +19,7 @@ export default function Navigation() {
   const getNavigationItems = () => {
     const baseItems = [
       { href: '/upload', label: '📋 Upload Prescription' },
+      { href: '/google-lens-test', label: '🔬 Google Lens Analysis' },
       { href: '/chat', label: '💬 AI Assistant' },
       { href: '/doctors', label: '👨‍⚕️ Find Doctors' },
       { href: '/vitals', label: '🩺 Vital Signs' }

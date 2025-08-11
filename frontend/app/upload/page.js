@@ -119,12 +119,35 @@ export default function EnhancedUploadPage() {
                 setAnalysisStep(`🔍 টেক্সট শনাক্তকরণ: ${progressPercent}%`)
               }
             },
-            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,-+/(): ত্ত্বাআইউএওকখগঘঙচছজঝঞটঠডঢণপফবভমযরলশষসহড়ঢ়য়ৎৗং ঃ',
-            tessedit_pageseg_mode: Tesseract.PSM.AUTO
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY
           }
         )
         
-        resolve(text)
+        setProgress(100)
+        setAnalysisStep('✅ টেক্সট প্রক্রিয়াকরণ সম্পূর্ণ!')
+        
+        // Apply basic corrections using training data
+        const basicCorrections = {
+          'rng': 'mg',
+          'rnl': 'ml',
+          'tahlet': 'tablet',
+          'capsul': 'capsule',
+          'syrap': 'syrup',
+          'moming': 'morning',
+          'evemng': 'evening',
+          'nigth': 'night',
+          'daly': 'daily'
+        }
+        
+        let correctedText = text
+        Object.entries(basicCorrections).forEach(([mistake, correction]) => {
+          const regex = new RegExp(`\\b${mistake}\\b`, 'gi')
+          correctedText = correctedText.replace(regex, correction)
+        })
+        
+        resolve(correctedText)
+        
       } catch (error) {
         reject(error)
       }

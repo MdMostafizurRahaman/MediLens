@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react'
 import { Camera, Upload, FileText, Loader2, CheckCircle, AlertCircle, Download, Eye, Brain, FileDown } from 'lucide-react'
+import html2pdf from 'html2pdf.js';
 
 const AdvancedPrescriptionAnalyzer = () => {
   const [selectedFile, setSelectedFile] = useState(null)
@@ -127,7 +128,7 @@ const AdvancedPrescriptionAnalyzer = () => {
   }
 
   const downloadReport = async (format = 'json') => {
-    if (!analysis) return
+    if (!analysis) return;
 
     const reportData = {
       timestamp: new Date().toISOString(),
@@ -142,10 +143,44 @@ const AdvancedPrescriptionAnalyzer = () => {
       medicalAdvice: analysis.medicalAdvice,
       safetyWarnings: analysis.safetyWarnings,
       costAnalysis: analysis.costAnalysis
-    }
+    };
 
     if (format === 'pdf') {
-      await generatePDFReport(reportData)
+      try {
+        console.log('[PDF] Starting PDF download...');
+        const reportElement = document.getElementById('medical-report');
+        if (!reportElement) {
+          console.error('[PDF] #medical-report element not found!');
+          alert('Unable to find report section for PDF generation.');
+          return;
+        }
+        reportElement.style.display = 'block';
+        // Remove oklch colors before PDF generation
+        Array.from(document.querySelectorAll('*')).forEach(el => {
+          const style = getComputedStyle(el);
+          if (style.backgroundColor.includes('oklch')) {
+            el.style.backgroundColor = '#2563eb'; // fallback blue
+          }
+          if (style.color.includes('oklch')) {
+            el.style.color = '#2563eb'; // fallback blue
+          }
+        });
+        const opt = {
+          margin:       0,
+          filename:     `prescription-analysis-${Date.now()}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true },
+          jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        console.log('[PDF] Calling html2pdf...');
+        await html2pdf().set(opt).from(reportElement).save();
+        reportElement.style.display = '';
+        console.log('[PDF] PDF download complete!');
+      } catch (err) {
+        console.error('[PDF] Error during PDF generation:', err);
+        alert('PDF generation failed. See console for details.');
+      }
+      return;
     } else {
       // JSON Download
       const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
@@ -168,7 +203,7 @@ const AdvancedPrescriptionAnalyzer = () => {
         // Temporarily show the professional report for printing
         reportElement.style.display = 'block'
         
-        // Add print styles
+        // Add print styles with color preservation
         const printStyles = document.createElement('style')
         printStyles.innerHTML = `
           @media print {
@@ -185,12 +220,57 @@ const AdvancedPrescriptionAnalyzer = () => {
             }
             .print\\:block { display: block !important; }
             .print\\:hidden { display: none !important; }
+            /* Force colors and gradients to print */
+            * { 
+              -webkit-print-color-adjust: exact !important; 
+              color-adjust: exact !important; 
+              print-color-adjust: exact !important; 
+            }
           }
         `
         document.head.appendChild(printStyles)
         
-        // Print
-        window.print()
+        // Open new window with colorful content for better PDF control
+        const printWindow = window.open('', '_blank', 'width=1200,height=800')
+        
+        if (printWindow) {
+          const reportHTML = reportElement.outerHTML
+          
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>MediLens Professional Medical Analysis</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <style>
+                body { margin: 0; padding: 20px; }
+                .print\\:hidden { display: none !important; }
+                .print\\:block { display: block !important; }
+                /* Ensure all colors print */
+                * { 
+                  -webkit-print-color-adjust: exact !important; 
+                  color-adjust: exact !important; 
+                  print-color-adjust: exact !important; 
+                }
+              </style>
+            </head>
+            <body>
+              ${reportHTML}
+              <script>
+                window.onload = function() {
+                  window.focus();
+                  setTimeout(() => window.print(), 500);
+                };
+              </script>
+            </body>
+            </html>
+          `)
+          
+          printWindow.document.close()
+        } else {
+          // Fallback to current window
+          window.print()
+        }
         
         // Clean up
         setTimeout(() => {
@@ -273,7 +353,7 @@ const AdvancedPrescriptionAnalyzer = () => {
         }
         .header { 
           background: linear-gradient(135deg, #2563eb, #1d4ed8);
-          color: white; 
+          color: blue; 
           padding: 30px; 
           text-align: center; 
           margin-bottom: 30px;
@@ -949,32 +1029,49 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
           </div>
 
           {/* Professional Medical Report Display - PDF Only */}
-          <div className="bg-white border-2 border-gray-200 rounded-lg shadow-lg p-6 print:block hidden" id="medical-report">
+          <div className="bg-blue-600 border-2 border-gray-200 rounded-lg shadow-lg p-6 print:block hidden" id="medical-report">
             {/* Report Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-lg mb-6">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 print:bg-blue-700 text-white p-8 rounded-xl mb-8 shadow-lg" style={{backgroundColor: '#1d4ed8', background: 'linear-gradient(to right, #2563eb, #1d4ed8, #1e40af)'}}>
               <div className="text-center">
-                <h1 className="text-2xl font-bold mb-2">🏥 MediLens Prescription Analysis Report</h1>
-                <p className="text-blue-100">Professional Medical AI Analysis System</p>
-                <div className="mt-3 text-sm text-blue-200">
-                  <p>Analysis Method: {analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI with 50K+ Medical Terms' : 
-                    analysisMethod === 'gemini-vision' ? 'Google Gemini Vision AI' : 'Google Lens OCR + AI'}</p>
-                  <p>Generated: {new Date().toLocaleString()}</p>
+                <h1 className="text-3xl font-bold mb-3 drop-shadow-lg text-red-700">🏥 MediLens Professional Medical Analysis</h1>
+                <p className="text-blue-100 text-lg font-medium">Advanced AI-Powered Prescription Intelligence System</p>
+                <div className="mt-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <p className="flex items-center justify-center md:justify-start">
+                      <span className="w-2 h-2 bg-yellow-300 rounded-full mr-2 animate-pulse"></span>
+                      <strong>Analysis Engine:</strong> {analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI with 50K+ Medical Terms' : 
+                        analysisMethod === 'gemini-vision' ? 'Google Gemini Vision AI' : 'Google Lens OCR + AI'}
+                    </p>
+                    <p className="flex items-center justify-center md:justify-start">
+                      <span className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></span>
+                      <strong>Generated:</strong> {new Date().toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Patient Information */}
             {analysis.patientInformation && (
-              <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center">
-                  👤 Patient Information
+              <div className="mb-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-l-8 border-emerald-500 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold text-emerald-800 mb-4 flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                    👤
+                  </div>
+                  Patient Information
+                  <div className="ml-3 px-3 py-1 bg-emerald-500 text-white text-sm font-medium rounded-full">
+                    Personal Details
+                  </div>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(analysis.patientInformation).map(([key, value]) => 
                     value && key !== 'additionalNotes' ? (
-                      <div key={key} className="bg-white p-3 rounded border-l-2 border-green-300">
-                        <span className="font-semibold text-gray-700 capitalize">{key}:</span>
-                        <span className="ml-2 text-gray-900">{value}</span>
+                      <div key={key} className="bg-white p-4 rounded-xl border-l-4 border-emerald-400 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full mr-3"></div>
+                          <span className="font-bold text-emerald-700 capitalize text-lg">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        </div>
+                        <span className="ml-6 text-gray-800 font-medium text-lg">{value}</span>
                       </div>
                     ) : null
                   )}
@@ -984,16 +1081,25 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
 
             {/* Doctor Information */}
             {analysis.doctorInformation && (
-              <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-purple-800 mb-3 flex items-center">
-                  👨‍⚕️ Doctor Information
+              <div className="mb-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 border-l-8 border-violet-500 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold text-violet-800 mb-4 flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                    👨‍⚕️
+                  </div>
+                  Prescribing Physician
+                  <div className="ml-3 px-3 py-1 bg-violet-500 text-white text-sm font-medium rounded-full">
+                    Healthcare Provider
+                  </div>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(analysis.doctorInformation).map(([key, value]) => 
                     value ? (
-                      <div key={key} className="bg-white p-3 rounded border-l-2 border-purple-300">
-                        <span className="font-semibold text-gray-700 capitalize">{key}:</span>
-                        <span className="ml-2 text-gray-900">{value}</span>
+                      <div key={key} className="bg-white p-4 rounded-xl border-l-4 border-violet-400 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-gradient-to-r from-violet-400 to-purple-400 rounded-full mr-3"></div>
+                          <span className="font-bold text-violet-700 capitalize text-lg">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        </div>
+                        <span className="ml-6 text-gray-800 font-medium text-lg">{value}</span>
                       </div>
                     ) : null
                   )}
@@ -1003,32 +1109,45 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
 
             {/* Primary Diagnosis */}
             {analysis.primaryDiagnosis && (
-              <div className="mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center">
-                  🔍 Primary Diagnosis
+              <div className="mb-8 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 border-l-8 border-amber-500 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold text-amber-800 mb-4 flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                    🔍
+                  </div>
+                  Primary Medical Diagnosis
+                  <div className="ml-3 px-3 py-1 bg-amber-500 text-white text-sm font-medium rounded-full">
+                    Clinical Findings
+                  </div>
                 </h3>
                 {analysis.primaryDiagnosis.conditions && Array.isArray(analysis.primaryDiagnosis.conditions) && analysis.primaryDiagnosis.conditions.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-orange-700 mb-2">Conditions:</h4>
-                    <div className="space-y-2">
+                  <div className="mb-6">
+                    <h4 className="font-bold text-amber-700 mb-3 text-lg flex items-center">
+                      <div className="w-4 h-4 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full mr-3"></div>
+                      Diagnosed Conditions:
+                    </h4>
+                    <div className="space-y-3">
                       {analysis.primaryDiagnosis.conditions.map((condition, index) => (
-                        <div key={index} className="bg-white p-3 rounded border-l-2 border-orange-300 flex items-center">
-                          <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                        <div key={index} className="bg-white p-4 rounded-xl border-l-4 border-amber-400 shadow-sm hover:shadow-md transition-shadow flex items-center">
+                          <span className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4 shadow-sm">
                             {index + 1}
                           </span>
-                          <span className="text-gray-900">{condition}</span>
+                          <span className="text-gray-800 font-medium text-lg">{condition}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
                 {analysis.primaryDiagnosis.symptoms && Array.isArray(analysis.primaryDiagnosis.symptoms) && analysis.primaryDiagnosis.symptoms.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-orange-700 mb-2">Symptoms:</h4>
-                    <div className="space-y-2">
+                  <div className="bg-white p-6 rounded-xl border border-amber-200 shadow-sm">
+                    <h4 className="font-bold text-amber-700 mb-3 text-lg flex items-center">
+                      <div className="w-4 h-4 bg-gradient-to-r from-red-400 to-pink-400 rounded-full mr-3"></div>
+                      Associated Symptoms:
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {analysis.primaryDiagnosis.symptoms.map((symptom, index) => (
-                        <div key={index} className="bg-white p-2 rounded border-l-2 border-orange-300">
-                          <span className="text-gray-900">• {symptom}</span>
+                        <div key={index} className="bg-gradient-to-r from-red-50 to-pink-50 p-3 rounded-lg border-l-4 border-red-300 flex items-center">
+                          <div className="w-2 h-2 bg-gradient-to-r from-red-400 to-pink-400 rounded-full mr-3"></div>
+                          <span className="text-gray-800 font-medium">{symptom}</span>
                         </div>
                       ))}
                     </div>
@@ -1039,104 +1158,114 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
 
             {/* Prescribed Medications */}
             {analysis.medications && Array.isArray(analysis.medications) && analysis.medications.length > 0 && (
-              <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
-                  💊 Prescribed Medications
+              <div className="mb-8 bg-gradient-to-br from-pink-50 via-rose-50 to-red-50 border-l-8 border-pink-500 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold text-pink-800 mb-6 flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                    💊
+                  </div>
+                  Prescribed Medications
+                  <div className="ml-3 px-3 py-1 bg-pink-500 text-white text-sm font-medium rounded-full">
+                    {analysis.medications.length} Medication{analysis.medications.length > 1 ? 's' : ''}
+                  </div>
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {analysis.medications.map((medication, index) => (
-                    <div key={index} className="bg-white border border-red-200 rounded-lg p-4 shadow-sm">
-                      <div className="flex items-start mb-3">
-                        <span className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
+                    <div key={index} className="bg-white border-2 border-pink-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-start mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full flex items-center justify-center text-lg font-bold mr-4 shadow-md">
                           {index + 1}
-                        </span>
+                        </div>
                         <div className="flex-1">
-                          <h4 className="text-lg font-bold text-red-900">
+                          <h4 className="text-xl font-bold text-pink-900 mb-2">
                             {medication.prescribedName || medication.correctedName || medication.genericName || medication.brandName || 
                              medication.name || medication.medication || medication.drug || medication.medicine || `Medication ${index + 1}`}
                           </h4>
                           {medication.genericName && medication.prescribedName !== medication.genericName && (
-                            <p className="text-sm text-red-700 mt-1">
-                              <strong>Generic:</strong> {medication.genericName}
-                            </p>
+                            <div className="mb-2">
+                              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                Generic: {medication.genericName}
+                              </span>
+                            </div>
                           )}
                           {medication.bangla && (
-                            <p className="text-sm text-red-600 mt-1">
-                              <strong>বাংলা:</strong> {medication.bangla}
-                            </p>
-                          )}
-                          {/* Debug info - show all medication properties */}
-                          {process.env.NODE_ENV === 'development' && (
-                            <details className="text-xs text-gray-500 mt-1">
-                              <summary>Debug Info</summary>
-                              <pre>{JSON.stringify(medication, null, 2)}</pre>
-                            </details>
+                            <div className="mb-2">
+                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                বাংলা: {medication.bangla}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ml-11">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {(medication.strength || medication.dosage) && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Strength/Dosage:</span>
-                            <p className="text-gray-900 text-sm">{medication.strength || medication.dosage}</p>
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-l-4 border-blue-400">
+                            <div className="flex items-center mb-2">
+                              <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full mr-2"></div>
+                              <span className="font-bold text-blue-700 text-sm">Strength/Dosage</span>
+                            </div>
+                            <p className="text-gray-800 font-medium">{medication.strength || medication.dosage}</p>
                           </div>
                         )}
                         {medication.frequency && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Frequency:</span>
-                            <p className="text-gray-900 text-sm">{medication.frequency}</p>
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border-l-4 border-green-400">
+                            <div className="flex items-center mb-2">
+                              <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full mr-2"></div>
+                              <span className="font-bold text-green-700 text-sm">Frequency</span>
+                            </div>
+                            <p className="text-gray-800 font-medium">{medication.frequency}</p>
                             {medication.timing && (
-                              <p className="text-gray-700 text-xs">({medication.timing})</p>
+                              <p className="text-green-600 text-xs mt-1 font-medium">({medication.timing})</p>
                             )}
                           </div>
                         )}
                         {medication.duration && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Duration:</span>
-                            <p className="text-gray-900 text-sm">{medication.duration}</p>
+                          <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-xl border-l-4 border-purple-400">
+                            <div className="flex items-center mb-2">
+                              <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-violet-400 rounded-full mr-2"></div>
+                              <span className="font-bold text-purple-700 text-sm">Duration</span>
+                            </div>
+                            <p className="text-gray-800 font-medium">{medication.duration}</p>
                           </div>
                         )}
                         {(medication.purpose || medication.mechanism) && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Purpose:</span>
-                            <p className="text-gray-900 text-sm">{medication.purpose || medication.mechanism}</p>
-                          </div>
-                        )}
-                        {medication.formulation && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Type:</span>
-                            <p className="text-gray-900 text-sm capitalize">{medication.formulation}</p>
-                          </div>
-                        )}
-                        {medication.totalQuantity && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Quantity:</span>
-                            <p className="text-gray-900 text-sm">{medication.totalQuantity}</p>
-                          </div>
-                        )}
-                        {medication.estimatedCost && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Est. Cost:</span>
-                            <p className="text-gray-900 text-sm">{medication.estimatedCost} BDT</p>
-                          </div>
-                        )}
-                        {medication.instructions && (
-                          <div className="bg-red-50 p-2 rounded border-l-2 border-red-300">
-                            <span className="font-semibold text-red-700">Instructions:</span>
-                            <p className="text-gray-900 text-sm">{medication.instructions}</p>
+                          <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border-l-4 border-orange-400">
+                            <div className="flex items-center mb-2">
+                              <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full mr-2"></div>
+                              <span className="font-bold text-orange-700 text-sm">Purpose</span>
+                            </div>
+                            <p className="text-gray-800 font-medium">{medication.purpose || medication.mechanism}</p>
                           </div>
                         )}
                       </div>
-                      {medication.sideEffects && (
-                        <div className="mt-3 ml-11 bg-yellow-50 border-l-2 border-yellow-400 p-2 rounded">
-                          <span className="font-semibold text-yellow-700">Side Effects:</span>
-                          <p className="text-yellow-800 text-sm">{medication.sideEffects}</p>
-                        </div>
-                      )}
-                      {medication.alternatives && (
-                        <div className="mt-2 ml-11 bg-green-50 border-l-2 border-green-400 p-2 rounded">
-                          <span className="font-semibold text-green-700">Alternatives:</span>
-                          <p className="text-green-800 text-sm">{medication.alternatives}</p>
+                      {(medication.sideEffects || medication.instructions || medication.alternatives) && (
+                        <div className="mt-4 space-y-3">
+                          {medication.instructions && (
+                            <div className="bg-gradient-to-r from-cyan-50 to-sky-50 p-4 rounded-xl border-l-4 border-cyan-400">
+                              <div className="flex items-center mb-2">
+                                <div className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full mr-2"></div>
+                                <span className="font-bold text-cyan-700 text-sm">Special Instructions</span>
+                              </div>
+                              <p className="text-gray-800">{medication.instructions}</p>
+                            </div>
+                          )}
+                          {medication.sideEffects && (
+                            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-4 rounded-xl border-l-4 border-yellow-400">
+                              <div className="flex items-center mb-2">
+                                <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full mr-2"></div>
+                                <span className="font-bold text-yellow-700 text-sm">Potential Side Effects</span>
+                              </div>
+                              <p className="text-gray-800">{medication.sideEffects}</p>
+                            </div>
+                          )}
+                          {medication.alternatives && (
+                            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-xl border-l-4 border-slate-400">
+                              <div className="flex items-center mb-2">
+                                <div className="w-3 h-3 bg-gradient-to-r from-slate-400 to-gray-400 rounded-full mr-2"></div>
+                                <span className="font-bold text-slate-700 text-sm">Alternative Options</span>
+                              </div>
+                              <p className="text-gray-800 text-sm">{medication.alternatives}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1145,23 +1274,31 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
               </div>
             )}
 
-            {/* Recommended Investigations */}
+            {/* Recommended Investigations - Enhanced Professional Design */}
             {analysis.investigations && Array.isArray(analysis.investigations) && analysis.investigations.length > 0 && (
-              <div className="mb-6 bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-cyan-800 mb-3 flex items-center">
-                  🔬 Recommended Investigations
+              <div className="mb-6 print:block bg-gradient-to-r from-cyan-50 via-sky-50 to-blue-50 border-l-4 border-cyan-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-cyan-800 to-blue-800 bg-clip-text text-transparent mb-3 flex items-center">
+                  <span className="mr-2 text-cyan-600">🔬</span>
+                  Recommended Investigations
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {analysis.investigations.map((investigation, index) => (
-                    <div key={index} className="bg-white p-3 rounded border-l-2 border-cyan-300 flex items-start">
-                      <span className="w-6 h-6 bg-cyan-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-cyan-900">{investigation.test || investigation}</h4>
-                        {investigation.purpose && (
-                          <p className="text-gray-600 text-sm mt-1"><em>Purpose: {investigation.purpose}</em></p>
-                        )}
+                    <div key={index} className="bg-gradient-to-br from-white to-cyan-50 p-4 rounded-lg border border-cyan-200 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-start">
+                        <span className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1 shadow-md">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <h4 className="font-semibold bg-gradient-to-r from-cyan-900 to-blue-900 bg-clip-text text-transparent mb-2">
+                            {investigation.test || investigation}
+                          </h4>
+                          {investigation.purpose && (
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border-l-4 border-blue-300">
+                              <span className="font-medium bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">🎯 Purpose:</span>
+                              <p className="text-gray-800 text-sm mt-1">{investigation.purpose}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1169,20 +1306,26 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
               </div>
             )}
 
-            {/* Medical Advice */}
+            {/* Medical Advice - Enhanced Professional Design */}
             {analysis.medicalAdvice && (
-              <div className="mb-6 bg-gradient-to-r from-teal-50 to-emerald-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center">
-                  👨‍⚕️ Medical Advice
+              <div className="mb-6 print:block bg-gradient-to-r from-teal-50 via-emerald-50 to-green-50 border-l-4 border-teal-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-teal-800 to-emerald-800 bg-clip-text text-transparent mb-3 flex items-center">
+                  <span className="mr-2 text-teal-600">👨‍⚕️</span>
+                  Medical Advice
                 </h3>
                 {analysis.medicalAdvice.generalCare && Array.isArray(analysis.medicalAdvice.generalCare) && analysis.medicalAdvice.generalCare.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="font-semibold text-teal-700 mb-2">General Care Instructions:</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-semibold bg-gradient-to-r from-teal-700 to-emerald-700 bg-clip-text text-transparent mb-3 flex items-center">
+                      <span className="mr-2">🏥</span>
+                      General Care Instructions:
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {analysis.medicalAdvice.generalCare.map((advice, index) => (
-                        <div key={index} className="bg-white p-3 rounded border-l-2 border-teal-300 flex items-start">
-                          <span className="text-teal-600 mr-2 mt-1">✓</span>
-                          <span className="text-gray-900">{advice}</span>
+                        <div key={index} className="bg-gradient-to-br from-white to-teal-50 p-4 rounded-lg border border-teal-200 shadow-sm">
+                          <div className="flex items-start">
+                            <span className="w-6 h-6 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-1">✓</span>
+                            <span className="text-gray-900 font-medium">{advice}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1190,12 +1333,17 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
                 )}
                 {analysis.medicalAdvice.followUp && Array.isArray(analysis.medicalAdvice.followUp) && analysis.medicalAdvice.followUp.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-teal-700 mb-2">Follow-up Instructions:</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-semibold bg-gradient-to-r from-teal-700 to-emerald-700 bg-clip-text text-transparent mb-3 flex items-center">
+                      <span className="mr-2">📅</span>
+                      Follow-up Instructions:
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {analysis.medicalAdvice.followUp.map((instruction, index) => (
-                        <div key={index} className="bg-white p-3 rounded border-l-2 border-teal-300 flex items-start">
-                          <span className="text-teal-600 mr-2 mt-1">📅</span>
-                          <span className="text-gray-900">{instruction}</span>
+                        <div key={index} className="bg-gradient-to-br from-white to-emerald-50 p-4 rounded-lg border border-emerald-200 shadow-sm">
+                          <div className="flex items-start">
+                            <span className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-1">📅</span>
+                            <span className="text-gray-900 font-medium">{instruction}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1204,34 +1352,87 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
               </div>
             )}
 
-            {/* Safety Warnings */}
+            {/* Safety Warnings - Enhanced Professional Design */}
             {analysis.safetyWarnings && Array.isArray(analysis.safetyWarnings) && analysis.safetyWarnings.length > 0 && (
-              <div className="mb-6 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
-                <h3 className="text-lg font-bold text-yellow-800 mb-3 flex items-center">
-                  ⚠️ Safety Warnings
+              <div className="mb-6 print:block bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-yellow-800 to-orange-800 bg-clip-text text-transparent mb-3 flex items-center">
+                  <span className="mr-2 text-yellow-600">⚠️</span>
+                  Safety Warnings
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4">
                   {analysis.safetyWarnings.map((warning, index) => (
-                    <div key={index} className="bg-yellow-100 border border-yellow-300 p-3 rounded flex items-start">
-                      <span className="text-yellow-600 mr-2 mt-1 text-lg">⚠️</span>
-                      <span className="text-yellow-900 font-medium">{warning}</span>
+                    <div key={index} className="bg-gradient-to-br from-yellow-100 to-amber-100 border-2 border-yellow-300 p-4 rounded-lg shadow-sm">
+                      <div className="flex items-start">
+                        <span className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full flex items-center justify-center text-lg font-bold mr-3 mt-1 shadow-md">⚠️</span>
+                        <span className="text-yellow-900 font-semibold text-base leading-relaxed">{warning}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Legal Disclaimer */}
-            <div className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 p-6 rounded-lg">
-              <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
-                ⚠️ Important Medical Disclaimer
+            {/* Quality Metrics - Enhanced Professional Design */}
+            {analysis.qualityMetrics && (
+              <div className="mb-6 print:block bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent mb-3 flex items-center">
+                  <span className="mr-2 text-blue-600">📊</span>
+                  Analysis Quality Metrics
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(analysis.qualityMetrics).map(([key, value]) => (
+                    <div key={key} className="bg-gradient-to-br from-white to-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+                      <div className="flex items-center mb-2">
+                        <span className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">📈</span>
+                        <span className="font-semibold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                      </div>
+                      <p className="text-gray-900 font-medium">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cost Analysis - Enhanced Professional Design */}
+            {analysis.costAnalysis && (
+              <div className="mb-6 print:block bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-green-800 to-teal-800 bg-clip-text text-transparent mb-3 flex items-center">
+                  <span className="mr-2 text-green-600">💰</span>
+                  Cost Analysis
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(analysis.costAnalysis).map(([key, value]) => 
+                    value && (
+                      <div key={key} className="bg-gradient-to-br from-white to-green-50 p-4 rounded-lg border border-green-200 shadow-sm">
+                        <div className="flex items-center mb-2">
+                          <span className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">💵</span>
+                          <span className="font-semibold bg-gradient-to-r from-green-700 to-teal-700 bg-clip-text text-transparent capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        </div>
+                        <p className="text-gray-900 font-medium text-lg">{value}</p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Legal Disclaimer - Enhanced Professional Design */}
+            <div className="print:block bg-gradient-to-r from-red-100 via-pink-100 to-rose-100 border-2 border-red-300 p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-red-800 to-pink-800 bg-clip-text text-transparent mb-3 flex items-center">
+                <span className="mr-2 text-red-600">⚠️</span>
+                Important Medical Disclaimer
               </h3>
-              <div className="bg-white p-4 rounded border border-red-200">
-                <p className="text-red-900 text-sm leading-relaxed">
-                  This AI analysis is for <strong>informational and educational purposes only</strong>. It is <strong>NOT a substitute</strong> for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider before taking any medication or making medical decisions. In case of medical emergency, seek immediate professional medical attention.
-                </p>
-                <div className="mt-4 text-center">
-                  <p className="text-red-700 font-semibold">Generated by MediLens AI • {new Date().toLocaleDateString()}</p>
+              <div className="bg-gradient-to-br from-white to-red-50 p-5 rounded-lg border-2 border-red-200 shadow-sm">
+                <div className="flex items-start mb-4">
+                  <span className="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full flex items-center justify-center text-lg font-bold mr-3 mt-1 shadow-md">⚖️</span>
+                  <p className="text-red-900 text-sm leading-relaxed font-medium">
+                    This AI analysis is for <strong className="text-red-800">informational and educational purposes only</strong>. It is <strong className="text-red-800">NOT a substitute</strong> for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider before taking any medication or making medical decisions. In case of medical emergency, seek immediate professional medical attention.
+                  </p>
+                </div>
+                <div className="bg-gradient-to-r from-red-50 to-pink-50 p-3 rounded-lg border border-red-200">
+                  <p className="text-center text-red-700 font-bold text-sm">
+                    Generated by <span className="bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">MediLens AI</span> • {new Date().toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             </div>

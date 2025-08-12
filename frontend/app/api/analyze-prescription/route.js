@@ -11,6 +11,7 @@ export async function POST(request) {
     if (!text) {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 })
     }
+    
 
     // Get the Gemini model
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })

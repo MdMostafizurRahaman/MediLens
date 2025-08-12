@@ -27,18 +27,9 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> singUp(@RequestBody User user) {
-        try {
             user.setRole(Role.ROLE_USER);
             UserDTO createdUser = userService.save(user);
             return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-        } catch (Exception e) {
-            // Always return valid JSON
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new java.util.HashMap<String, Object>() {{
-                    put("error", "Failed to create user");
-                    put("details", e.getMessage());
-                }});
-        }
     }
 
     @GetMapping("/all")

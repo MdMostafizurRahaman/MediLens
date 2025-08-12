@@ -55,12 +55,7 @@ public class AuthController {
                     put("error", "Invalid credentials");
                 }});
         } catch (Exception e) {
-            // Catch-all for unexpected errors
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new java.util.HashMap<String, Object>() {{
-                    put("error", "Unexpected error");
-                    put("details", e.getMessage());
-                }});
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
 }

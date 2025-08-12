@@ -50,7 +50,11 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            // Always return valid JSON
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new java.util.HashMap<String, Object>() {{
+                    put("error", "Invalid credentials");
+                }});
         }
     }
 }

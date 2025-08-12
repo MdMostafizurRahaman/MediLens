@@ -31,7 +31,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
-
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -54,6 +53,13 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new java.util.HashMap<String, Object>() {{
                     put("error", "Invalid credentials");
+                }});
+        } catch (Exception e) {
+            // Catch-all for unexpected errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new java.util.HashMap<String, Object>() {{
+                    put("error", "Unexpected error");
+                    put("details", e.getMessage());
                 }});
         }
     }

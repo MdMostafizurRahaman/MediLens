@@ -11,9 +11,11 @@ export async function POST(request) {
     if (!text) {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 })
     }
+    
 
-    // Get the Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  // Get the Gemini model name from environment variable, fallback to 'gemini-1.5-flash'
+  const geminiModelName = process.env.GEMINI_MODEL_NAME || 'gemini-1.5-flash'
+  const model = genAI.getGenerativeModel({ model: geminiModelName })
 
     // Enhanced medical analysis prompt for MediLens Advanced System
     const prompt = `

@@ -27,9 +27,9 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> singUp(@RequestBody User user) {
-        user.setRole(Role.ROLE_USER);
-        UserDTO createdUser = userService.save(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+            user.setRole(Role.ROLE_USER);
+            UserDTO createdUser = userService.save(user);
+            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
     @GetMapping("/all")

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react'
 import { Camera, Upload, FileText, Loader2, CheckCircle, AlertCircle, Download, Eye, Brain, FileDown } from 'lucide-react'
-import html2pdf from 'html2pdf.js';
+
 
 const AdvancedPrescriptionAnalyzer = () => {
   const [selectedFile, setSelectedFile] = useState(null)
@@ -147,6 +147,8 @@ const AdvancedPrescriptionAnalyzer = () => {
 
     if (format === 'pdf') {
       try {
+        // Dynamically import html2pdf.js only on the client
+        const html2pdf = (await import('html2pdf.js')).default;
         console.log('[PDF] Starting PDF download...');
         const reportElement = document.getElementById('medical-report');
         if (!reportElement) {

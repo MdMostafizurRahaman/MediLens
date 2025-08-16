@@ -18,7 +18,7 @@ export default function Navigation() {
 
   const getNavigationItems = () => {
     const baseItems = [
-      { href: '/upload', label: '📋 Upload Prescription' },
+      // { href: '/upload', label: '📋 Upload Prescription' },
       { href: '/google-lens-test', label: '🔬 Google Lens Analysis' },
       { href: '/chat', label: '💬 AI Assistant' },
       { href: '/doctors', label: '👨‍⚕️ Find Doctors' },
@@ -146,7 +146,7 @@ export default function Navigation() {
               )}
               
               <li><Link href="/profile">⚙️ Account Settings</Link></li>
-              <li><Link href="/upload">📋 Upload Prescription</Link></li>
+              {/* <li><Link href="/upload">📋 Upload Prescription</Link></li> */}
               <li><Link href="/chat">💬 AI Assistant</Link></li>
               
               <div className="divider my-1"></div>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
+import BackButton from "../../components/BackButton";
 
 export default function VitalsPage() {
   const [vitals, setVitals] = useState({
@@ -32,7 +33,6 @@ export default function VitalsPage() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
     setLoading(true)
     
     // Simulate API call
@@ -109,6 +109,7 @@ export default function VitalsPage() {
   return (
     <div className="min-h-screen bg-base-100 p-4">
       <div className="container mx-auto max-w-6xl">
+        <BackButton />
         <motion.div 
           className="text-center mb-8"
           initial={{ opacity: 0, y: 30 }}

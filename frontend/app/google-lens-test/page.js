@@ -7,16 +7,16 @@ export default function GoogleLensTestPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-900 mb-4">
-            🔬 Google Lens + AI Prescription Analysis
+            🔬 AI Prescription Analysis
           </h1>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-            Google Lens API + Enhanced Medical AI + Gemini Vision দিয়ে উন্নত প্রেসক্রিপশন বিশ্লেষণ।
+            Enhanced Medical AI দিয়ে উন্নত প্রেসক্রিপশন বিশ্লেষণ।
             50,000+ মেডিকেল টার্মিনোলজি ডেটা সহ সম্পূর্ণ চিকিৎসা পরামর্শ।
           </p>
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-blue-600 text-3xl mb-3">🧠</div>
             <h3 className="text-lg font-semibold mb-2">Gemini Vision AI</h3>
@@ -43,7 +43,7 @@ export default function GoogleLensTestPage() {
               সহ সম্পূর্ণ বিশ্লেষণ বাংলায়।
             </p>
           </div>
-        </div>
+        </div> */}
 
         {/* Main Component */}
         <AdvancedPrescriptionAnalyzer />

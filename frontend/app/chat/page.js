@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
+import BackButton from "../../components/BackButton";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([])
@@ -579,6 +580,7 @@ export default function ChatPage() {
       <div className="container mx-auto max-w-6xl h-screen flex">
         {/* Sidebar - Chat History */}
         <div className="w-1/4 bg-base-200 border-r">
+          <BackButton />
           <div className="p-4 border-b">
             <button 
               onClick={createNewChat}
@@ -620,12 +622,6 @@ export default function ChatPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-between">
-              <button 
-                onClick={() => router.back()} 
-                className="btn btn-ghost btn-circle text-primary-content"
-              >
-                ← Back
-              </button>
               <div className="text-center">
                 <h1 className="text-2xl font-bold">🤖 MediLens AI Assistant</h1>
                 <p className="text-primary-content/80">আপনার স্বাস্থ্য বিষয়ক সহায়ক</p>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
+import BackButton from "../../components/BackButton";
 
 export default function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -164,12 +165,7 @@ export default function DoctorsPage() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center justify-between mb-4">
-            <button 
-              onClick={() => router.back()} 
-              className="btn btn-ghost btn-circle"
-            >
-              ← Back
-            </button>
+            <BackButton />
             <div></div>
           </div>
           <h1 className="text-4xl font-bold text-primary mb-4">👨‍⚕️ Doctor Directory</h1>

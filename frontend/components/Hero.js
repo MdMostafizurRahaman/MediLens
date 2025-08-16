@@ -69,9 +69,9 @@ export default function Hero() {
           >
             {currentUser ? (
               <>
-                <Link href="/upload" className="btn btn-accent btn-lg">
+                {/* <Link href="/upload" className="btn btn-accent btn-lg">
                   Upload Prescription
-                </Link>
+                </Link> */}
                 <Link href="/google-lens-test" className="btn btn-primary btn-lg">
                   🔬 Try Google Lens AI
                 </Link>

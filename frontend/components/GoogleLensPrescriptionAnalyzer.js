@@ -110,7 +110,7 @@ const GoogleLensPrescriptionAnalyzer = () => {
           🔬 Google Lens Prescription Analyzer
         </h1>
         <p className="text-gray-600">
-          Google Lens API + Fine-tuned Medical AI দিয়ে প্রেসক্রিপশন বিশ্লেষণ
+          Fine-tuned Medical AI দিয়ে প্রেসক্রিপশন বিশ্লেষণ
         </p>
       </div>
 

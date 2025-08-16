@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Upload, FileText, TestTube, CheckCircle, AlertCircle } from 'lucide-react';
+import BackButton from "../../components/BackButton";
 
 export default function OCRTest() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -31,6 +32,7 @@ export default function OCRTest() {
 
     try {
       const formData = new FormData();
+    <BackButton />
       formData.append('image', selectedFile);
 
       const response = await fetch('/api/enhanced-ocr', {

@@ -73,7 +73,7 @@ export default function Hero() {
                   Upload Prescription
                 </Link> */}
                 <Link href="/google-lens-test" className="btn btn-primary btn-lg">
-                  🔬 Try Google Lens AI
+                  🔬 Try  AI Prescription Analysis
                 </Link>
                 <Link href="/chat" className="btn btn-outline btn-lg">
                   Chat with Bot

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import BackButton from "../../components/BackButton";
+import Navigation from '@/components/Navigation'
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([])
@@ -41,7 +41,7 @@ export default function ChatPage() {
         setMessages([{
           id: 'welcome-' + Date.now(),
           type: 'bot',
-          content: 'আসসালামু আলাইকুম! আমি MediLens এর AI সহায়ক। আপনার স্বাস্থ্য, প্রেসক্রিপশন বা মেডিক্যাল প্রশ্ন করুন। আমি বাংলায় বিস্তারিত উত্তর দিতে পারি। 🏥💊',
+          content: 'আসসালামু আলাইকুম! 🙏\n\nআমি MediLens এর AI সহায়ক। আপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন - আমি বাংলায় সাহায্য করতে পারি! 🩺�',
           timestamp: new Date()
         }])
       }
@@ -92,10 +92,13 @@ export default function ChatPage() {
         const chatData = await response.json()
         const formattedMessages = chatData.messages?.map(msg => ({
           id: msg.id,
-          type: msg.chatRole === 'USER' ? 'user' : 'bot',
-          content: msg.content,
-          timestamp: new Date(msg.timestamp || msg.createdAt)
+          type: msg.role === 'USER' ? 'user' : 'bot',
+          content: msg.message, // Changed from msg.content to msg.message
+          timestamp: new Date(msg.createdAt) // Changed from msg.timestamp
         })) || []
+        
+        // Sort messages by timestamp (oldest first)
+        formattedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
         
         setMessages(formattedMessages)
       }
@@ -106,32 +109,36 @@ export default function ChatPage() {
 
   const createNewChat = async () => {
     try {
+      // Clear current messages and create new chat
+      setMessages([{
+        id: 'welcome-' + Date.now(),
+        type: 'bot',
+        content: '✨ নতুন চ্যাট শুরু হয়েছে!\n\nআপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন। আমি সাহায্য করতে প্রস্তুত! 🩺',
+        timestamp: new Date()
+      }])
+      
+      setSelectedChatId(null) // Reset selected chat
+      
+      // Create new chat in backend
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/new`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: 'নতুন চ্যাট - ' + new Date().toLocaleDateString('bn-BD')
-        }),
+        }
       })
 
       if (response.ok) {
-        const newChat = await response.json()
-        setSelectedChatId(newChat.id)
-        setMessages([{
-          id: 'welcome-' + Date.now(),
-          type: 'bot',
-          content: 'নতুন চ্যাট শুরু হয়েছে। আপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন! 🩺',
-          timestamp: new Date()
-        }])
+        const newChatId = await response.text() // Backend returns just the ID as text
+        setSelectedChatId(parseInt(newChatId))
         await loadChatHistory()
-        return newChat.id
+        return parseInt(newChatId)
       }
     } catch (error) {
       console.error('Error creating new chat:', error)
+      // Even if backend fails, allow local new chat
+      setSelectedChatId(null)
     }
     return null
   }
@@ -140,94 +147,65 @@ export default function ChatPage() {
     try {
       const token = getToken()
       
-      // First try the enhanced medical AI
-      const medicalAIResponse = await fetch('/api/medical-analysis', {
+      // Save user message to backend first if we have a chatId
+      if (chatId) {
+        try {
+          const userMessageData = {
+            role: 'USER',
+            message: message
+          }
+          
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userMessageData),
+          })
+        } catch (error) {
+          console.log('Failed to save user message to backend:', error)
+        }
+      }
+      
+      // Get AI response from medical chat API
+      const medicalChatResponse = await fetch('/api/medical-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: message,
+          message: message,
           chatHistory: messages.slice(-10) // Send last 10 messages for context
         })
       })
 
-      if (medicalAIResponse.ok) {
-        const aiResult = await medicalAIResponse.json()
-        if (aiResult.success && aiResult.analysis) {
-          // Format the structured analysis as readable text
-          const analysis = aiResult.analysis
-          let formattedResponse = `🩺 **মেডিকেল বিশ্লেষণ:**\n\n`
+      if (medicalChatResponse.ok) {
+        const aiResult = await medicalChatResponse.json()
+        if (aiResult.success && aiResult.response) {
           
-          // Patient Info
-          if (analysis.রোগীর_তথ্য) {
-            formattedResponse += `👤 **রোগীর তথ্য:**\n${analysis.রোগীর_তথ্য.শিরোনাম || 'তথ্য পাওয়া যায়নি'}\n\n`
-          }
-          
-          // Diagnosis
-          if (analysis.রোগ_নির্ণয়?.প্রধান_রোগ?.length > 0) {
-            formattedResponse += `🔍 **রোগ নির্ণয়:**\n`
-            analysis.রোগ_নির্ণয়.প্রধান_রোগ.forEach((disease, index) => {
-              formattedResponse += `${index + 1}. ${disease.রোগের_নাম} (${disease.বাংলা_নাম})\n   ${disease.ব্যাখ্যা}\n\n`
-            })
-          }
-          
-          // Medications
-          if (analysis.ওষুধের_তালিকা?.length > 0) {
-            formattedResponse += `💊 **ওষুধের তালিকা:**\n`
-            analysis.ওষুধের_তালিকা.forEach((medicine, index) => {
-              formattedResponse += `${index + 1}. **${medicine.ওষুধের_নাম}**\n`
-              formattedResponse += `   📋 সেবনবিধি: ${medicine.সেবনবিধি} (${medicine.সময়})\n`
-              formattedResponse += `   🎯 কাজ: ${medicine.কাজ}\n`
-              if (medicine.সতর্কতা) {
-                formattedResponse += `   ⚠️ সতর্কতা: ${medicine.সতর্কতা}\n`
+          // Save bot response to backend if we have a chatId
+          if (chatId) {
+            try {
+              const botMessageData = {
+                role: 'ASSISTANT',
+                message: aiResult.response
               }
-              formattedResponse += `\n`
-            })
-          }
-          
-          // Medical Advice
-          if (analysis.চিকিৎসা_পরামর্শ) {
-            formattedResponse += `📋 **চিকিৎসা পরামর্শ:**\n`
-            if (analysis.চিকিৎসা_পরামর্শ.সতর্কতা?.length > 0) {
-              formattedResponse += `⚠️ **সতর্কতা:**\n`
-              analysis.চিকিৎসা_পরামর্শ.সতর্কতা.forEach(warning => {
-                formattedResponse += `• ${warning}\n`
+              
+              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(botMessageData),
               })
+            } catch (error) {
+              console.log('Failed to save bot response to backend:', error)
             }
-            formattedResponse += `\n`
           }
           
-          // Emergency Info
-          if (analysis.জরুরি_তথ্য?.length > 0) {
-            formattedResponse += `🚨 **জরুরি তথ্য:**\n`
-            analysis.জরুরি_তথ্য.forEach(info => {
-              formattedResponse += `• ${info.তথ্য}\n  করণীয়: ${info.করণীয়}\n\n`
-            })
-          }
-          
-          formattedResponse += `\n💡 **দ্রষ্টব্য:** এই বিশ্লেষণ তথ্যমূলক উদ্দেশ্যে। চিকিৎসার জন্য অভিজ্ঞ ডাক্তারের পরামর্শ নিন।`
-          
-          // Save to backend chat history
-          try {
-            const messageData = {
-              content: message,
-              role: 'USER'
-            }
-            
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(messageData),
-            })
-          } catch (backendError) {
-            console.log('Backend chat save failed, continuing with AI response')
-          }
-          
-          return formattedResponse
+          return aiResult.response
         }
       }
       
@@ -276,8 +254,14 @@ export default function ChatPage() {
       
       setMessages(prev => [...prev, botResponse])
       
-      // Refresh chat history to show updated conversation
-      await loadChatHistory()
+      // Refresh chat history to show updated conversation (only if backend was successful)
+      if (currentChatId) {
+        try {
+          await loadChatHistory()
+        } catch (error) {
+          console.log('Failed to refresh chat history, continuing...')
+        }
+      }
       
     } catch (error) {
       console.error('Error handling message:', error)
@@ -286,7 +270,7 @@ export default function ChatPage() {
       const fallbackResponse = {
         id: 'bot-' + Date.now(),
         type: 'bot',
-        content: 'দুঃখিত, আমি এখন সংযোগে সমস্যা হচ্ছে। পরে আবার চেষ্টা করুন। জরুরি অবস্থায় দ্রুত ডাক্তারের পরামর্শ নিন।',
+        content: 'দুঃখিত, আমি এখন সংযোগে সমস্যা হচ্ছে। তবে আমি স্থানীয়ভাবে আপনার সাহায্য করতে পারি। আপনার প্রশ্ন আবার করুন। 🤖',
         timestamp: new Date()
       }
       
@@ -298,6 +282,47 @@ export default function ChatPage() {
 
   const getEnhancedLocalResponse = (message) => {
     const lowerMessage = message.toLowerCase()
+    
+    // Simple greetings
+    const greetings = ['hello', 'hi', 'সালাম', 'আসসালামু আলাইকুম', 'হ্যালো', 'হাই', 'নমস্কার']
+    if (greetings.some(greeting => lowerMessage.includes(greeting))) {
+      return `আসসালামু আলাইকুম! 🙏
+
+আমি MediLens এর AI সহায়ক। আমি আপনাকে স্বাস্থ্য বিষয়ক যেকোনো প্রশ্নের উত্তর দিতে পারি!
+
+🩺 **আমি সাহায্য করতে পারি:**
+• রোগের লক্ষণ ও চিকিৎসা
+• ওষুধের তথ্য ও ব্যবহার
+• স্বাস্থ্য পরামর্শ ও টিপস
+• প্রেসক্রিপশন বুঝতে সাহায্য
+
+আপনার কোন প্রশ্ন আছে? 💬`
+    }
+    
+    // Simple questions
+    if (lowerMessage.includes('how are you') || lowerMessage.includes('কেমন আছেন') || lowerMessage.includes('কেমন আছো')) {
+      return `আমি ভালো আছি, ধন্যবাদ! 😊
+
+আমি আপনার স্বাস্থ্য সেবায় সর্বদা প্রস্তুত। আপনার কোন শারীরিক সমস্যা বা স্বাস্থ্য বিষয়ক প্রশ্ন আছে?
+
+**🔥 জনপ্রিয় প্রশ্ন:**
+• "জ্বর হলে কি করব?"
+• "রক্তচাপ নিয়ন্ত্রণ করব কিভাবে?"
+• "মাথাব্যথার কারণ কি?"
+
+আপনার প্রশ্ন করুন! 💭`
+    }
+    
+    // Thank you responses
+    if (lowerMessage.includes('thank') || lowerMessage.includes('ধন্যবাদ') || lowerMessage.includes('শুকরিয়া')) {
+      return `আপনাকেও ধন্যবাদ! 🙏
+
+আমি সবসময় আপনার সেবায় আছি। আরো কোন স্বাস্থ্য বিষয়ক প্রশ্ন থাকলে জানাবেন।
+
+🌟 **মনে রাখবেন:** গুরুতর সমস্যায় অবশ্যই ডাক্তারের পরামর্শ নিন।
+
+আপনার সুস্বাস্থ্য কামনা করি! 💚`
+    }
     
     // Emergency detection
     const emergencyKeywords = [
@@ -539,6 +564,7 @@ export default function ChatPage() {
   }
 
   const quickQuestions = [
+    'আসসালামু আলাইকুম',
     'জ্বর হলে কি করব?',
     'রক্তচাপ বেশি হলে কি খাব?',
     'ডায়াবেটিস কন্ট্রোল করার উপায়?',
@@ -549,7 +575,10 @@ export default function ChatPage() {
     'এসিডিটির সমাধান',
     'প্রেসক্রিপশন বুঝতে সাহায্য',
     'ওষুধের পার্শ্বপ্রতিক্রিয়া',
-    'রক্ত পরীক্ষার রিপোর্ট',
+    'স্বাস্থ্যকর খাবার কি কি?',
+    'ব্যায়ামের উপকারিতা',
+    'ঘুমের সমস্যার সমাধান',
+    'ত্বকের যত্ন কিভাবে নিব?',
     'জরুরি অবস্থায় কি করব?'
   ]
 
@@ -577,10 +606,10 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-base-100">
-      <div className="container mx-auto max-w-6xl h-screen flex">
-        {/* Sidebar - Chat History */}
-        <div className="w-1/4 bg-base-200 border-r">
-          <BackButton />
+      <Navigation />
+      <div className="flex h-screen pt-16">
+        {/* Sidebar - Chat History - Hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block w-1/4 bg-base-200 border-r">
           <div className="p-4 border-b">
             <button 
               onClick={createNewChat}
@@ -613,7 +642,7 @@ export default function ChatPage() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto">
           {/* Header */}
           <motion.div 
             className="bg-primary text-primary-content p-4"
@@ -622,11 +651,20 @@ export default function ChatPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-between">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold">🤖 MediLens AI Assistant</h1>
-                <p className="text-primary-content/80">আপনার স্বাস্থ্য বিষয়ক সহায়ক</p>
+              <div className="text-center flex-1">
+                <h1 className="text-xl lg:text-2xl font-bold">🤖 MediLens AI Assistant</h1>
+                <p className="text-primary-content/80 text-sm lg:text-base">আপনার স্বাস্থ্য বিষয়ক সহায়ক</p>
               </div>
-              <div></div>
+              {/* Mobile: New Chat Button */}
+              <div className="lg:hidden">
+                <button 
+                  onClick={createNewChat}
+                  className="btn btn-sm btn-ghost"
+                  disabled={isTyping}
+                >
+                  ➕
+                </button>
+              </div>
             </div>
           </motion.div>
 
@@ -689,13 +727,13 @@ export default function ChatPage() {
           </div>
 
           {/* Quick Questions */}
-          <div className="p-4 bg-base-200 border-t">
-            <p className="text-sm text-base-content/70 mb-2">দ্রুত প্রশ্ন:</p>
-            <div className="flex flex-wrap gap-2">
-              {quickQuestions.map((question, index) => (
+          <div className="p-3 lg:p-4 bg-base-200 border-t">
+            <p className="text-xs lg:text-sm text-base-content/70 mb-2">দ্রুত প্রশ্ন:</p>
+            <div className="flex flex-wrap gap-1 lg:gap-2">
+              {quickQuestions.slice(0, 8).map((question, index) => (
                 <button
                   key={index}
-                  className="btn btn-xs btn-outline"
+                  className="btn btn-xs lg:btn-sm btn-outline text-xs"
                   onClick={() => setInputMessage(question)}
                   disabled={isTyping}
                 >
@@ -706,14 +744,14 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSendMessage} className="p-4 bg-base-200">
+          <form onSubmit={handleSendMessage} className="p-3 lg:p-4 bg-base-200">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন... (বাংলা বা ইংরেজিতে)"
-                className="input input-bordered flex-1"
+                placeholder="আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন..."
+                className="input input-bordered flex-1 text-sm lg:text-base"
                 disabled={isTyping}
               />
               <button
@@ -721,7 +759,12 @@ export default function ChatPage() {
                 className={`btn btn-primary ${isTyping ? 'loading' : ''}`}
                 disabled={!inputMessage.trim() || isTyping}
               >
-                {isTyping ? 'পাঠাচ্ছি...' : '📤 Send'}
+                <span className="hidden lg:inline">
+                  {isTyping ? 'পাঠাচ্ছি...' : '📤 Send'}
+                </span>
+                <span className="lg:hidden">
+                  {isTyping ? '...' : '📤'}
+                </span>
               </button>
             </div>
           </form>

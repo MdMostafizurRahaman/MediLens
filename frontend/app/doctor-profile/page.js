@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import Navigation from '@/components/Navigation'
 
 export default function DoctorProfile() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
@@ -184,26 +185,9 @@ export default function DoctorProfile() {
 
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Header */}
-      <div className="navbar bg-secondary text-secondary-content">
-        <div className="navbar-start">
-          <h1 className="text-xl font-bold">👨‍⚕️ Doctor Profile</h1>
-        </div>
-        <div className="navbar-end">
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost">
-              Dr. {currentUser?.firstName} {currentUser?.lastName}
-            </div>
-            <ul tabIndex={0} className="dropdown-content menu bg-base-100 text-base-content rounded-box z-[1] w-52 p-2 shadow">
-              <li><button onClick={() => router.push('/doctors')}>View All Doctors</button></li>
-              <li><button onClick={() => router.push('/chat')}>Patient Chat</button></li>
-              <li><button onClick={logout}>Logout</button></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto p-4 max-w-4xl">
+      <Navigation />
+      
+      <div className="container mx-auto p-4 max-w-4xl pt-20">
         {loading ? (
           <div className="text-center py-12">
             <span className="loading loading-spinner loading-lg"></span>
@@ -245,11 +229,16 @@ export default function DoctorProfile() {
             )}
 
             {/* Profile Form */}
-            <div className="card bg-base-200 shadow-lg">
+            <div className="card bg-gradient-to-br from-white to-blue-50 shadow-xl border border-blue-100">
               <div className="card-body">
-                <h2 className="card-title mb-6">
-                  {doctorData ? '✏️ Edit Profile' : '📝 Complete Your Profile'}
-                </h2>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-primary mb-2">
+                    {doctorData ? '✏️ Edit Your Profile' : '📝 Complete Your Profile'}
+                  </h2>
+                  <p className="text-base-content/70">
+                    Provide comprehensive information to help patients find and trust you
+                  </p>
+                </div>
 
                 {error && (
                   <div className="alert alert-error mb-4">
@@ -263,120 +252,138 @@ export default function DoctorProfile() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-8">
                   {/* Specializations */}
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">🏥 Specializations</span>
+                      <span className="label-text font-bold text-lg flex items-center gap-2">
+                        🏥 <span>Specializations</span>
+                      </span>
+                      <span className="label-text-alt text-xs">e.g., Cardiology, Neurology</span>
                     </label>
-                    {formData.specialization.map((spec, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          placeholder="e.g., Cardiology, Neurology"
-                          className="input input-bordered flex-1"
-                          value={spec}
-                          onChange={(e) => handleArrayInputChange('specialization', index, e.target.value)}
-                          required={index === 0}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-error btn-sm"
-                          onClick={() => removeArrayField('specialization', index)}
-                          disabled={formData.specialization.length === 1}
-                        >
-                          ❌
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm mt-2"
-                      onClick={() => addArrayField('specialization')}
-                    >
-                      ➕ Add Specialization
-                    </button>
+                    <div className="space-y-3">
+                      {formData.specialization.map((spec, index) => (
+                        <div key={index} className="flex gap-3">
+                          <input
+                            type="text"
+                            placeholder="Enter medical specialization"
+                            className="input input-bordered flex-1 focus:input-primary"
+                            value={spec}
+                            onChange={(e) => handleArrayInputChange('specialization', index, e.target.value)}
+                            required={index === 0}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-error btn-circle btn-sm"
+                            onClick={() => removeArrayField('specialization', index)}
+                            disabled={formData.specialization.length === 1}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-primary btn-sm"
+                        onClick={() => addArrayField('specialization')}
+                      >
+                        ➕ Add Another Specialization
+                      </button>
+                    </div>
                   </div>
 
                   {/* Degrees */}
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">🎓 Medical Degrees</span>
+                      <span className="label-text font-bold text-lg flex items-center gap-2">
+                        🎓 <span>Medical Degrees</span>
+                      </span>
+                      <span className="label-text-alt text-xs">e.g., MBBS, MD, MS</span>
                     </label>
-                    {formData.degree.map((degree, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          placeholder="e.g., MBBS, MD, MS"
-                          className="input input-bordered flex-1"
-                          value={degree}
-                          onChange={(e) => handleArrayInputChange('degree', index, e.target.value)}
-                          required={index === 0}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-error btn-sm"
-                          onClick={() => removeArrayField('degree', index)}
-                          disabled={formData.degree.length === 1}
-                        >
-                          ❌
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm mt-2"
-                      onClick={() => addArrayField('degree')}
-                    >
-                      ➕ Add Degree
-                    </button>
+                    <div className="space-y-3">
+                      {formData.degree.map((degree, index) => (
+                        <div key={index} className="flex gap-3">
+                          <input
+                            type="text"
+                            placeholder="Enter medical degree"
+                            className="input input-bordered flex-1 focus:input-primary"
+                            value={degree}
+                            onChange={(e) => handleArrayInputChange('degree', index, e.target.value)}
+                            required={index === 0}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-error btn-circle btn-sm"
+                            onClick={() => removeArrayField('degree', index)}
+                            disabled={formData.degree.length === 1}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-primary btn-sm"
+                        onClick={() => addArrayField('degree')}
+                      >
+                        ➕ Add Another Degree
+                      </button>
+                    </div>
                   </div>
 
                   {/* Phone Numbers */}
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">📞 Phone Numbers</span>
+                      <span className="label-text font-bold text-lg flex items-center gap-2">
+                        📞 <span>Phone Numbers</span>
+                      </span>
+                      <span className="label-text-alt text-xs">e.g., +880 1234567890</span>
                     </label>
-                    {formData.phoneNumber.map((phone, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input
-                          type="tel"
-                          placeholder="e.g., +880 1234567890"
-                          className="input input-bordered flex-1"
-                          value={phone}
-                          onChange={(e) => handleArrayInputChange('phoneNumber', index, e.target.value)}
-                          required={index === 0}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-error btn-sm"
-                          onClick={() => removeArrayField('phoneNumber', index)}
-                          disabled={formData.phoneNumber.length === 1}
-                        >
-                          ❌
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm mt-2"
-                      onClick={() => addArrayField('phoneNumber')}
-                    >
-                      ➕ Add Phone Number
-                    </button>
+                    <div className="space-y-3">
+                      {formData.phoneNumber.map((phone, index) => (
+                        <div key={index} className="flex gap-3">
+                          <input
+                            type="tel"
+                            placeholder="Enter phone number with country code"
+                            className="input input-bordered flex-1 focus:input-primary"
+                            value={phone}
+                            onChange={(e) => handleArrayInputChange('phoneNumber', index, e.target.value)}
+                            required={index === 0}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-error btn-circle btn-sm"
+                            onClick={() => removeArrayField('phoneNumber', index)}
+                            disabled={formData.phoneNumber.length === 1}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-primary btn-sm"
+                        onClick={() => addArrayField('phoneNumber')}
+                      >
+                        ➕ Add Another Phone Number
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Other Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Professional Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-semibold">🏢 Designation</span>
+                        <span className="label-text font-bold text-lg flex items-center gap-2">
+                          🏢 <span>Designation</span>
+                        </span>
+                        <span className="label-text-alt text-xs">e.g., Consultant, Assistant Professor</span>
                       </label>
                       <input
                         type="text"
                         name="designation"
-                        placeholder="e.g., Consultant, Assistant Professor"
-                        className="input input-bordered"
+                        placeholder="Enter your professional designation"
+                        className="input input-bordered focus:input-primary"
                         value={formData.designation}
                         onChange={handleInputChange}
                       />
@@ -384,13 +391,16 @@ export default function DoctorProfile() {
 
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-semibold">🏥 Institute/Hospital</span>
+                        <span className="label-text font-bold text-lg flex items-center gap-2">
+                          🏥 <span>Institute/Hospital</span>
+                        </span>
+                        <span className="label-text-alt text-xs">e.g., Dhaka Medical College</span>
                       </label>
                       <input
                         type="text"
                         name="institute"
-                        placeholder="e.g., Dhaka Medical College"
-                        className="input input-bordered"
+                        placeholder="Enter your workplace"
+                        className="input input-bordered focus:input-primary"
                         value={formData.institute}
                         onChange={handleInputChange}
                       />
@@ -398,13 +408,16 @@ export default function DoctorProfile() {
 
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-semibold">📍 Current City</span>
+                        <span className="label-text font-bold text-lg flex items-center gap-2">
+                          📍 <span>Current City</span>
+                        </span>
+                        <span className="label-text-alt text-xs">e.g., Dhaka, Chittagong</span>
                       </label>
                       <input
                         type="text"
                         name="currentCity"
-                        placeholder="e.g., Dhaka, Chittagong"
-                        className="input input-bordered"
+                        placeholder="Enter your city"
+                        className="input input-bordered focus:input-primary"
                         value={formData.currentCity}
                         onChange={handleInputChange}
                       />
@@ -412,13 +425,16 @@ export default function DoctorProfile() {
 
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-semibold">🕒 Available Time</span>
+                        <span className="label-text font-bold text-lg flex items-center gap-2">
+                          🕒 <span>Available Time</span>
+                        </span>
+                        <span className="label-text-alt text-xs">e.g., 9 AM - 5 PM, Sat-Thu</span>
                       </label>
                       <input
                         type="text"
                         name="availableTime"
-                        placeholder="e.g., 9 AM - 5 PM, Sat-Thu"
-                        className="input input-bordered"
+                        placeholder="Enter your schedule"
+                        className="input input-bordered focus:input-primary"
                         value={formData.availableTime}
                         onChange={handleInputChange}
                       />
@@ -427,13 +443,15 @@ export default function DoctorProfile() {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">🏥 Chamber Address</span>
+                      <span className="label-text font-bold text-lg flex items-center gap-2">
+                        🏥 <span>Chamber Address</span>
+                      </span>
+                      <span className="label-text-alt text-xs">Full chamber/clinic address with landmarks</span>
                     </label>
                     <textarea
                       name="chamberAddress"
-                      placeholder="Full chamber/clinic address..."
-                      className="textarea textarea-bordered"
-                      rows="3"
+                      placeholder="Enter complete address with landmarks for easy navigation"
+                      className="textarea textarea-bordered focus:textarea-primary h-24"
                       value={formData.chamberAddress}
                       onChange={handleInputChange}
                     ></textarea>
@@ -441,25 +459,41 @@ export default function DoctorProfile() {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">📸 Photo URL (Optional)</span>
+                      <span className="label-text font-bold text-lg flex items-center gap-2">
+                        📸 <span>Photo URL (Optional)</span>
+                      </span>
+                      <span className="label-text-alt text-xs">Professional photo URL</span>
                     </label>
                     <input
                       type="url"
                       name="photoUrl"
-                      placeholder="https://example.com/your-photo.jpg"
-                      className="input input-bordered"
+                      placeholder="https://example.com/your-professional-photo.jpg"
+                      className="input input-bordered focus:input-primary"
                       value={formData.photoUrl}
                       onChange={handleInputChange}
                     />
                   </div>
 
-                  <div className="card-actions justify-end mt-8">
+                  <div className="card-actions justify-center mt-12">
                     <button 
                       type="submit" 
-                      className={`btn btn-primary ${submitting ? 'loading' : ''}`}
+                      className={`btn btn-primary btn-lg px-12 ${submitting ? 'loading' : ''}`}
                       disabled={submitting}
                     >
-                      {submitting ? 'Saving...' : doctorData ? '💾 Update Profile' : '🚀 Create Profile'}
+                      {submitting ? (
+                        <>
+                          <span className="loading loading-spinner"></span>
+                          Saving...
+                        </>
+                      ) : doctorData ? (
+                        <>
+                          💾 Update Profile
+                        </>
+                      ) : (
+                        <>
+                          🚀 Create Profile
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>

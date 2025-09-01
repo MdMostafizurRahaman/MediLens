@@ -89,28 +89,44 @@ export default function Features() {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-bold mb-4 text-primary">What Makes MediLens Unique?</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            <div className="stat bg-base-100 shadow-lg">
-              <div className="stat-figure text-primary text-2xl">🤖</div>
-              <div className="stat-title">AI + Language</div>
-              <div className="stat-desc">Personalized responses in Bangla</div>
-            </div>
-            <div className="stat bg-base-100 shadow-lg">
-              <div className="stat-figure text-primary text-2xl">📋</div>
-              <div className="stat-title">Prescription Understanding</div>
-              <div className="stat-desc">No need to decode handwriting</div>
-            </div>
-            <div className="stat bg-base-100 shadow-lg">
-              <div className="stat-figure text-primary text-2xl">❤️</div>
-              <div className="stat-title">Care Beyond Translation</div>
-              <div className="stat-desc">Advice, side effects, explanations</div>
-            </div>
-            <div className="stat bg-base-100 shadow-lg">
-              <div className="stat-figure text-primary text-2xl">🔒</div>
-              <div className="stat-title">Secure & Private</div>
-              <div className="stat-desc">All data stays with you</div>
-            </div>
+          <h3 className="text-2xl md:text-3xl font-bold mb-6 text-primary">What Makes MediLens Unique?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 max-w-5xl mx-auto">
+            <motion.div 
+              className="stat bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-200 p-6 rounded-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="stat-figure text-blue-600 text-4xl mb-3">🤖</div>
+              <div className="stat-title text-blue-800 font-bold text-lg mb-2">AI + Language</div>
+              <div className="stat-desc text-blue-700 text-base">Personalized responses in Bangla</div>
+            </motion.div>
+            <motion.div 
+              className="stat bg-gradient-to-br from-green-50 to-green-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-200 p-6 rounded-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="stat-figure text-green-600 text-4xl mb-3">📋</div>
+              <div className="stat-title text-green-800 font-bold text-lg mb-2">Prescription Understanding</div>
+              <div className="stat-desc text-green-700 text-base">No need to decode handwriting</div>
+            </motion.div>
+            <motion.div 
+              className="stat bg-gradient-to-br from-pink-50 to-pink-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-pink-200 p-6 rounded-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="stat-figure text-pink-600 text-4xl mb-3">❤️</div>
+              <div className="stat-title text-pink-800 font-bold text-lg mb-2">Care Beyond Translation</div>
+              <div className="stat-desc text-pink-700 text-base">Advice, side effects, explanations</div>
+            </motion.div>
+            <motion.div 
+              className="stat bg-gradient-to-br from-purple-50 to-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-200 p-6 rounded-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="stat-figure text-purple-600 text-4xl mb-3">🔒</div>
+              <div className="stat-title text-purple-800 font-bold text-lg mb-2">Secure & Private</div>
+              <div className="stat-desc text-purple-700 text-base">All data stays with you</div>
+            </motion.div>
           </div>
         </motion.div>
       </div>

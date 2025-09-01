@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import BackButton from "../../components/BackButton";
+import Navigation from '@/components/Navigation'
 
 export default function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -156,26 +156,24 @@ export default function DoctorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-100 p-4">
-      <div className="container mx-auto max-w-7xl">
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <BackButton />
-            <div></div>
-          </div>
-          <h1 className="text-4xl font-bold text-primary mb-4">👨‍⚕️ Doctor Directory</h1>
-          <p className="text-lg text-base-content/70">
-            Find verified doctors in Bangladesh
-          </p>
-          <div className="badge badge-success mt-2">
-            ✅ {doctors.length} Verified Doctors Available
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-base-100">
+      <Navigation />
+      <div className="p-4 pt-20">
+        <div className="container mx-auto max-w-7xl">
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl font-bold text-primary mb-4">👨‍⚕️ Doctor Directory</h1>
+            <p className="text-lg text-base-content/70">
+              Find verified doctors in Bangladesh
+            </p>
+            <div className="badge badge-success mt-2">
+              ✅ {doctors.length} Verified Doctors Available
+            </div>
+          </motion.div>
 
         {error && (
           <div className="alert alert-error mb-6">
@@ -448,9 +446,9 @@ export default function DoctorsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          <a href="/upload" className="card bg-primary text-primary-content shadow-lg hover:shadow-xl transition-shadow">
+          <a href="/google-lens-test" className="card bg-primary text-primary-content shadow-lg hover:shadow-xl transition-shadow">
             <div className="card-body text-center">
-              <h3 className="card-title justify-center">📋 Upload Prescription</h3>
+              <h3 className="card-title justify-center">� Gemini Vision AI</h3>
               <p>Get your prescription analyzed</p>
             </div>
           </a>
@@ -466,7 +464,8 @@ export default function DoctorsPage() {
               <p>Monitor your health parameters</p>
             </div>
           </a>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </div>
   )

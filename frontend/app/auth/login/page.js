@@ -29,7 +29,7 @@ export default function LoginPage() {
       } else if (userData.role === 'doctor') {
         router.push('/doctor-profile')
       } else {
-        router.push('/upload')
+        router.push('/google-lens-test')
       }
     } catch (error) {
       setError('Failed to log in: ' + error.message)

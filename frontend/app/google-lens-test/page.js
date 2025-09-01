@@ -1,21 +1,17 @@
 import AdvancedPrescriptionAnalyzer from '@/components/AdvancedPrescriptionAnalyzer'
-import BackButton from "../../components/BackButton";
+import Navigation from '@/components/Navigation'
 
 export default function GoogleLensTestPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
       <div className="container mx-auto py-8">
-        {/* Header */}
-        <div>
-          <BackButton />
-        </div>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-900 mb-4">
-            🔬 AI Prescription Analysis
+            🔬 Gemini Vision AI
           </h1>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-            Enhanced Medical AI দিয়ে উন্নত প্রেসক্রিপশন বিশ্লেষণ।
-            50,000+ মেডিকেল টার্মিনোলজি ডেটা সহ সম্পূর্ণ চিকিৎসা পরামর্শ।
+            সরাসরি ছবি বিশ্লেষণ + চিকিৎসা পরামর্শ
           </p>
         </div>
 
@@ -51,22 +47,6 @@ export default function GoogleLensTestPage() {
 
         {/* Main Component */}
         <AdvancedPrescriptionAnalyzer />
-
-
-        {/* Training Data Status */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="text-blue-600 text-xl mr-3">📊</div>
-            <div>
-              <h3 className="font-semibold text-blue-800 mb-2">Training Data Status</h3>
-              <p className="text-blue-700 text-sm">
-                ✅ 50,000+ মেডিকেল টার্মিনোলজি ডেটা আপলোড করা হয়েছে (1.93 MB)<br/>
-                ✅ Fine-tuning এর জন্য প্রস্তুত<br/>
-                ⚙️ Run <code>python Fine_tune.py</code> to create specialized medical model
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Disclaimer */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">

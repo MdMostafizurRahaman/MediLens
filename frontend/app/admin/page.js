@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import Navigation from '@/components/Navigation'
 
 export default function AdminDashboard() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
@@ -137,26 +138,23 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-base-100">
-      {/* Header */}
-      <div className="navbar bg-primary text-primary-content">
-        <div className="navbar-start">
-          <h1 className="text-xl font-bold">🛡️ Admin Dashboard</h1>
-        </div>
-        <div className="navbar-end">
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost">
-              👨‍💼 {currentUser?.firstName} {currentUser?.lastName}
-            </div>
-            <ul tabIndex={0} className="dropdown-content menu bg-base-100 text-base-content rounded-box z-[1] w-52 p-2 shadow">
-              <li><button onClick={() => router.push('/profile')}>Profile</button></li>
-              <li><button onClick={logout}>Logout</button></li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <Navigation />
+      <div className="pt-16">
+        <div className="container mx-auto p-4">
+          {/* Admin Dashboard Header */}
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl font-bold text-primary mb-4">🛡️ Admin Dashboard</h1>
+            <p className="text-lg text-base-content/70">
+              Manage users, doctors, and system settings
+            </p>
+          </motion.div>
 
-      <div className="container mx-auto p-4 max-w-7xl">
-        {/* Stats Cards */}
+          {/* Stats Cards */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -359,6 +357,7 @@ export default function AdminDashboard() {
             )}
           </motion.div>
         )}
+        </div>
       </div>
     </div>
   )

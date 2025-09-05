@@ -102,6 +102,90 @@ const GoogleLensPrescriptionAnalyzer = () => {
     URL.revokeObjectURL(url)
   }
 
+  const initiateChatWithPrescription = () => {
+    if (!analysis) return
+
+    // Prepare prescription summary for chat
+    const prescriptionSummary = generatePrescriptionSummary(analysis)
+    
+    // Store prescription data in sessionStorage for chat to access
+    sessionStorage.setItem('prescriptionAnalysis', JSON.stringify({
+      analysis: analysis,
+      summary: prescriptionSummary,
+      ocrText: ocrText,
+      timestamp: new Date().toISOString()
+    }))
+
+    // Navigate to chat page with prescription context
+    window.location.href = '/chat?source=prescription'
+  }
+
+  const generatePrescriptionSummary = (analysis) => {
+    let summary = "প্রেসক্রিপশন বিশ্লেষণ সারসংক্ষেপ:\n\n"
+
+    // Patient info
+    if (analysis.patientInformation) {
+      summary += "রোগীর তথ্য:\n"
+      Object.entries(analysis.patientInformation).forEach(([key, value]) => {
+        if (value) summary += `• ${key}: ${value}\n`
+      })
+      summary += "\n"
+    }
+
+    // Primary diagnosis
+    if (analysis.primaryDiagnosis) {
+      summary += "রোগ নির্ণয়:\n"
+      summary += `• রোগ: ${analysis.primaryDiagnosis.condition || 'উল্লেখ নেই'}\n`
+      if (analysis.primaryDiagnosis.bangla) {
+        summary += `• বাংলায়: ${analysis.primaryDiagnosis.bangla}\n`
+      }
+      if (analysis.primaryDiagnosis.description) {
+        summary += `• বিবরণ: ${analysis.primaryDiagnosis.description}\n`
+      }
+      summary += "\n"
+    }
+
+    // Medications
+    if (analysis.medications && analysis.medications.length > 0) {
+      summary += "ওষুধের তালিকা:\n"
+      analysis.medications.forEach((med, index) => {
+        summary += `${index + 1}. ${med.prescribedName || med.genericName || 'নাম উল্লেখ নেই'}\n`
+        if (med.strength) summary += `   শক্তি: ${med.strength}\n`
+        if (med.frequency) summary += `   সেবনবিধি: ${med.frequency}\n`
+        if (med.duration) summary += `   মেয়াদ: ${med.duration}\n`
+        if (med.purpose) summary += `   উদ্দেশ্য: ${med.purpose}\n`
+        summary += "\n"
+      })
+    }
+
+    // Investigations
+    if (analysis.investigations && analysis.investigations.length > 0) {
+      summary += "পরীক্ষা-নিরীক্ষা:\n"
+      analysis.investigations.forEach((test, index) => {
+        summary += `${index + 1}. ${test.test || 'পরীক্ষার নাম উল্লেখ নেই'}\n`
+        if (test.bangla) summary += `   বাংলায়: ${test.bangla}\n`
+        if (test.purpose) summary += `   উদ্দেশ্য: ${test.purpose}\n`
+      })
+      summary += "\n"
+    }
+
+    // Medical advice
+    if (analysis.medicalAdvice && analysis.medicalAdvice.banglaReport) {
+      summary += "চিকিৎসা পরামর্শ:\n"
+      summary += analysis.medicalAdvice.banglaReport + "\n\n"
+    }
+
+    // Safety warnings
+    if (analysis.safetyWarnings && analysis.safetyWarnings.length > 0) {
+      summary += "গুরুত্বপূর্ণ সতর্কতা:\n"
+      analysis.safetyWarnings.forEach((warning, index) => {
+        summary += `${index + 1}. ${warning}\n`
+      })
+    }
+
+    return summary
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       {/* Header */}
@@ -216,19 +300,27 @@ const GoogleLensPrescriptionAnalyzer = () => {
       {/* Analysis Results */}
       {analysis && (
         <div className="space-y-6">
-          {/* Header with download */}
+          {/* Header with download and chat */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-green-800 flex items-center">
               <CheckCircle className="w-6 h-6 mr-2" />
               বিশ্লেষণ সম্পন্ন
             </h2>
-            <button
-              onClick={downloadReport}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              রিপোর্ট ডাউনলোড
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={initiateChatWithPrescription}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                💬 চ্যাট শুরু করুন
+              </button>
+              <button
+                onClick={downloadReport}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                রিপোর্ট ডাউনলোড
+              </button>
+            </div>
           </div>
 
           {/* OCR Quality */}

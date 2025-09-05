@@ -1,10 +1,88 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import dynamic from 'next/dynamic'
+
+// Lazy load Navigation component
+const Navigation = dynamic(() => import('@/components/Navigation'), {
+  loading: () => <div className="h-16 bg-primary animate-pulse"></div>
+})
+
+// Memoized message component for performance
+const MessageItem = memo(({ message, isTyping = false }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+  >
+    <div
+      className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-3 rounded-2xl ${
+        message.type === 'user'
+          ? 'bg-primary text-primary-content ml-auto'
+          : 'bg-base-200 text-base-content'
+      }`}
+    >
+      {message.type === 'bot' && (
+        <div className="flex items-center mb-2">
+          <span className="text-lg mr-2">🤖</span>
+          <span className="text-sm font-medium">MediLens AI</span>
+          {message.timestamp && (
+            <span className="text-xs opacity-60 ml-auto">
+              {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          )}
+        </div>
+      )}
+      
+      {message.type === 'user' && message.timestamp && (
+        <div className="text-xs opacity-80 mb-1 text-right">
+          {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </div>
+      )}
+      
+      <div className="whitespace-pre-wrap break-words">
+        {isTyping ? (
+          <div className="flex items-center">
+            <span>টাইপ করছি</span>
+            <div className="ml-2 flex space-x-1">
+              <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
+        ) : (
+          message.content
+        )}
+      </div>
+    </div>
+  </motion.div>
+))
+
+// Memoized chat item for performance
+const ChatItem = memo(({ chat, isSelected, onSelect }) => (
+  <div
+    className={`p-3 border-b cursor-pointer hover:bg-base-300 transition-colors ${
+      isSelected ? 'bg-base-300' : ''
+    }`}
+    onClick={onSelect}
+  >
+    <h4 className="text-sm font-medium truncate">
+      {chat.title || `চ্যাট ${chat.id}`}
+    </h4>
+    <p className="text-xs text-base-content/60">
+      {new Date(chat.createdAt).toLocaleDateString('bn-BD')}
+    </p>
+  </div>
+))
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([])
@@ -13,20 +91,50 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [chatHistory, setChatHistory] = useState([])
   const [selectedChatId, setSelectedChatId] = useState(null)
+  const [prescriptionData, setPrescriptionData] = useState(null)
+  const [chatContext, setChatContext] = useState('')
+  const [isSending, setIsSending] = useState(false) // New flag to prevent duplicate sends
+  const [lastMessageId, setLastMessageId] = useState(null) // Track last message to prevent duplicates
   const messagesEndRef = useRef(null)
   const { currentUser, getToken } = useAuth()
   const router = useRouter()
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  }, [])
+
+  const debouncedScrollToBottom = useMemo(() => {
+    let timeoutId
+    return () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(scrollToBottom, 100)
+    }
+  }, [scrollToBottom])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    debouncedScrollToBottom()
+  }, [messages, debouncedScrollToBottom])
 
   useEffect(() => {
     if (currentUser) {
+      // Check for prescription data from Google Lens
+      const urlParams = new URLSearchParams(window.location.search)
+      const source = urlParams.get('source')
+      
+      if (source === 'prescription') {
+        const storedPrescriptionData = sessionStorage.getItem('prescriptionAnalysis')
+        if (storedPrescriptionData) {
+          try {
+            const prescriptionAnalysis = JSON.parse(storedPrescriptionData)
+            setPrescriptionData(prescriptionAnalysis)
+            setChatContext('prescription')
+            sessionStorage.removeItem('prescriptionAnalysis') // Clear after use
+          } catch (error) {
+            console.error('Error parsing prescription data:', error)
+          }
+        }
+      }
+      
       initializeChat()
     }
   }, [currentUser])
@@ -38,10 +146,37 @@ export default function ChatPage() {
       
       // Start with welcome message if no chat history
       if (messages.length === 0) {
+        let welcomeMessage = 'আসসালামু আলাইকুম! 🙏\n\nআমি MediLens এর AI সহায়ক। আপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন - আমি বাংলায় সাহায্য করতে পারি! 🩺💚'
+        
+        // If coming from prescription analysis, customize welcome message
+        if (prescriptionData) {
+          welcomeMessage = `🔬 প্রেসক্রিপশন বিশ্লেষণ থেকে আপনাকে স্বাগতম!\n\nআমি আপনার প্রেসক্রিপশন বিশ্লেষণ করেছি এবং এখন আপনার যেকোনো প্রশ্নের উত্তর দিতে প্রস্তুত। আপনি নিম্নলিখিত বিষয়ে প্রশ্ন করতে পারেন:\n\n• ওষুধের পার্শ্বপ্রতিক্রিয়া\n• সেবনবিধি সম্পর্কে\n• খাদ্যাভ্যাস ও সতর্কতা\n• বিকল্প চিকিৎসা\n• পরীক্ষা-নিরীক্ষা সম্পর্কে\n\nকী জানতে চান? 💬`
+          
+          // Also add prescription summary as a system message
+          if (prescriptionData.summary) {
+            setMessages([
+              {
+                id: 'welcome-' + Date.now(),
+                type: 'bot',
+                content: welcomeMessage,
+                timestamp: new Date()
+              },
+              {
+                id: 'prescription-' + Date.now(),
+                type: 'system',
+                content: prescriptionData.summary,
+                timestamp: new Date(),
+                isHidden: true // This will be used for context but not displayed
+              }
+            ])
+            return
+          }
+        }
+        
         setMessages([{
           id: 'welcome-' + Date.now(),
           type: 'bot',
-          content: 'আসসালামু আলাইকুম! 🙏\n\nআমি MediLens এর AI সহায়ক। আপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন - আমি বাংলায় সাহায্য করতে পারি! 🩺�',
+          content: welcomeMessage,
           timestamp: new Date()
         }])
       }
@@ -66,8 +201,8 @@ export default function ChatPage() {
         const chats = await response.json()
         setChatHistory(chats)
         
-        // If there are existing chats, load the most recent one
-        if (chats.length > 0) {
+        // If there are existing chats, load the most recent one (only if not coming from prescription)
+        if (chats.length > 0 && !prescriptionData) {
           const latestChat = chats[0]
           setSelectedChatId(latestChat.id)
           await loadChatMessages(latestChat.id)
@@ -93,8 +228,8 @@ export default function ChatPage() {
         const formattedMessages = chatData.messages?.map(msg => ({
           id: msg.id,
           type: msg.role === 'USER' ? 'user' : 'bot',
-          content: msg.message, // Changed from msg.content to msg.message
-          timestamp: new Date(msg.createdAt) // Changed from msg.timestamp
+          content: msg.message,
+          timestamp: new Date(msg.createdAt)
         })) || []
         
         // Sort messages by timestamp (oldest first)
@@ -107,40 +242,171 @@ export default function ChatPage() {
     }
   }
 
-  const createNewChat = async () => {
+  const generateChatTitle = async (messages) => {
+    if (!messages || messages.length === 0) return 'নতুন চ্যাট'
+    
+    // Get first few user messages to understand the conversation topic
+    const userMessages = messages.filter(msg => msg.sender === 'user').slice(0, 3)
+    const conversationContext = userMessages.map(msg => msg.content).join(' ')
+    
+    try {
+      // Use AI to generate a meaningful title based on conversation content
+      const response = await fetch('/api/generate-chat-title', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation: conversationContext,
+          prescriptionContext: prescriptionData ? 'prescription_analysis' : 'general_health',
+          chatContext: chatContext
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.title || generateFallbackTitle(conversationContext)
+      }
+    } catch (error) {
+      console.error('Error generating AI title:', error)
+    }
+
+    // Fallback to intelligent local title generation
+    return generateFallbackTitle(conversationContext)
+  }
+
+  const generateFallbackTitle = (conversationText) => {
+    if (!conversationText) return 'নতুন চ্যাট'
+    
+    const text = conversationText.toLowerCase()
+    
+    // Medical conditions with emojis
+    const conditionMatches = [
+      { keywords: ['জ্বর', 'fever', 'তাপমাত্রা'], title: '🌡️ জ্বর ও তাপমাত্রা' },
+      { keywords: ['মাথাব্যথা', 'headache', 'মাথা ব্যথা'], title: '🧠 মাথাব্যথার সমস্যা' },
+      { keywords: ['ডায়াবেটিস', 'diabetes', 'চিনি', 'সুগার'], title: '🍎 ডায়াবেটিস নিয়ন্ত্রণ' },
+      { keywords: ['রক্তচাপ', 'pressure', 'হাইপ্রেশার'], title: '🩺 রক্তচাপ ব্যবস্থাপনা' },
+      { keywords: ['কাশি', 'cough', 'খুসখুসানি'], title: '😷 কাশি ও শ্বাসকষ্ট' },
+      { keywords: ['পেট', 'stomach', 'গ্যাস', 'হজম'], title: '🍽️ পেট ও হজমের সমস্যা' },
+      { keywords: ['হৃদরোগ', 'heart', 'বুকে ব্যথা'], title: '❤️ হৃদরোগ পরামর্শ' },
+      { keywords: ['অ্যালার্জি', 'allergy', 'চুলকানি'], title: '🤧 অ্যালার্জি সমস্যা' },
+      { keywords: ['ত্বক', 'skin', 'চর্মরোগ'], title: '🧴 ত্বকের সমস্যা' },
+      { keywords: ['চোখ', 'eye', 'দৃষ্টি'], title: '👁️ চোখের পরামর্শ' },
+      { keywords: ['দাঁত', 'teeth', 'মাড়ি'], title: '🦷 দাঁত ও মুখের স্বাস্থ্য' },
+      { keywords: ['প্রেসক্রিপশন', 'ওষুধ', 'medicine'], title: '💊 ওষুধ ও প্রেসক্রিপশন' },
+      { keywords: ['গর্ভাবস্থা', 'pregnancy', 'মা'], title: '🤱 গর্ভাবস্থা পরামর্শ' },
+      { keywords: ['শিশু', 'baby', 'বাচ্চা'], title: '� শিশু স্বাস্থ্য' }
+    ]
+
+    // Check for condition matches
+    for (const condition of conditionMatches) {
+      if (condition.keywords.some(keyword => text.includes(keyword))) {
+        return condition.title
+      }
+    }
+
+    // If it's a prescription context
+    if (chatContext === 'prescription' || prescriptionData) {
+      return '� প্রেসক্রিপশন বিশ্লেষণ'
+    }
+    
+    // Extract meaningful words and create title
+    const meaningfulWords = conversationText
+      .replace(/[^\u0980-\u09FF\w\s]/g, '') // Keep Bengali and English characters
+      .split(' ')
+      .filter(word => word.length > 2)
+      .slice(0, 3)
+      .join(' ')
+    
+    if (meaningfulWords.length > 0) {
+      return meaningfulWords.length > 25 ? 
+        meaningfulWords.substring(0, 25) + '...' : 
+        meaningfulWords
+    }
+
+    return 'স্বাস্থ্য পরামর্শ'
+  }
+
+  const createNewChat = async (firstMessage = null) => {
     try {
       // Clear current messages and create new chat
+      let welcomeContent = '✨ নতুন চ্যাট শুরু হয়েছে!\n\nআপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন। আমি সাহায্য করতে প্রস্তুত! 🩺'
+      
+      if (prescriptionData) {
+        welcomeContent = '🔬 প্রেসক্রিপশন বিশ্লেষণ চ্যাট শুরু!\n\nআপনার প্রেসক্রিপশন সম্পর্কে যেকোনো প্রশ্ন করুন। আমি সাহায্য করতে প্রস্তুত! 💊'
+      }
+      
       setMessages([{
         id: 'welcome-' + Date.now(),
         type: 'bot',
-        content: '✨ নতুন চ্যাট শুরু হয়েছে!\n\nআপনার স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন করুন। আমি সাহায্য করতে প্রস্তুত! 🩺',
+        content: welcomeContent,
         timestamp: new Date()
       }])
       
       setSelectedChatId(null) // Reset selected chat
       
-      // Create new chat in backend
+      // Create new chat in backend with smart title
       const token = getToken()
+      let chatTitle = 'নতুন চ্যাট'
+      
+      // Generate title based on first message if provided
+      if (firstMessage) {
+        chatTitle = generateFallbackTitle(firstMessage)
+      } else if (prescriptionData) {
+        chatTitle = '💊 প্রেসক্রিপশন বিশ্লেষণ'
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          title: chatTitle,
+          context: chatContext || 'general'
+        })
       })
 
       if (response.ok) {
-        const newChatId = await response.text() // Backend returns just the ID as text
+        const newChatId = await response.text()
         setSelectedChatId(parseInt(newChatId))
         await loadChatHistory()
         return parseInt(newChatId)
       }
     } catch (error) {
       console.error('Error creating new chat:', error)
-      // Even if backend fails, allow local new chat
       setSelectedChatId(null)
     }
     return null
+  }
+
+  const updateChatTitle = async (chatId, messages) => {
+    if (!chatId || !messages || messages.length < 3) return
+
+    try {
+      const userMessages = messages.filter(msg => msg.sender === 'user')
+      if (userMessages.length < 2) return
+
+      const newTitle = await generateChatTitle(messages)
+      const token = getToken()
+      
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}/title`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: newTitle })
+      })
+
+      // Update local chat history
+      setChatHistory(prev => prev.map(chat => 
+        chat.id === chatId ? { ...chat, title: newTitle } : chat
+      ))
+    } catch (error) {
+      console.error('Error updating chat title:', error)
+    }
   }
 
   const sendMessageToBackend = async (message, chatId) => {
@@ -168,6 +434,18 @@ export default function ChatPage() {
         }
       }
       
+      // Prepare context for AI - include prescription data if available
+      let chatHistoryForAI = messages.slice(-10)
+      if (prescriptionData && prescriptionData.summary) {
+        chatHistoryForAI = [
+          {
+            type: 'system',
+            content: `প্রেসক্রিপশন প্রসঙ্গ: ${prescriptionData.summary}`
+          },
+          ...chatHistoryForAI
+        ]
+      }
+      
       // Get AI response from medical chat API
       const medicalChatResponse = await fetch('/api/medical-chat', {
         method: 'POST',
@@ -176,7 +454,13 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           message: message,
-          chatHistory: messages.slice(-10) // Send last 10 messages for context
+          chatHistory: chatHistoryForAI,
+          context: chatContext || 'general',
+          prescriptionData: prescriptionData ? {
+            medications: prescriptionData.analysis?.medications || [],
+            diagnosis: prescriptionData.analysis?.primaryDiagnosis || null,
+            investigations: prescriptionData.analysis?.investigations || []
+          } : null
         })
       })
 
@@ -218,19 +502,37 @@ export default function ChatPage() {
     }
   }
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = useCallback(async (e) => {
     e.preventDefault()
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim() || isTyping || isSending) return
 
+    const currentMessage = inputMessage.trim()
+    const messageId = 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+    
+    // Prevent duplicate messages
+    if (lastMessageId === messageId) return
+    setLastMessageId(messageId)
+    
     const userMessage = {
-      id: 'user-' + Date.now(),
+      id: messageId,
       type: 'user',
-      content: inputMessage,
-      timestamp: new Date()
+      content: currentMessage,
+      timestamp: new Date(),
+      sender: 'user'
     }
 
-    setMessages(prev => [...prev, userMessage])
-    const currentMessage = inputMessage
+    // Prevent concurrent sends
+    setIsSending(true)
+    
+    // Optimistically add user message
+    setMessages(prev => {
+      // Check if message already exists
+      if (prev.some(msg => msg.id === messageId)) {
+        return prev
+      }
+      return [...prev, userMessage]
+    })
+    
     setInputMessage('')
     setIsTyping(true)
 
@@ -239,347 +541,128 @@ export default function ChatPage() {
       
       // Create new chat if none exists
       if (!currentChatId) {
-        currentChatId = await createNewChat()
+        currentChatId = await createNewChat(currentMessage)
+        if (!currentChatId) {
+          throw new Error('Failed to create chat')
+        }
       }
 
       // Send message to backend and get AI response
       const botResponseContent = await sendMessageToBackend(currentMessage, currentChatId)
       
-      const botResponse = {
-        id: 'bot-' + Date.now(),
+      const botMessage = {
+        id: 'bot-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         type: 'bot',
         content: botResponseContent,
-        timestamp: new Date()
+        timestamp: new Date(),
+        sender: 'bot'
       }
       
-      setMessages(prev => [...prev, botResponse])
-      
-      // Refresh chat history to show updated conversation (only if backend was successful)
-      if (currentChatId) {
-        try {
-          await loadChatHistory()
-        } catch (error) {
-          console.log('Failed to refresh chat history, continuing...')
+      setMessages(prev => {
+        // Check if bot response already exists
+        if (prev.some(msg => msg.content === botResponseContent && msg.sender === 'bot' && 
+                          Math.abs(new Date(msg.timestamp) - new Date()) < 5000)) {
+          return prev
         }
+        return [...prev, botMessage]
+      })
+      
+      // Update chat title intelligently (only after meaningful conversation)
+      const newMessageCount = messages.filter(m => m.sender === 'user').length + 1
+      if (newMessageCount === 2) {
+        // Update title after second message for better context
+        setTimeout(() => {
+          const allMessages = [...messages, userMessage, botMessage]
+          updateChatTitle(currentChatId, allMessages)
+        }, 1500)
+      }
+      
+      // Refresh chat history periodically, not every message (performance optimization)
+      if (newMessageCount % 3 === 0) {
+        setTimeout(loadChatHistory, 2000)
       }
       
     } catch (error) {
       console.error('Error handling message:', error)
       
-      // Fallback to local response
+      // Enhanced fallback response
       const fallbackResponse = {
-        id: 'bot-' + Date.now(),
+        id: 'bot-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         type: 'bot',
-        content: 'দুঃখিত, আমি এখন সংযোগে সমস্যা হচ্ছে। তবে আমি স্থানীয়ভাবে আপনার সাহায্য করতে পারি। আপনার প্রশ্ন আবার করুন। 🤖',
-        timestamp: new Date()
+        content: '⚠️ দুঃখিত, সংযোগে সমস্যা হচ্ছে। আপনার প্রশ্ন আবার করুন অথবা কিছুক্ষণ পর চেষ্টা করুন। 🔄',
+        timestamp: new Date(),
+        sender: 'bot'
       }
       
       setMessages(prev => [...prev, fallbackResponse])
     } finally {
       setIsTyping(false)
+      setIsSending(false)
     }
-  }
+  }, [inputMessage, isTyping, isSending, selectedChatId, messages, createNewChat, sendMessageToBackend, updateChatTitle, loadChatHistory, lastMessageId])
 
   const getEnhancedLocalResponse = (message) => {
     const lowerMessage = message.toLowerCase()
     
+    // Enhanced prescription responses if prescription data is available
+    if (prescriptionData) {
+      if (lowerMessage.includes('ওষুধ') || lowerMessage.includes('medicine') || lowerMessage.includes('medication')) {
+        const medications = prescriptionData.analysis?.medications || []
+        if (medications.length > 0) {
+          let response = "আপনার প্রেসক্রিপশনের ওষুধ সম্পর্কে তথ্য:\n\n"
+          medications.forEach((med, index) => {
+            response += `${index + 1}. **${med.prescribedName || med.genericName}**\n`
+            if (med.strength) response += `   শক্তি: ${med.strength}\n`
+            if (med.frequency) response += `   সেবনবিধি: ${med.frequency}\n`
+            if (med.purpose) response += `   কাজ: ${med.purpose}\n\n`
+          })
+          response += "আরো কোন প্রশ্ন থাকলে জানান! 💊"
+          return response
+        }
+      }
+      
+      if (lowerMessage.includes('পার্শ্ব') || lowerMessage.includes('side effect')) {
+        return `আপনার প্রেসক্রিপশনের ওষুধের পার্শ্বপ্রতিক্রিয়া সম্পর্কে:\n\n• যেকোন নতুন উপসর্গ দেখা দিলে চিকিৎসকের সাথে যোগাযোগ করুন\n• পেট খারাপ হলে খাবারের সাথে ওষুধ খান\n• চুলকানি বা র‍্যাশ হলে ওষুধ বন্ধ করে চিকিৎসকের পরামর্শ নিন\n• মাথা ঘোরা বা দুর্বলতা হলে বিশ্রাম নিন\n\nকোন নির্দিষ্ট ওষুধের পার্শ্বপ্রতিক্রিয়া জানতে চান? 🤔`
+      }
+    }
+    
     // Simple greetings
     const greetings = ['hello', 'hi', 'সালাম', 'আসসালামু আলাইকুম', 'হ্যালো', 'হাই', 'নমস্কার']
     if (greetings.some(greeting => lowerMessage.includes(greeting))) {
-      return `আসসালামু আলাইকুম! 🙏
-
-আমি MediLens এর AI সহায়ক। আমি আপনাকে স্বাস্থ্য বিষয়ক যেকোনো প্রশ্নের উত্তর দিতে পারি!
-
-🩺 **আমি সাহায্য করতে পারি:**
-• রোগের লক্ষণ ও চিকিৎসা
-• ওষুধের তথ্য ও ব্যবহার
-• স্বাস্থ্য পরামর্শ ও টিপস
-• প্রেসক্রিপশন বুঝতে সাহায্য
-
-আপনার কোন প্রশ্ন আছে? 💬`
-    }
-    
-    // Simple questions
-    if (lowerMessage.includes('how are you') || lowerMessage.includes('কেমন আছেন') || lowerMessage.includes('কেমন আছো')) {
-      return `আমি ভালো আছি, ধন্যবাদ! 😊
-
-আমি আপনার স্বাস্থ্য সেবায় সর্বদা প্রস্তুত। আপনার কোন শারীরিক সমস্যা বা স্বাস্থ্য বিষয়ক প্রশ্ন আছে?
-
-**🔥 জনপ্রিয় প্রশ্ন:**
-• "জ্বর হলে কি করব?"
-• "রক্তচাপ নিয়ন্ত্রণ করব কিভাবে?"
-• "মাথাব্যথার কারণ কি?"
-
-আপনার প্রশ্ন করুন! 💭`
-    }
-    
-    // Thank you responses
-    if (lowerMessage.includes('thank') || lowerMessage.includes('ধন্যবাদ') || lowerMessage.includes('শুকরিয়া')) {
-      return `আপনাকেও ধন্যবাদ! 🙏
-
-আমি সবসময় আপনার সেবায় আছি। আরো কোন স্বাস্থ্য বিষয়ক প্রশ্ন থাকলে জানাবেন।
-
-🌟 **মনে রাখবেন:** গুরুতর সমস্যায় অবশ্যই ডাক্তারের পরামর্শ নিন।
-
-আপনার সুস্বাস্থ্য কামনা করি! 💚`
-    }
-    
-    // Emergency detection
-    const emergencyKeywords = [
-      'chest pain', 'difficulty breathing', 'unconscious', 'severe bleeding',
-      'বুকে ব্যথা', 'শ্বাস নিতে কষ্ট', 'অজ্ঞান', 'রক্তক্ষরণ', 'heart attack', 'stroke'
-    ]
-    
-    if (emergencyKeywords.some(keyword => lowerMessage.includes(keyword))) {
-      return `🚨 **জরুরি অবস্থা সনাক্ত করা হয়েছে!**
-
-অবিলম্বে নিকটস্থ হাসপাতালের জরুরি বিভাগে যান বা জরুরি সেবায় কল করুন:
-📞 ৯৯৯ (জাতীয় জরুরি সেবা)
-📞 ১৬২৬৩ (ঢাকা মেডিকেল কলেজ)
-
-🏥 **তাৎক্ষণিক করণীয়:**
-• রোগীকে আরামদায়ক অবস্থানে রাখুন
-• শ্বাস-প্রশ্বাসের দিকে নজর রাখুন  
-• জ্ঞান হারালে পাশে শুইয়ে দিন
-• কোনো ওষুধ না দিয়ে দ্রুত হাসপাতালে নিন
-
-⚠️ **বিলম্ব করবেন না - জীবন ঝুঁকিতে থাকতে পারে!**`
-    }
-    
-    // Enhanced medical responses
-    if (lowerMessage.includes('fever') || lowerMessage.includes('জ্বর')) {
-      return `🌡️ **জ্বরের সম্পূর্ণ চিকিৎসা:**
-
-**তাৎক্ষণিক চিকিৎসা:**
-• প্যারাসিটামল ৫০০ মিগ্রা - প্রতি ৬-৮ ঘন্টায় (সর্বোচ্চ দিনে ৪ বার)
-• ইবুপ্রোফেন ৪০০ মিগ্রা - যদি প্যারাসিটামল কাজ না করে
-• প্রচুর পানি, ডাবের পানি, স্যালাইন খান (দিনে ৩-৪ লিটার)
-
-**ঘরোয়া চিকিৎসা:**
-• কুসুম গরম পানিতে গোসল করুন
-• হালকা সুতির কাপড় পরুন
-• ঘর ঠান্ডা রাখুন, ফ্যান চালান
-• বিশ্রাম নিন, কাজকর্ম বন্ধ রাখুন
-
-**খাবার:**
-• তরল খাবার বেশি খান
-• ফলের রস, স্যুপ, খিচুড়ি
-• মসলাদার ও ভাজাপোড়া এড়িয়ে চলুন
-
-🚨 **ডাক্তার দেখান যদি:**
-• জ্বর ১০৩°F (৩৯.৪°C) এর বেশি হয়
-• ৩ দিনের বেশি স্থায়ী হয়
-• শ্বাস কষ্ট, বুকে ব্যথা বা তীব্র মাথাব্যথা হয়
-• বমি বা ডায়রিয়া সঙ্গে থাকে`
-    }
-    
-    if (lowerMessage.includes('pressure') || lowerMessage.includes('রক্তচাপ') || lowerMessage.includes('hypertension')) {
-      return `🩺 **উচ্চ রক্তচাপ সম্পূর্ণ ব্যবস্থাপনা:**
-
-**ওষুধ ব্যবস্থাপনা:**
-• নিয়মিত ওষুধ খান - কখনো বন্ধ করবেন না
-• প্রতিদিন একই সময়ে খান
-• ওষুধ শেষ হওয়ার আগেই নতুন নিন
-
-**খাদ্য নিয়ন্ত্রণ:**
-• লবণ কঠোরভাবে কমান (দিনে ৫ গ্রামের কম)
-• প্রক্রিয়াজাত খাবার এড়িয়ে চলুন
-• কলা, কমলা, পেঁপে, শাকসবজি বেশি খান
-• মাছ, ডাল, বাদাম খান
-
-**জীবনযাত্রা:**
-• প্রতিদিন ৩০-৪৫ মিনিট দ্রুত হাঁটুন
-• ওজন নিয়ন্ত্রণে রাখুন
-• ধূমপান ও মদ্যপান সম্পূর্ণ ছাড়ুন
-• মানসিক চাপ কমান - যোগব্যায়াম/মেডিটেশন
-
-**নিয়মিত পরীক্ষা:**
-• সপ্তাহে ২-৩ বার BP মাপুন
-• মাসে ১ বার ডাক্তার দেখান
-• বছরে ২ বার ECG ও রক্ত পরীক্ষা
-
-📊 **লক্ষ্য:** ১৩০/৮০ mmHg এর নিচে রাখুন`
-    }
-    
-    if (lowerMessage.includes('diabetes') || lowerMessage.includes('ডায়াবেটিস') || lowerMessage.includes('sugar')) {
-      return `🍎 **ডায়াবেটিস সম্পূর্ণ ব্যবস্থাপনা:**
-
-**ওষুধ ব্যবস্থাপনা:**
-• মেটফরমিন - খাবারের সাথে বা পরে খান
-• ইনসুলিন - নির্ধারিত সময়ে নিন
-• কখনো ওষুধ বাদ দেবেন না
-
-**খাদ্য পরিকল্পনা:**
-• চিনি, মিষ্টি, কোমল পানীয় সম্পূর্ণ বন্ধ
-• ভাত কম, রুটি বেশি খান
-• শাকসবজি, সালাদ প্রতি বেলায়
-• ছোট প্লেটে খান, ধীরে ধীরে চিবিয়ে খান
-
-**নিয়মিত ব্যায়াম:**
-• প্রতিদিন ৪৫ মিনিট হাঁটুন
-• খাবারের ৩০ মিনিট পর হাঁটুন
-• সাইক্লিং, সাঁতার করতে পারেন
-
-**নিয়মিত পরীক্ষা:**
-• মাসে ২ বার রক্তের গ্লুকোজ
-• ৩ মাসে ১ বার HbA1c (৭% এর নিচে)
-• বছরে ২ বার চোখ ও কিডনি চেকআপ
-
-🎯 **লক্ষ্য:** খালি পেটে ৫.৬-৭.০ mmol/L`
-    }
-    
-    if (lowerMessage.includes('headache') || lowerMessage.includes('মাথাব্যথা')) {
-      return `🧠 **মাথাব্যথার সম্পূর্ণ চিকিৎসা:**
-
-**তাৎক্ষণিক চিকিৎসা:**
-• প্যারাসিটামল ৫০০ মিগ্রা - ৬ ঘন্টা পর পর
-• অন্ধকার ঘরে শুয়ে থাকুন
-• মাথায় ঠান্ডা পানির পট্টি দিন
-• ঘাড় ও কাঁধ মালিশ করুন
-
-**কারণ অনুযায়ী চিকিৎসা:**
-• **টেনশনের মাথাব্যথা:** রিলাক্সেশন, গভীর শ্বাস
-• **মাইগ্রেইন:** অন্ধকার ঘরে বিশ্রাম, সুমাট্রিপটান
-• **সাইনাসের মাথাব্যথা:** গরম পানির ভাপ নিন
-
-**প্রতিরোধ:**
-• পর্যাপ্ত পানি পান করুন (দিনে ৮-১০ গ্লাস)
-• নিয়মিত খাবার খান, খালি পেটে থাকবেন না
-• ৭-৮ ঘন্টা ঘুমান
-• চোখের পাওয়ার চেক করান
-
-🚨 **তাৎক্ষণিক ডাক্তার দেখান:**
-• হঠাৎ তীব্র মাথাব্যথা
-• জ্বর ও ঘাড় শক্ত হওয়া
-• দৃষ্টি ঝাপসা বা কথা জড়িয়ে যাওয়া`
-    }
-
-    if (lowerMessage.includes('cough') || lowerMessage.includes('কাশি')) {
-      return `😷 **কাশির সম্পূর্ণ চিকিৎসা:**
-
-**ঘরোয়া চিকিৎসা:**
-• মধু ১ চামচ + আদার রস ১ চামচ - দিনে ৩ বার
-• কুসুম গরম পানিতে লবণ দিয়ে গড়গড়া
-• তুলসী পাতার রস + মধু
-• আদা-লেবু-মধুর চা
-
-**ওষুধ:**
-• শুকনো কাশি: ডেক্সট্রোমেথরফেন সিরাপ
-• কফযুক্ত কাশি: ব্রোমহেক্সিন সিরাপ
-• অ্যালার্জিক কাশি: সেটিরিজিন ১০ মিগ্রা
-
-**জীবনযাত্রা:**
-• প্রচুর তরল পান করুন
-• ধূমপান ও ধুলাবালি এড়িয়ে চলুন
-• হিউমিডিফায়ার ব্যবহার করুন
-• মাথা উঁচু করে ঘুমান
-
-🚨 **ডাক্তার দেখান যদি:**
-• ২ সপ্তাহের বেশি কাশি
-• কফের সাথে রক্ত
-• শ্বাস কষ্ট বা বুকে ব্যথা
-• জ্বর ও ওজন কমে যাওয়া`
-    }
-
-    if (lowerMessage.includes('stomach') || lowerMessage.includes('পেট') || lowerMessage.includes('acidity')) {
-      return `🍽️ **পেটের সমস্যার সম্পূর্ণ সমাধান:**
-
-**গ্যাস্ট্রিক/এসিডিটি:**
-• ওমিপ্রাজল ২০ মিগ্রা - খালি পেটে সকালে
-• র‍্যানিটিডিন ১৫০ মিগ্রা - রাতে খাবারের পর
-• এন্টাসিড - খাবারের ১ ঘন্টা পর
-
-**খাদ্যাভ্যাস:**
-• অল্প অল্প করে ঘন ঘন খান (দিনে ৫-৬ বার)
-• তেল-মসলা, ভাজাপোড়া এড়িয়ে চলুন
-• চা-কফি সীমিত করুন
-• রাতে খাওয়ার ২-৩ ঘন্টা পর ঘুমান
-
-**উপকারী খাবার:**
-• দই, কলা, সিদ্ধ চাল
-• ওটস, বার্লি, সবুজ শাকসবজি
-• ক্যামোমাইল চা, পুদিনা পাতা
-
-**জীবনযাত্রা:**
-• নিয়মিত ব্যায়াম করুন
-• মানসিক চাপ কমান
-• ধূমপান ও মদ্যপান ছাড়ুন
-
-🚨 **জরুরি ডাক্তার দেখান:**
-• তীব্র পেট ব্যথা
-• বমিতে রক্ত বা কালো রং
-• মলের সাথে রক্ত
-• হঠাৎ ওজন কমে যাওয়া`
-    }
-
-    // Enhanced prescription help
-    if (lowerMessage.includes('prescription') || lowerMessage.includes('প্রেসক্রিপশন') || lowerMessage.includes('medicine')) {
-      return `💊 **প্রেসক্রিপশন সাহায্য:**
-
-**MediLens এ প্রেসক্রিপশন বিশ্লেষণ:**
-📱 Upload বাটনে গিয়ে প্রেসক্রিপশনের ছবি আপলোড করুন
-🔍 AI স্বয়ংক্রিয়ভাবে বিশ্লেষণ করে দেবে:
-
-**যা পাবেন:**
-• ✅ রোগ নির্ণয় (Disease Diagnosis)
-• 🧪 প্রয়োজনীয় পরীক্ষা (Required Tests)  
-• 💊 ওষুধের তালিকা ও নির্দেশনা (Medicine List & Instructions)
-• ⚠️ পার্শ্বপ্রতিক্রিয়া (Side Effects)
-• 📋 স্বাস্থ্য পরামর্শ (Health Advice)
-
-**ওষুধ সেবনের নিয়ম:**
-• AC = খাবারের আগে (Before meal)
-• PC = খাবারের পর (After meal)  
-• HS = শোয়ার সময় (At bedtime)
-• OD = দিনে ১ বার, BD = দিনে ২ বার
-• TDS = দিনে ৩ বার, QID = দিনে ৪ বার
-
-🔗 **এখনই ব্যবহার করুন:** Upload পেজে যান এবং প্রেসক্রিপশন আপলোড করুন!`
+      let response = `আসসালামু আলাইকুম! 🙏\n\nআমি MediLens এর AI সহায়ক। আমি আপনাকে স্বাস্থ্য বিষয়ক যেকোনো প্রশ্নের উত্তর দিতে পারি!`
+      
+      if (prescriptionData) {
+        response += `\n\n🔬 **আপনার প্রেসক্রিপশন বিশ্লেষণ করা হয়েছে!**\n\nআপনি নিম্নলিখিত বিষয়ে প্রশ্ন করতে পারেন:\n• ওষুধের বিস্তারিত তথ্য\n• সেবনবিধি ও সময়সূচি\n• পার্শ্বপ্রতিক্রিয়া\n• খাদ্যাভ্যাস ও সতর্কতা`
+      } else {
+        response += `\n\n🩺 **আমি সাহায্য করতে পারি:**\n• রোগের লক্ষণ ও চিকিৎসা\n• ওষুধের তথ্য ও ব্যবহার\n• স্বাস্থ্য পরামর্শ ও টিপস\n• প্রেসক্রিপশন বুঝতে সাহায্য`
+      }
+      
+      response += `\n\nআপনার কোন প্রশ্ন আছে? 💬`
+      return response
     }
     
     // Default enhanced response
-    return `🩺 **MediLens স্বাস্থ্য সহায়ক**
-
-আপনার প্রশ্নটি আরো স্পষ্ট করে জানালে আমি আরো ভালো সাহায্য করতে পারব।
-
-**� জনপ্রিয় প্রশ্নসমূহ:**
-• "জ্বর হলে কি করব?" 
-• "ডায়াবেটিস নিয়ন্ত্রণের উপায়?"
-• "রক্তচাপ বেশি হলে কি খাব?"
-• "মাথাব্যথার ওষুধ কি?"
-• "পেট ব্যথার কারণ কি?"
-
-**🚀 MediLens এর বিশেষ সুবিধা:**
-• 📋 প্রেসক্রিপশন বিশ্লেষণ (AI Powered)
-• 🩺 ভাইটাল সাইন মনিটরিং  
-• 👨‍⚕️ ডাক্তারদের তালিকা
-• 💬 ২৪/৭ স্বাস্থ্য পরামর্শ
-
-**⚡ দ্রুত সেবা নিন:**
-• Upload: প্রেসক্রিপশন বিশ্লেষণ
-• Vitals: স্বাস্থ্য পরিমাপ  
-• Doctors: ডাক্তার খুঁজুন
-
-আপনার স্বাস্থ্যের যত্ন নিন, MediLens আপনার পাশে! 💚`
+    let defaultResponse = `🩺 **MediLens স্বাস্থ্য সহায়ক**\n\nআপনার প্রশ্নটি আরো স্পষ্ট করে জানালে আমি আরো ভালো সাহায্য করতে পারব।`
+    
+    if (prescriptionData) {
+      defaultResponse += `\n\n🔬 **আপনার প্রেসক্রিপশনের তথ্য আছে।** নিম্নলিখিত বিষয়ে প্রশ্ন করতে পারেন:\n• "ওষুধের তালিকা দেখান"\n• "পার্শ্বপ্রতিক্রিয়া কী?"\n• "সেবনবিধি কী?"\n• "খাদ্য নিয়ম কী?"`
+    } else {
+      defaultResponse += `\n\n**🔥 জনপ্রিয় প্রশ্নসমূহ:**\n• "জ্বর হলে কি করব?"\n• "ডায়াবেটিস নিয়ন্ত্রণের উপায়?"\n• "রক্তচাপ বেশি হলে কি খাব?"\n• "মাথাব্যথার ওষুধ কি?"`
+    }
+    
+    defaultResponse += `\n\nআপনার স্বাস্থ্যের যত্ন নিন, MediLens আপনার পাশে! 💚`
+    return defaultResponse
   }
 
   const quickQuestions = [
     'আসসালামু আলাইকুম',
-    'জ্বর হলে কি করব?',
-    'রক্তচাপ বেশি হলে কি খাব?',
-    'ডায়াবেটিস কন্ট্রোল করার উপায়?',
-    'মাথাব্যথার ওষুধ কি?',
+    prescriptionData ? 'ওষুধের তালিকা' : 'জ্বর হলে কি করব?',
+    prescriptionData ? 'পার্শ্বপ্রতিক্রিয়া' : 'রক্তচাপ বেশি হলে কি খাব?',
+    prescriptionData ? 'সেবনবিধি' : 'ডায়াবেটিস কন্ট্রোল করার উপায়?',
+    prescriptionData ? 'খাদ্য নিয়ম' : 'মাথাব্যথার ওষুধ কি?',
     'পেট ব্যথার কারণ কি?',
     'কাশির ঘরোয়া চিকিৎসা',
-    'হার্টের সমস্যার লক্ষণ',
-    'এসিডিটির সমাধান',
-    'প্রেসক্রিপশন বুঝতে সাহায্য',
-    'ওষুধের পার্শ্বপ্রতিক্রিয়া',
-    'স্বাস্থ্যকর খাবার কি কি?',
-    'ব্যায়ামের উপকারিতা',
-    'ঘুমের সমস্যার সমাধান',
-    'ত্বকের যত্ন কিভাবে নিব?',
-    'জরুরি অবস্থায় কি করব?'
+    'হার্টের সমস্যার লক্ষণ'
   ]
 
   if (!currentUser) {
@@ -612,7 +695,7 @@ export default function ChatPage() {
         <div className="hidden lg:block w-1/4 bg-base-200 border-r">
           <div className="p-4 border-b">
             <button 
-              onClick={createNewChat}
+              onClick={() => createNewChat()}
               className="btn btn-primary btn-sm w-full"
             >
               ➕ নতুন চ্যাট
@@ -620,24 +703,22 @@ export default function ChatPage() {
           </div>
           <div className="overflow-y-auto h-full">
             {chatHistory.map((chat) => (
-              <div
+              <ChatItem
                 key={chat.id}
-                className={`p-3 border-b cursor-pointer hover:bg-base-300 ${
-                  selectedChatId === chat.id ? 'bg-base-300' : ''
-                }`}
-                onClick={() => {
+                chat={chat}
+                isSelected={selectedChatId === chat.id}
+                onSelect={() => {
                   setSelectedChatId(chat.id)
                   loadChatMessages(chat.id)
                 }}
-              >
-                <h4 className="text-sm font-medium truncate">
-                  {chat.title || 'Chat ' + chat.id}
-                </h4>
-                <p className="text-xs text-base-content/60">
-                  {new Date(chat.createdAt).toLocaleDateString('bn-BD')}
-                </p>
-              </div>
+              />
             ))}
+            {chatHistory.length === 0 && (
+              <div className="p-4 text-center text-base-content/60">
+                <p className="text-sm">কোন চ্যাট নেই</p>
+                <p className="text-xs mt-1">নতুন চ্যাট শুরু করুন</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -645,20 +726,24 @@ export default function ChatPage() {
         <div className="flex-1 flex flex-col max-w-4xl mx-auto">
           {/* Header */}
           <motion.div 
-            className="bg-primary text-primary-content p-4"
+            className={`${prescriptionData ? 'bg-success' : 'bg-primary'} text-primary-content p-4`}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-between">
               <div className="text-center flex-1">
-                <h1 className="text-xl lg:text-2xl font-bold">🤖 MediLens AI Assistant</h1>
-                <p className="text-primary-content/80 text-sm lg:text-base">আপনার স্বাস্থ্য বিষয়ক সহায়ক</p>
+                <h1 className="text-xl lg:text-2xl font-bold">
+                  {prescriptionData ? '🔬 প্রেসক্রিপশন AI সহায়ক' : '🤖 MediLens AI Assistant'}
+                </h1>
+                <p className="text-primary-content/80 text-sm lg:text-base">
+                  {prescriptionData ? 'আপনার প্রেসক্রিপশন বিষয়ক সহায়ক' : 'আপনার স্বাস্থ্য বিষয়ক সহায়ক'}
+                </p>
               </div>
               {/* Mobile: New Chat Button */}
               <div className="lg:hidden">
                 <button 
-                  onClick={createNewChat}
+                  onClick={() => createNewChat()}
                   className="btn btn-sm btn-ghost"
                   disabled={isTyping}
                 >
@@ -671,7 +756,7 @@ export default function ChatPage() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 bg-base-100">
             <div className="space-y-4">
-              {messages.map((message) => (
+              {messages.filter(message => !message.isHidden).map((message) => (
                 <motion.div
                   key={message.id}
                   className={`chat ${message.type === 'user' ? 'chat-end' : 'chat-start'}`}
@@ -686,19 +771,19 @@ export default function ChatPage() {
                           {currentUser?.firstName?.[0] || 'U'}
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-secondary-content">
-                          🤖
+                        <div className={`w-10 h-10 rounded-full ${prescriptionData ? 'bg-success' : 'bg-secondary'} flex items-center justify-center text-secondary-content`}>
+                          {prescriptionData ? '🔬' : '🤖'}
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="chat-header">
-                    {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : 'MediLens AI'}
+                    {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : (prescriptionData ? 'প্রেসক্রিপশন AI' : 'MediLens AI')}
                     <time className="text-xs opacity-50 ml-2">
                       {message.timestamp.toLocaleTimeString('bn-BD')}
                     </time>
                   </div>
-                  <div className={`chat-bubble ${message.type === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary'} whitespace-pre-line`}>
+                  <div className={`chat-bubble ${message.type === 'user' ? 'chat-bubble-primary' : (prescriptionData ? 'chat-bubble-success' : 'chat-bubble-secondary')} whitespace-pre-line`}>
                     {message.content}
                   </div>
                 </motion.div>
@@ -712,11 +797,11 @@ export default function ChatPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <div className="chat-image avatar">
-                    <div className="w-10 rounded-full bg-secondary flex items-center justify-center text-secondary-content">
-                      🤖
+                    <div className={`w-10 rounded-full ${prescriptionData ? 'bg-success' : 'bg-secondary'} flex items-center justify-center text-secondary-content`}>
+                      {prescriptionData ? '🔬' : '🤖'}
                     </div>
                   </div>
-                  <div className="chat-bubble chat-bubble-secondary">
+                  <div className={`chat-bubble ${prescriptionData ? 'chat-bubble-success' : 'chat-bubble-secondary'}`}>
                     <span className="loading loading-dots loading-sm"></span>
                     <span className="ml-2">চিন্তা করছি...</span>
                   </div>
@@ -728,14 +813,20 @@ export default function ChatPage() {
 
           {/* Quick Questions */}
           <div className="p-3 lg:p-4 bg-base-200 border-t">
-            <p className="text-xs lg:text-sm text-base-content/70 mb-2">দ্রুত প্রশ্ন:</p>
+            <p className="text-xs lg:text-sm text-base-content/70 mb-2">
+              {prescriptionData ? 'প্রেসক্রিপশন সম্পর্কিত প্রশ্ন:' : 'দ্রুত প্রশ্ন:'}
+            </p>
             <div className="flex flex-wrap gap-1 lg:gap-2">
               {quickQuestions.slice(0, 8).map((question, index) => (
                 <button
                   key={index}
                   className="btn btn-xs lg:btn-sm btn-outline text-xs"
-                  onClick={() => setInputMessage(question)}
-                  disabled={isTyping}
+                  onClick={() => {
+                    if (!isTyping && !isSending) {
+                      setInputMessage(question)
+                    }
+                  }}
+                  disabled={isTyping || isSending}
                 >
                   {question}
                 </button>
@@ -750,14 +841,14 @@ export default function ChatPage() {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন..."
+                placeholder={prescriptionData ? "প্রেসক্রিপশন সম্পর্কে প্রশ্ন করুন..." : "আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন..."}
                 className="input input-bordered flex-1 text-sm lg:text-base"
-                disabled={isTyping}
+                disabled={isTyping || isSending}
               />
               <button
                 type="submit"
-                className={`btn btn-primary ${isTyping ? 'loading' : ''}`}
-                disabled={!inputMessage.trim() || isTyping}
+                className={`btn ${prescriptionData ? 'btn-success' : 'btn-primary'} ${(isTyping || isSending) ? 'loading' : ''}`}
+                disabled={!inputMessage.trim() || isTyping || isSending}
               >
                 <span className="hidden lg:inline">
                   {isTyping ? 'পাঠাচ্ছি...' : '📤 Send'}

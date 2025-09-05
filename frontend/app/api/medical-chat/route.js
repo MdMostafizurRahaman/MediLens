@@ -3,15 +3,56 @@ import { NextResponse } from 'next/server'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
+// Cache for frequently asked questions
+const responseCache = new Map()
+const requestTracker = new Map() // Track recent requests to prevent duplicates
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const DUPLICATE_WINDOW = 2000 // 2 seconds to prevent duplicate requests
+
 export async function POST(request) {
   try {
-    const { message, chatHistory } = await request.json()
+    const { message, chatHistory, context, prescriptionData } = await request.json()
 
     if (!message) {
       return NextResponse.json({ error: 'No message provided' }, { status: 400 })
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Create a request fingerprint to prevent duplicates
+    const requestFingerprint = `${message.trim()}-${Date.now() - (Date.now() % DUPLICATE_WINDOW)}`
+    
+    // Check if this is a duplicate request
+    if (requestTracker.has(requestFingerprint)) {
+      const cachedResponse = requestTracker.get(requestFingerprint)
+      return NextResponse.json({ 
+        success: true, 
+        response: cachedResponse,
+        deduplicated: true 
+      })
+    }
+
+    // Check cache for common questions (performance optimization)
+    const cacheKey = message.toLowerCase().trim()
+    const cached = responseCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      // Store in request tracker too
+      requestTracker.set(requestFingerprint, cached.response)
+      setTimeout(() => requestTracker.delete(requestFingerprint), DUPLICATE_WINDOW)
+      
+      return NextResponse.json({ 
+        success: true, 
+        response: cached.response,
+        cached: true 
+      })
+    }
+
+    // Use faster model for better performance
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        maxOutputTokens: 1000, // Limit for faster responses
+        temperature: 0.7,
+      }
+    })
 
     // Build conversation context
     let conversationContext = ""
@@ -19,6 +60,33 @@ export async function POST(request) {
       conversationContext = chatHistory.map(msg => 
         `${msg.type === 'user' ? 'রোগী' : 'ডাক্তার'}: ${msg.content}`
       ).join('\n')
+    }
+
+    // Build prescription context if available
+    let prescriptionContext = ""
+    if (prescriptionData && (prescriptionData.medications || prescriptionData.diagnosis)) {
+      prescriptionContext = "\n\n**প্রেসক্রিপশন তথ্য:**\n"
+      
+      if (prescriptionData.diagnosis) {
+        prescriptionContext += `রোগ নির্ণয়: ${prescriptionData.diagnosis.condition || 'উল্লেখ নেই'}\n`
+      }
+      
+      if (prescriptionData.medications && prescriptionData.medications.length > 0) {
+        prescriptionContext += "ওষুধসমূহ:\n"
+        prescriptionData.medications.forEach((med, index) => {
+          prescriptionContext += `${index + 1}. ${med.prescribedName || med.genericName || 'নাম উল্লেখ নেই'}`
+          if (med.strength) prescriptionContext += ` (${med.strength})`
+          if (med.frequency) prescriptionContext += ` - ${med.frequency}`
+          prescriptionContext += "\n"
+        })
+      }
+      
+      if (prescriptionData.investigations && prescriptionData.investigations.length > 0) {
+        prescriptionContext += "পরীক্ষা-নিরীক্ষা:\n"
+        prescriptionData.investigations.forEach((test, index) => {
+          prescriptionContext += `${index + 1}. ${test.test || 'পরীক্ষার নাম উল্লেখ নেই'}\n`
+        })
+      }
     }
 
     const prompt = `
@@ -31,10 +99,12 @@ export async function POST(request) {
 - প্রেসক্রিপশন বিশ্লেষণ (Prescription Analysis)
 - স্বাস্থ্য শিক্ষা (Health Education)
 
- **নিরাপত্তা নির্দেশনা:**
+**নিরাপত্তা নির্দেশনা:**
 - সবসময় রোগীর নিরাপত্তা প্রাধান্য দিন
 - গুরুতর উপসর্গে তাৎক্ষণিক ডাক্তার দেখতে বলুন
 - অনিশ্চিত থাকলে বিশেষজ্ঞ ডাক্তারের কাছে পাঠান
+
+${prescriptionContext}
 
 **পূর্ববর্তী কথোপকথন:**
 ${conversationContext}
@@ -44,6 +114,7 @@ ${conversationContext}
 
 **উত্তর নির্দেশনা:**
 - সহজ ও বন্ধুত্বপূর্ণ ভাষায় উত্তর দিন
+- প্রেসক্রিপশনের তথ্য থাকলে সেই অনুযায়ী নির্দিষ্ট পরামর্শ দিন
 - অভিবাদনের জন্য সংক্ষিপ্ত ও উষ্ণ উত্তর দিন  
 - চিকিৎসা বিষয়ে বিস্তারিত ও নিরাপদ পরামর্শ দিন
 - সবসময় প্রয়োজনে ডাক্তার দেখার পরামর্শ যোগ করুন
@@ -65,7 +136,19 @@ ${conversationContext}
       .trim()
 
     // Add emojis and structure for better readability
-    const formattedResponse = formatMedicalResponse(cleanedResponse, message)
+    const formattedResponse = formatMedicalResponse(cleanedResponse, message, context, prescriptionData)
+
+    // Cache common responses for performance
+    if (isCommonQuestion(message)) {
+      responseCache.set(cacheKey, {
+        response: formattedResponse,
+        timestamp: Date.now()
+      })
+    }
+
+    // Store in request tracker to prevent immediate duplicates
+    requestTracker.set(requestFingerprint, formattedResponse)
+    setTimeout(() => requestTracker.delete(requestFingerprint), DUPLICATE_WINDOW)
 
     return NextResponse.json({
       success: true,
@@ -87,13 +170,15 @@ ${conversationContext}
   }
 }
 
-function formatMedicalResponse(response, originalMessage) {
+function formatMedicalResponse(response, originalMessage, context, prescriptionData) {
   const lowerMessage = originalMessage.toLowerCase()
   
-  // Add appropriate medical emojis based on content
+  // Add appropriate medical emojis based on content and context
   let formattedResponse = response
   
-  if (lowerMessage.includes('জ্বর') || lowerMessage.includes('fever')) {
+  if (context === 'prescription') {
+    formattedResponse = '💊 ' + formattedResponse
+  } else if (lowerMessage.includes('জ্বর') || lowerMessage.includes('fever')) {
     formattedResponse = '🌡️ ' + formattedResponse
   } else if (lowerMessage.includes('মাথাব্যথা') || lowerMessage.includes('headache')) {
     formattedResponse = '🧠 ' + formattedResponse
@@ -107,8 +192,12 @@ function formatMedicalResponse(response, originalMessage) {
     formattedResponse = '🩺 ' + formattedResponse
   }
   
-  // Add standard medical disclaimer
-  formattedResponse += '\n\n⚠️ **গুরুত্বপূর্ণ:** এটি প্রাথমিক পরামর্শ। গুরুতর সমস্যায় অবশ্যই চিকিৎসকের সাথে দেখা করুন।'
+  // Add prescription-specific disclaimer if prescription data is available
+  if (prescriptionData) {
+    formattedResponse += '\n\n💊 **প্রেসক্রিপশন সম্পর্কিত:** এই পরামর্শ আপনার প্রেসক্রিপশনের উপর ভিত্তি করে দেওয়া। যেকোনো পরিবর্তনের জন্য চিকিৎসকের সাথে যোগাযোগ করুন।'
+  } else {
+    formattedResponse += '\n\n⚠️ **গুরুত্বপূর্ণ:** এটি প্রাথমিক পরামর্শ। গুরুতর সমস্যায় অবশ্যই চিকিৎসকের সাথে দেখা করুন।'
+  }
   
   return formattedResponse
 }
@@ -209,4 +298,16 @@ function getMedicalFallbackResponse(message) {
 "বুকে ব্যথা হচ্ছে কেন?"
 
 📱 মনে রাখবেন: MediLens এ প্রেসক্রিপশন আপলোড করে বিস্তারিত বিশ্লেষণ পেতে পারেন।`
+}
+
+// Helper function to identify common questions for caching
+function isCommonQuestion(message) {
+  const commonPatterns = [
+    'জ্বর', 'fever', 'মাথাব্যথা', 'headache', 
+    'ডায়াবেটিস', 'diabetes', 'রক্তচাপ', 'pressure',
+    'কাশি', 'cough', 'পেট', 'stomach', 'ব্যথা', 'pain'
+  ]
+  
+  const lowerMessage = message.toLowerCase()
+  return commonPatterns.some(pattern => lowerMessage.includes(pattern))
 }

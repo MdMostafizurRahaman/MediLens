@@ -30,7 +30,7 @@ public class DoctorServiceImp implements DoctorService {
                 user.getDoctor().getInstitute(),
                 user.getDoctor().getCurrentCity(),
                 user.getDoctor().getAvailableTime(),
-                user.getDoctor().getPhotoUrl(),
+                user.getDoctor().getWebsiteUrl(),
                 user.getDoctor().getStatus());
     }
 
@@ -94,7 +94,7 @@ public class DoctorServiceImp implements DoctorService {
                 doctorDTO.getInstitute(),
                 doctorDTO.getCurrentCity(),
                 doctorDTO.getAvailableTime(),
-                doctorDTO.getPhotoUrl(),
+                doctorDTO.getWebsiteUrl(),
                 Status.PENDING,
                 user
                 );

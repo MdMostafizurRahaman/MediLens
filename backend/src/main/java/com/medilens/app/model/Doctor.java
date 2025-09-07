@@ -31,7 +31,7 @@ public class Doctor {
 
     private String availableTime;
 
-    private String photoUrl;
+    private String websiteUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

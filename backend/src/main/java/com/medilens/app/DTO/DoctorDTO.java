@@ -18,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DoctorDTO {
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
@@ -39,4 +40,17 @@ public class DoctorDTO {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
+    
+    // User fields without circular reference
+    private UserInfoDTO user;
+    
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class UserInfoDTO {
+        private String firstName;
+        private String lastName;
+        private String email;
+    }
 }

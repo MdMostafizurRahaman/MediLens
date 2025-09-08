@@ -1,5 +1,5 @@
 
-package com.medilens.app.DTO;
+package com.medilens.app.dto;
 
 import java.util.List;
 import com.medilens.app.model.PrescriptionAnalysis;

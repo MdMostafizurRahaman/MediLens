@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -54,7 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             final String username = jwtUtil.extractUsername(token);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsernameOrCreate(username);
 
                 if (jwtUtil.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
@@ -75,19 +74,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Map<String, Object> errorBody = new HashMap<>();
             errorBody.put("message", "Invalid or expired JWT token");
             errorBody.put("timestamp", LocalDateTime.now().toString());
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            new ObjectMapper().writeValue(response.getWriter(), errorBody);
-
-            response.getWriter().flush();
-        } catch (UsernameNotFoundException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-
-            Map<String, Object> errorBody = new HashMap<>();
-            errorBody.put("timestamp", LocalDateTime.now().toString());
-            errorBody.put("message", "User not found: " + e.getMessage());
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");

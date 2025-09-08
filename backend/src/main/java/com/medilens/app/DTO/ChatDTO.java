@@ -1,4 +1,4 @@
-package com.medilens.app.DTO;
+package com.medilens.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.medilens.app.model.ChatRole;

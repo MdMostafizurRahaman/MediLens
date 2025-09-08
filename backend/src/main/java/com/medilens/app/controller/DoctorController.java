@@ -1,7 +1,7 @@
 package com.medilens.app.controller;
 
-import com.medilens.app.DTO.DoctorDTO;
-import com.medilens.app.DTO.UserDTO;
+import com.medilens.app.dto.DoctorDTO;
+import com.medilens.app.dto.UserDTO;
 import com.medilens.app.exception.NotFoundException;
 import com.medilens.app.model.Doctor;
 import com.medilens.app.model.Role;

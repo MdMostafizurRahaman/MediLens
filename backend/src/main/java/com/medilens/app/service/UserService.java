@@ -1,7 +1,7 @@
 package com.medilens.app.service;
 
-import com.medilens.app.DTO.ChatDTO;
-import com.medilens.app.DTO.UserDTO;
+import com.medilens.app.dto.ChatDTO;
+import com.medilens.app.dto.UserDTO;
 import com.medilens.app.exception.NotFoundException;
 import com.medilens.app.model.Chat;
 import com.medilens.app.model.User;

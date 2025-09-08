@@ -1,7 +1,7 @@
 package com.medilens.app.service.imp;
 
-import com.medilens.app.DTO.ChatDTO;
-import com.medilens.app.DTO.UserDTO;
+import com.medilens.app.dto.ChatDTO;
+import com.medilens.app.dto.UserDTO;
 import com.medilens.app.exception.NotFoundException;
 import com.medilens.app.model.Chat;
 import com.medilens.app.model.Role;
@@ -98,28 +98,37 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserDTO update(User user) {
-    User existingUser = userRepository.getUserByEmail(user.getEmail()).get();
-    user.setPassword(existingUser.getPassword());
-    // Update all fields
-    existingUser.setFirstName(user.getFirstName());
-    existingUser.setLastName(user.getLastName());
-    existingUser.setPhoneNumber(user.getPhoneNumber());
-    existingUser.setDateOfBirth(user.getDateOfBirth());
-    existingUser.setGender(user.getGender());
-    existingUser.setBloodGroup(user.getBloodGroup());
-    existingUser.setEmergencyContact(user.getEmergencyContact());
-    existingUser.setAddress(user.getAddress());
-    // Safely update medicalHistory to avoid orphan removal error
-    if (existingUser.getMedicalHistory() != null && user.getMedicalHistory() != null) {
-        existingUser.getMedicalHistory().clear();
-        existingUser.getMedicalHistory().addAll(user.getMedicalHistory());
-    } else {
-        existingUser.setMedicalHistory(user.getMedicalHistory());
-    }
-    existingUser.setAllergies(user.getAllergies());
-    existingUser.setCurrentMedications(user.getCurrentMedications());
-    User useredited = userRepository.save(existingUser);
-    return convertUserDTO(useredited);
+        Optional<User> existingUserOpt = userRepository.getUserByEmail(user.getEmail());
+        
+        if (existingUserOpt.isPresent()) {
+            // User exists, update the existing user
+            User existingUser = existingUserOpt.get();
+            // Update all fields
+            existingUser.setFirstName(user.getFirstName());
+            existingUser.setLastName(user.getLastName());
+            existingUser.setPhoneNumber(user.getPhoneNumber());
+            existingUser.setDateOfBirth(user.getDateOfBirth());
+            existingUser.setGender(user.getGender());
+            existingUser.setBloodGroup(user.getBloodGroup());
+            existingUser.setEmergencyContact(user.getEmergencyContact());
+            existingUser.setAddress(user.getAddress());
+            // Safely update medicalHistory to avoid orphan removal error
+            if (existingUser.getMedicalHistory() != null && user.getMedicalHistory() != null) {
+                existingUser.getMedicalHistory().clear();
+                existingUser.getMedicalHistory().addAll(user.getMedicalHistory());
+            } else {
+                existingUser.setMedicalHistory(user.getMedicalHistory());
+            }
+            existingUser.setAllergies(user.getAllergies());
+            existingUser.setCurrentMedications(user.getCurrentMedications());
+            User useredited = userRepository.save(existingUser);
+            return convertUserDTO(useredited);
+        } else {
+            // User doesn't exist, create a new user profile
+            user.setPassword(bCryptPasswordEncoder.encode("profile_user_" + System.currentTimeMillis()));
+            User newUser = userRepository.save(user);
+            return convertUserDTO(newUser);
+        }
     }
 
     @Autowired

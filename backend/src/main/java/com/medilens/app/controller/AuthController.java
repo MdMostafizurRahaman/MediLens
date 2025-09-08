@@ -1,6 +1,6 @@
 package com.medilens.app.controller;
 
-import com.medilens.app.DTO.UserDTO;
+import com.medilens.app.dto.UserDTO;
 import com.medilens.app.model.User;
 import com.medilens.app.security.JwtUtil;
 import com.medilens.app.service.UserService;

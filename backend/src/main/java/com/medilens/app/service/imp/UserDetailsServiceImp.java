@@ -1,8 +1,8 @@
 package com.medilens.app.service.imp;
 
+import com.medilens.app.model.Role;
 import com.medilens.app.model.User;
 import com.medilens.app.repository.UserRepository;
-import com.medilens.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,5 +23,20 @@ public class UserDetailsServiceImp implements UserDetailsService {
                 () -> new UsernameNotFoundException("User not found")
         );
         return new MyUserDetails(user);
+    }
+    
+    // Method to create a minimal user record for JWT authentication if user doesn't exist
+    public UserDetails loadUserByUsernameOrCreate(String email) {
+        try {
+            return loadUserByUsername(email);
+        } catch (UsernameNotFoundException e) {
+            // Create a minimal user record for authentication purposes
+            User tempUser = new User();
+            tempUser.setEmail(email);
+            tempUser.setRole(Role.ROLE_USER);
+            tempUser.setFirstName("User"); // Default first name
+            tempUser.setLastName(""); // Default last name
+            return new MyUserDetails(tempUser);
+        }
     }
 }

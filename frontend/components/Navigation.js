@@ -101,56 +101,35 @@ export default function Navigation() {
       <div className="navbar-end">
         {currentUser ? (
           <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost flex items-center gap-2">
-              <div className="avatar">
-                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-content font-bold text-sm">
-                  {getUserInitials()}
-                </div>
-              </div>
-              <div className="hidden md:block text-left">
-                <div className="text-sm font-medium">{getUserDisplayName()}</div>
-                <div className="text-xs opacity-70">{getUserRoleBadge()}</div>
-              </div>
+            <div tabIndex={0} role="button" className="btn btn-ghost flex flex-col items-start gap-0">
+              <div className="text-sm font-medium">{getUserDisplayName()}</div>
+              <div className="text-xs opacity-70">{getUserRoleBadge()}</div>
             </div>
             <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-64 text-base-content">
               <li className="menu-title">
                 <span>Account</span>
               </li>
               <li>
-                <div className="flex items-center gap-2 p-2">
-                  <div className="avatar">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold text-sm">
-                      {getUserInitials()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-medium">{getUserDisplayName()}</div>
-                    <div className="text-xs opacity-70">{currentUser?.email}</div>
-                    <div className="badge badge-sm mt-1">{getUserRoleBadge()}</div>
-                  </div>
+                <div>
+                  <div className="font-medium">{getUserDisplayName()}</div>
+                  <div className="text-xs opacity-70">{currentUser?.email}</div>
+                  <div className="badge badge-sm mt-1">{getUserRoleBadge()}</div>
                 </div>
               </li>
-              
               <div className="divider my-1"></div>
-              
               <li className="menu-title">
                 <span>Quick Actions</span>
               </li>
-              
               {hasRole('admin') && (
                 <li><Link href="/admin">🛡️ Admin Dashboard</Link></li>
               )}
-              
               {hasRole('doctor') && (
                 <li><Link href="/doctor-profile">👨‍⚕️ My Doctor Profile</Link></li>
               )}
-              
               <li><Link href="/profile">⚙️ Account Settings</Link></li>
               {/* <li><Link href="/upload">📋 Upload Prescription</Link></li> */}
               <li><Link href="/chat">💬 AI Assistant</Link></li>
-              
               <div className="divider my-1"></div>
-              
               <li><a onClick={handleLogout} className="text-error">🚪 Logout</a></li>
             </ul>
           </div>

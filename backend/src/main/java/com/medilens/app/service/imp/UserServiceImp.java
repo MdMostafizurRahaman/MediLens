@@ -23,11 +23,20 @@ import java.util.Optional;
 public class UserServiceImp implements UserService {
 
     UserDTO convertUserDTO(User user) {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName(user.getFirstName());
-        userDTO.setLastName(user.getLastName());
-        userDTO.setEmail(user.getEmail());
-        return userDTO;
+    UserDTO userDTO = new UserDTO();
+    userDTO.setFirstName(user.getFirstName());
+    userDTO.setLastName(user.getLastName());
+    userDTO.setEmail(user.getEmail());
+    userDTO.setPhoneNumber(user.getPhoneNumber());
+    userDTO.setDateOfBirth(user.getDateOfBirth());
+    userDTO.setGender(user.getGender());
+    userDTO.setBloodGroup(user.getBloodGroup());
+    userDTO.setEmergencyContact(user.getEmergencyContact());
+    userDTO.setAddress(user.getAddress());
+    userDTO.setMedicalHistory(user.getMedicalHistory());
+    userDTO.setAllergies(user.getAllergies());
+    userDTO.setCurrentMedications(user.getCurrentMedications());
+    return userDTO;
     }
 
     @Autowired
@@ -89,9 +98,28 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserDTO update(User user) {
-        user.setPassword(userRepository.getUserByEmail(user.getEmail()).get().getPassword());
-        User useredited = userRepository.save(user);
-        return convertUserDTO(useredited);
+    User existingUser = userRepository.getUserByEmail(user.getEmail()).get();
+    user.setPassword(existingUser.getPassword());
+    // Update all fields
+    existingUser.setFirstName(user.getFirstName());
+    existingUser.setLastName(user.getLastName());
+    existingUser.setPhoneNumber(user.getPhoneNumber());
+    existingUser.setDateOfBirth(user.getDateOfBirth());
+    existingUser.setGender(user.getGender());
+    existingUser.setBloodGroup(user.getBloodGroup());
+    existingUser.setEmergencyContact(user.getEmergencyContact());
+    existingUser.setAddress(user.getAddress());
+    // Safely update medicalHistory to avoid orphan removal error
+    if (existingUser.getMedicalHistory() != null && user.getMedicalHistory() != null) {
+        existingUser.getMedicalHistory().clear();
+        existingUser.getMedicalHistory().addAll(user.getMedicalHistory());
+    } else {
+        existingUser.setMedicalHistory(user.getMedicalHistory());
+    }
+    existingUser.setAllergies(user.getAllergies());
+    existingUser.setCurrentMedications(user.getCurrentMedications());
+    User useredited = userRepository.save(existingUser);
+    return convertUserDTO(useredited);
     }
 
     @Autowired

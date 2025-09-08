@@ -22,6 +22,21 @@ public class User {
 
     private String lastName;
 
+    private String phoneNumber;
+    private String dateOfBirth;
+    private String gender;
+    private String bloodGroup;
+    private String emergencyContact;
+    private String address;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PrescriptionAnalysis> medicalHistory;
+
+    @Column(length = 1000)
+    private String allergies;
+
+    @ElementCollection
+    private List<String> currentMedications;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

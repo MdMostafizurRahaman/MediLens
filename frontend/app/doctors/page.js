@@ -58,7 +58,7 @@ export default function DoctorsPage() {
       setLoading(true)
       setError('')
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/doctor/all`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/all`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -284,25 +284,12 @@ export default function DoctorsPage() {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="avatar">
                     <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-content text-2xl">
-                      {doctor.photoUrl ? (
-                        <img 
-                          src={doctor.photoUrl} 
-                          alt={`Dr. ${doctor.user?.firstName}`}
-                          className="w-16 h-16 rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none'
-                            e.target.nextSibling.style.display = 'flex'
-                          }}
-                        />
-                      ) : null}
-                      <div className={doctor.photoUrl ? 'hidden' : 'flex'}>
-                        👨‍⚕️
-                      </div>
+                      👨‍⚕️
                     </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="card-title text-primary text-lg">
-                      Dr. {doctor.user?.firstName} {doctor.user?.lastName}
+                      Dr. {doctor.firstName} {doctor.lastName}
                     </h3>
                     <p className="text-secondary text-sm">{doctor.designation || 'Medical Doctor'}</p>
                     <div className="badge badge-success badge-sm mt-1">✅ Verified</div>
@@ -367,21 +354,34 @@ export default function DoctorsPage() {
                 <div className="divider my-4"></div>
 
                 <div className="card-actions justify-between">
-                  {formatPhoneNumbers(doctor.phoneNumber) !== 'Not available' && (
-                    <a 
-                      href={`tel:${formatPhoneNumbers(doctor.phoneNumber)}`} 
-                      className="btn btn-primary btn-sm flex-1"
+                  <div className="flex gap-2 flex-wrap">
+                    {formatPhoneNumbers(doctor.phoneNumber) !== 'Not available' && (
+                      <a 
+                        href={`tel:${formatPhoneNumbers(doctor.phoneNumber)}`} 
+                        className="btn btn-primary btn-sm"
+                      >
+                        📞 Call
+                      </a>
+                    )}
+                    
+                    {doctor.websiteUrl && (
+                      <a 
+                        href={doctor.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-info btn-sm"
+                      >
+                        🌐 Website
+                      </a>
+                    )}
+                    
+                    <button 
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => alert('Appointment booking feature coming soon!')}
                     >
-                      📞 Call
-                    </a>
-                  )}
-                  
-                  <button 
-                    className="btn btn-secondary btn-sm flex-1"
-                    onClick={() => alert('Appointment booking feature coming soon!')}
-                  >
-                    📅 Book
-                  </button>
+                      📅 Book
+                    </button>
+                  </div>
                   
                   <div className="dropdown dropdown-end">
                     <div tabIndex={0} role="button" className="btn btn-ghost btn-sm">

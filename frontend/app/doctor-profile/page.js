@@ -18,7 +18,7 @@ export default function DoctorProfile() {
     institute: '',
     currentCity: '',
     availableTime: '',
-    photoUrl: ''
+    websiteUrl: ''
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -45,7 +45,7 @@ export default function DoctorProfile() {
       setLoading(true)
       const token = getToken()
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/doctor/${currentUser?.email}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/${currentUser?.email}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export default function DoctorProfile() {
           institute: data.institute || '',
           currentCity: data.currentCity || '',
           availableTime: data.availableTime || '',
-          photoUrl: data.photoUrl || ''
+          websiteUrl: data.websiteUrl || ''
         })
       } else if (response.status === 404) {
         // Doctor profile doesn't exist yet, use empty form
@@ -129,7 +129,7 @@ export default function DoctorProfile() {
       }
 
       const isUpdate = doctorData !== null
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/doctor${isUpdate ? '' : '/add'}`
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor${isUpdate ? '' : '/add'}`
       const method = isUpdate ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
@@ -142,13 +142,15 @@ export default function DoctorProfile() {
       })
 
       if (response.ok) {
-        setSuccess(isUpdate ? 'Profile updated successfully! Changes will be reviewed by admin.' : 'Profile created successfully! Waiting for admin approval.')
-        if (!isUpdate) {
-          await fetchDoctorData() // Refresh data
-        }
+        setSuccess(isUpdate ? 'প্রোফাইল সফলভাবে আপডেট হয়েছে! পরিবর্তনগুলি অ্যাডমিনের পর্যালোচনায় রয়েছে।' : 'প্রোফাইল সফলভাবে তৈরি হয়েছে! অ্যাডমিনের অনুমোদনের অপেক্ষায় রয়েছে।')
+        
+        // Refresh the data to get the updated status
+        setTimeout(async () => {
+          await fetchDoctorData()
+        }, 1000)
       } else {
         const errorText = await response.text()
-        setError(errorText || 'Failed to save profile')
+        setError(errorText || 'প্রোফাইল সেভ করতে ব্যর্থ')
       }
     } catch (error) {
       console.error('Error saving doctor profile:', error)
@@ -214,14 +216,21 @@ export default function DoctorProfile() {
                   {doctorData.status === 'PENDING' && (
                     <div className="alert alert-warning mt-4">
                       <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.336 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
-                      <span>Your profile is under review by the admin team. You'll be notified once approved.</span>
+                      <span>আপনার প্রোফাইল অ্যাডমিনের পর্যালোচনায় রয়েছে। অনুমোদনের পর রোগীরা আপনার প্রোফাইল দেখতে পাবেন।</span>
                     </div>
                   )}
                   
                   {doctorData.status === 'ACTIVE' && (
                     <div className="alert alert-success mt-4">
                       <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      <span>Congratulations! Your profile is approved and visible to patients.</span>
+                      <span>অভিনন্দন! আপনার প্রোফাইল অনুমোদিত এবং রোগীরা দেখতে পাচ্ছেন। কোনো পরিবর্তন করলে পুনরায় অ্যাডমিনের অনুমোদন প্রয়োজন।</span>
+                    </div>
+                  )}
+
+                  {doctorData.status === 'DISABLED' && (
+                    <div className="alert alert-error mt-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      <span>দুঃখিত! আপনার প্রোফাইল নিষ্ক্রিয় করা হয়েছে। আরো তথ্যের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।</span>
                     </div>
                   )}
                 </div>
@@ -460,16 +469,16 @@ export default function DoctorProfile() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        📸 <span>Photo URL (Optional)</span>
+                        🌐 <span>Website URL (Optional)</span>
                       </span>
-                      <span className="label-text-alt text-xs">Professional photo URL</span>
+                      <span className="label-text-alt text-xs">Your professional website or clinic website</span>
                     </label>
                     <input
                       type="url"
-                      name="photoUrl"
-                      placeholder="https://example.com/your-professional-photo.jpg"
+                      name="websiteUrl"
+                      placeholder="https://www.your-clinic-website.com"
                       className="input input-bordered focus:input-primary"
-                      value={formData.photoUrl}
+                      value={formData.websiteUrl}
                       onChange={handleInputChange}
                     />
                   </div>

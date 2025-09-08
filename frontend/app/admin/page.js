@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       const token = getToken()
       
       // Fetch all doctors
-      const doctorsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/doctor/all`, {
+      const doctorsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -50,6 +50,7 @@ export default function AdminDashboard() {
 
       if (doctorsResponse.ok) {
         const doctors = await doctorsResponse.json()
+        console.log('Doctors data:', doctors)
         setPendingDoctors(doctors.filter(doc => doc.status === 'PENDING'))
         setActiveDoctors(doctors.filter(doc => doc.status === 'ACTIVE'))
         
@@ -61,7 +62,7 @@ export default function AdminDashboard() {
       }
 
       // Fetch user statistics
-      const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/all`, {
+      const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/user/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -85,12 +86,24 @@ export default function AdminDashboard() {
 
   const handleDoctorAction = async (doctorEmail, action) => {
     try {
+      console.log('handleDoctorAction called with:', { doctorEmail, action })
+      
+      if (!doctorEmail) {
+        alert('ডক্টরের ইমেইল পাওয়া যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।')
+        return
+      }
+      
       setActionLoading(prev => ({ ...prev, [doctorEmail]: true }))
       const token = getToken()
       
       const status = action === 'approve' ? 'ACTIVE' : 'DISABLED'
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/status/${doctorEmail}`
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/doctor/status/${doctorEmail}`, {
+      console.log('API URL:', apiUrl)
+      console.log('Status:', status)
+      console.log('Token:', token ? 'Present' : 'Missing')
+      
+      const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,16 +112,34 @@ export default function AdminDashboard() {
         body: JSON.stringify(status),
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+
       if (response.ok) {
         // Refresh the data
         await fetchDashboardData()
-        alert(`Doctor ${action === 'approve' ? 'approved' : 'rejected'} successfully!`)
+        
+        // Show success message with better UX
+        const successAlert = document.createElement('div')
+        successAlert.className = 'alert alert-success fixed top-4 right-4 z-50 w-auto'
+        successAlert.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>ডক্টর ${action === 'approve' ? 'অনুমোদিত' : 'প্রত্যাখ্যাত'} হয়েছে সফলভাবে!</span>
+        `
+        document.body.appendChild(successAlert)
+        setTimeout(() => {
+          document.body.removeChild(successAlert)
+        }, 3000)
       } else {
-        alert('Failed to update doctor status')
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        alert('ডক্টরের স্ট্যাটাস আপডেট করতে ব্যর্থ: ' + errorText)
       }
     } catch (error) {
       console.error('Error updating doctor status:', error)
-      alert('An error occurred while updating doctor status')
+      alert('ডক্টরের স্ট্যাটাস আপডেটে সমস্যা হয়েছে: ' + error.message)
     } finally {
       setActionLoading(prev => ({ ...prev, [doctorEmail]: false }))
     }
@@ -234,7 +265,7 @@ export default function AdminDashboard() {
                 ) : (
                   pendingDoctors.map((doctor) => (
                     <motion.div 
-                      key={doctor.id}
+                      key={`${doctor.id}-${doctor.user?.email}`}
                       className="card bg-base-200 shadow-lg"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -244,9 +275,9 @@ export default function AdminDashboard() {
                         <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
                           <div className="flex-1">
                             <h3 className="card-title text-primary">
-                              Dr. {doctor.user?.firstName} {doctor.user?.lastName}
+                              Dr. {doctor.firstName} {doctor.lastName}
                             </h3>
-                            <p className="text-sm text-base-content/70 mb-2">📧 {doctor.user?.email}</p>
+                            <p className="text-sm text-base-content/70 mb-2">📧 {doctor.email}</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                               <div>
@@ -273,6 +304,21 @@ export default function AdminDashboard() {
                                 <p className="font-semibold">📞 Phone:</p>
                                 <p className="text-sm">{doctor.phoneNumber?.join(', ') || 'Not specified'}</p>
                               </div>
+                              {doctor.websiteUrl && (
+                                <div>
+                                  <p className="font-semibold">🌐 Website:</p>
+                                  <p className="text-sm">
+                                    <a 
+                                      href={doctor.websiteUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="link link-primary"
+                                    >
+                                      {doctor.websiteUrl}
+                                    </a>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                             
                             {doctor.chamberAddress && (
@@ -285,16 +331,16 @@ export default function AdminDashboard() {
                           
                           <div className="flex flex-col gap-2">
                             <button 
-                              className={`btn btn-success btn-sm ${actionLoading[doctor.user?.email] ? 'loading' : ''}`}
-                              onClick={() => handleDoctorAction(doctor.user?.email, 'approve')}
-                              disabled={actionLoading[doctor.user?.email]}
+                              className={`btn btn-success btn-sm ${actionLoading[doctor.email] ? 'loading' : ''}`}
+                              onClick={() => handleDoctorAction(doctor.email, 'approve')}
+                              disabled={actionLoading[doctor.email]}
                             >
                               ✅ Approve
                             </button>
                             <button 
-                              className={`btn btn-error btn-sm ${actionLoading[doctor.user?.email] ? 'loading' : ''}`}
-                              onClick={() => handleDoctorAction(doctor.user?.email, 'reject')}
-                              disabled={actionLoading[doctor.user?.email]}
+                              className={`btn btn-error btn-sm ${actionLoading[doctor.email] ? 'loading' : ''}`}
+                              onClick={() => handleDoctorAction(doctor.email, 'reject')}
+                              disabled={actionLoading[doctor.email]}
                             >
                               ❌ Reject
                             </button>
@@ -321,7 +367,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {activeDoctors.map((doctor) => (
                       <motion.div 
-                        key={doctor.id}
+                        key={`active-${doctor.id}-${doctor.user?.email}`}
                         className="card bg-base-200 shadow-lg"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -329,21 +375,34 @@ export default function AdminDashboard() {
                       >
                         <div className="card-body">
                           <h3 className="card-title text-success">
-                            Dr. {doctor.user?.firstName} {doctor.user?.lastName}
+                            Dr. {doctor.firstName} {doctor.lastName}
                           </h3>
-                          <p className="text-sm text-base-content/70">📧 {doctor.user?.email}</p>
+                          <p className="text-sm text-base-content/70">📧 {doctor.email}</p>
                           
                           <div className="mt-2 space-y-1">
                             <p className="text-sm"><strong>🎓:</strong> {formatDegrees(doctor.degree)}</p>
                             <p className="text-sm"><strong>🏥:</strong> {formatSpecializations(doctor.specialization)}</p>
                             <p className="text-sm"><strong>📍:</strong> {doctor.currentCity || 'Not specified'}</p>
                             <p className="text-sm"><strong>🕒:</strong> {doctor.availableTime || 'Not specified'}</p>
+                            {doctor.websiteUrl && (
+                              <p className="text-sm">
+                                <strong>🌐:</strong> 
+                                <a 
+                                  href={doctor.websiteUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="link link-primary ml-1"
+                                >
+                                  Website
+                                </a>
+                              </p>
+                            )}
                           </div>
 
                           <div className="card-actions justify-end mt-4">
                             <button 
                               className="btn btn-warning btn-sm"
-                              onClick={() => handleDoctorAction(doctor.user?.email, 'reject')}
+                              onClick={() => handleDoctorAction(doctor.email, 'reject')}
                             >
                               🚫 Disable
                             </button>

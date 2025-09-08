@@ -19,19 +19,30 @@ import java.util.stream.Collectors;
 public class DoctorServiceImp implements DoctorService {
 
     DoctorDTO convertToDoctorDTO(User user) {
-        return new DoctorDTO(user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getDoctor().getSpecialization(),
-                user.getDoctor().getDegree(),
-                user.getDoctor().getPhoneNumber(),
-                user.getDoctor().getChamberAddress(),
-                user.getDoctor().getDesignation(),
-                user.getDoctor().getInstitute(),
-                user.getDoctor().getCurrentCity(),
-                user.getDoctor().getAvailableTime(),
-                user.getDoctor().getWebsiteUrl(),
-                user.getDoctor().getStatus());
+        DoctorDTO dto = new DoctorDTO();
+        dto.setId(user.getDoctor().getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setSpecialization(user.getDoctor().getSpecialization());
+        dto.setDegree(user.getDoctor().getDegree());
+        dto.setPhoneNumber(user.getDoctor().getPhoneNumber());
+        dto.setChamberAddress(user.getDoctor().getChamberAddress());
+        dto.setDesignation(user.getDoctor().getDesignation());
+        dto.setInstitute(user.getDoctor().getInstitute());
+        dto.setCurrentCity(user.getDoctor().getCurrentCity());
+        dto.setAvailableTime(user.getDoctor().getAvailableTime());
+        dto.setWebsiteUrl(user.getDoctor().getWebsiteUrl());
+        dto.setStatus(user.getDoctor().getStatus());
+        
+        // Create safe user info without circular reference
+        DoctorDTO.UserInfoDTO userInfo = new DoctorDTO.UserInfoDTO();
+        userInfo.setFirstName(user.getFirstName());
+        userInfo.setLastName(user.getLastName());
+        userInfo.setEmail(user.getEmail());
+        dto.setUser(userInfo);
+        
+        return dto;
     }
 
     @Autowired
@@ -84,20 +95,19 @@ public class DoctorServiceImp implements DoctorService {
         user.setLastName(doctorDTO.getLastName());
         userRepository.save(user);
 
-        Doctor doctor = new Doctor(
-                user.getDoctor().getId(),
-                doctorDTO.getSpecialization(),
-                doctorDTO.getDegree(),
-                doctorDTO.getPhoneNumber(),
-                doctorDTO.getChamberAddress(),
-                doctorDTO.getDesignation(),
-                doctorDTO.getInstitute(),
-                doctorDTO.getCurrentCity(),
-                doctorDTO.getAvailableTime(),
-                doctorDTO.getWebsiteUrl(),
-                Status.PENDING,
-                user
-                );
+        Doctor doctor = new Doctor();
+        doctor.setId(user.getDoctor().getId());
+        doctor.setSpecialization(doctorDTO.getSpecialization());
+        doctor.setDegree(doctorDTO.getDegree());
+        doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
+        doctor.setChamberAddress(doctorDTO.getChamberAddress());
+        doctor.setDesignation(doctorDTO.getDesignation());
+        doctor.setInstitute(doctorDTO.getInstitute());
+        doctor.setCurrentCity(doctorDTO.getCurrentCity());
+        doctor.setAvailableTime(doctorDTO.getAvailableTime());
+        doctor.setWebsiteUrl(doctorDTO.getWebsiteUrl());
+        doctor.setStatus(Status.PENDING);
+        doctor.setUser(user);
         doctorRepository.save(doctor);
     }
 

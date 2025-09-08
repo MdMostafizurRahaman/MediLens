@@ -135,6 +135,33 @@ export default function ChatPage() {
         }
       }
       
+      // Check for analysis context from localStorage
+      const storedChatContext = localStorage.getItem('medilens_chat_context')
+      if (storedChatContext) {
+        try {
+          const chatContextData = JSON.parse(storedChatContext)
+          if (chatContextData.type === 'analysis_discussion' && chatContextData.analysis) {
+            setPrescriptionData(chatContextData.analysis)
+            setChatContext('analysis_discussion')
+            
+            // Set a detailed welcome message with analysis context
+            const welcomeMessage = `🔬 প্রেসক্রিপশন বিশ্লেষণ থেকে আপনাকে স্বাগতম!\n\n${chatContextData.fullReport || chatContextData.summary}\n\nএই বিশ্লেষণ নিয়ে আপনার কোনো প্রশ্ন আছে? আমি সাহায্য করতে প্রস্তুত! 💬`
+            
+            setMessages([{
+              id: 'welcome-analysis-' + Date.now(),
+              type: 'bot',
+              content: welcomeMessage,
+              timestamp: new Date()
+            }])
+            
+            localStorage.removeItem('medilens_chat_context') // Clear after use
+            return // Don't continue with normal initialization
+          }
+        } catch (error) {
+          console.error('Error parsing chat context data:', error)
+        }
+      }
+      
       initializeChat()
     }
   }, [currentUser])

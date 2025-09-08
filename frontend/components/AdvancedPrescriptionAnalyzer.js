@@ -2,22 +2,379 @@
 
 import React, { useState, useRef } from 'react'
 import { Camera, Upload, FileText, Loader2, CheckCircle, AlertCircle, Download, Eye, Brain, FileDown } from 'lucide-react'
-
+import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
+import BengaliSummaryCard from './BengaliSummaryCard'
+import DetailedAnalysisReportGenerator from './DetailedAnalysisReportGenerator'
 
 const AdvancedPrescriptionAnalyzer = () => {
+  const { currentUser, getToken } = useAuth()
+  const router = useRouter()
   const [selectedFile, setSelectedFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisProgress, setAnalysisProgress] = useState(0)
+  const [analysisStage, setAnalysisStage] = useState('')
+  const [estimatedTime, setEstimatedTime] = useState(0)
   const [analysis, setAnalysis] = useState(null)
   const [error, setError] = useState(null)
   const [extractedText, setExtractedText] = useState('')
   const [analysisMethod, setAnalysisMethod] = useState('enhanced-medical') // Default to Enhanced Medical
+  const [savedAnalysisId, setSavedAnalysisId] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
 
   // Helper function to safely get array data
   const safeArray = (data) => {
     return Array.isArray(data) ? data : []
+  }
+
+  // Create a concise summary for database storage (বাংলায়)
+  const createConciseSummary = (analysisData) => {
+    let summary = []
+    
+    // Basic info
+    if (analysisData.patientInformation?.name) {
+      summary.push(`রোগী: ${analysisData.patientInformation.name}`)
+    }
+    if (analysisData.doctorInformation?.name) {
+      summary.push(`ডাক্তার: ${analysisData.doctorInformation.name}`)
+    }
+    
+    // Primary diagnosis
+    if (analysisData.primaryDiagnosis?.condition) {
+      summary.push(`রোগ: ${analysisData.primaryDiagnosis.condition}`)
+    } else if (analysisData.primaryDiagnosis?.conditions?.length > 0) {
+      summary.push(`রোগসমূহ: ${analysisData.primaryDiagnosis.conditions.slice(0, 3).join(', ')}`)
+    }
+    
+    // Medications count
+    if (analysisData.medications?.length > 0) {
+      summary.push(`💊 ${analysisData.medications.length} টি ওষুধ`)
+    }
+    
+    // Key advice (shortened)
+    if (analysisData.medicalAdvice?.banglaReport) {
+      const advice = analysisData.medicalAdvice.banglaReport.substring(0, 300)
+      summary.push(`পরামর্শ: ${advice}${advice.length === 300 ? '...' : ''}`)
+    }
+    
+    return summary.join(' | ').substring(0, 9999)
+  }
+
+  // Create Bengali summary for display and chat
+  const createBengaliSummary = (analysisData) => {
+    let summary = {
+      title: "📊 সাম্প্রতিক বিশ্লেষণ",
+      date: `📅 ${new Date().toLocaleDateString('bn-BD')}`,
+      condition: "",
+      medicines: 0,
+      tests: 0,
+      shortDescription: ""
+    }
+
+    // Primary diagnosis
+    if (analysisData.primaryDiagnosis?.condition) {
+      summary.condition = analysisData.primaryDiagnosis.condition
+    } else if (analysisData.primaryDiagnosis?.conditions?.length > 0) {
+      summary.condition = analysisData.primaryDiagnosis.conditions[0]
+    }
+
+    // Medicines count
+    if (analysisData.medications?.length > 0) {
+      summary.medicines = analysisData.medications.length
+    }
+
+    // Tests count
+    if (analysisData.investigations?.length > 0) {
+      summary.tests = analysisData.investigations.length
+    }
+
+    // Short description for chat
+    let description = []
+    if (summary.condition) {
+      description.push(`রোগ: ${summary.condition}`)
+    }
+    if (summary.medicines > 0) {
+      description.push(`💊 ${summary.medicines} টি ওষুধ`)
+    }
+    if (summary.tests > 0) {
+      description.push(`🔬 ${summary.tests} টি টেস্ট`)
+    }
+    
+    summary.shortDescription = description.join(', ')
+    
+    return summary
+  }
+
+  // Color mapping for different analysis sections
+  const getAnalysisColors = () => {
+    return {
+      diagnosisColor: "#dc2626", // red-600
+      medicationColor: "#059669", // emerald-600
+      testColor: "#2563eb", // blue-600
+      warningColor: "#d97706", // amber-600
+      adviceColor: "#7c3aed", // violet-600
+      patientColor: "#0891b2", // cyan-600
+      doctorColor: "#be185d", // pink-600
+      summaryColor: "#374151" // gray-700
+    }
+  }
+
+  // Store analysis data with colors in localStorage
+  const storeAnalysisDataLocally = (analysisData, bengaliSummary, colors) => {
+    try {
+      const analysisWithColors = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('bn-BD'),
+        
+        // Full analysis data
+        analysis: analysisData,
+        summary: bengaliSummary,
+        colors: colors,
+        extractedText: extractedText,
+        analysisMethod: analysisMethod,
+        
+        // Detailed sections for easy access
+        imageAnalysis: analysisData.imageAnalysis || null,
+        patientInformation: analysisData.patientInformation || null,
+        doctorInformation: analysisData.doctorInformation || null,
+        primaryDiagnosis: analysisData.primaryDiagnosis || null,
+        medications: analysisData.medications || [],
+        investigations: analysisData.investigations || [],
+        medicalAdvice: analysisData.medicalAdvice || null,
+        safetyWarnings: analysisData.safetyWarnings || [],
+        costAnalysis: analysisData.costAnalysis || null,
+        qualityMetrics: analysisData.qualityMetrics || null,
+        
+        // For autofill features
+        medicalHistory: extractMedicalHistory(analysisData),
+        currentMedications: extractCurrentMedications(analysisData),
+        allergies: extractAllergies(analysisData),
+        
+        // Bengali translated content
+        bengaliDiagnosis: analysisData.primaryDiagnosis?.bangla || '',
+        bengaliAdvice: analysisData.medicalAdvice?.banglaReport || '',
+        
+        // Legacy fields for compatibility
+        keyDiseases: analysisData.primaryDiagnosis?.conditions || 
+                    [analysisData.primaryDiagnosis?.condition].filter(Boolean) || [],
+        medicines: analysisData.medications?.map(med => 
+          med.prescribedName || med.correctedName || med.genericName || med.brandName || 
+          med.name || med.medication || med.drug || med.medicine || 'Unknown Medicine'
+        ) || [],
+        doctorName: analysisData.doctorInformation?.name || null,
+        patientName: analysisData.patientInformation?.name || null
+      }
+
+      // Get existing analyses
+      const existingAnalyses = JSON.parse(localStorage.getItem('medilens_analyses') || '[]')
+      
+      // Add new analysis at the beginning
+      existingAnalyses.unshift(analysisWithColors)
+      
+      // Keep only last 50 analyses
+      if (existingAnalyses.length > 50) {
+        existingAnalyses.splice(50)
+      }
+      
+      // Store back to localStorage
+      localStorage.setItem('medilens_analyses', JSON.stringify(existingAnalyses))
+      localStorage.setItem('medilens_latest_analysis', JSON.stringify(analysisWithColors))
+      
+      console.log('✅ Detailed analysis stored locally with colors and Bengali summary')
+      return analysisWithColors
+    } catch (error) {
+      console.error('Error storing analysis locally:', error)
+      return null
+    }
+  }
+
+  // Extract medical history for autofill
+  const extractMedicalHistory = (analysisData) => {
+    let history = []
+    
+    if (analysisData.primaryDiagnosis?.condition) {
+      history.push(analysisData.primaryDiagnosis.condition)
+    }
+    if (analysisData.primaryDiagnosis?.conditions?.length > 0) {
+      history.push(...analysisData.primaryDiagnosis.conditions)
+    }
+    
+    return [...new Set(history)] // Remove duplicates
+  }
+
+  // Extract current medications for autofill
+  const extractCurrentMedications = (analysisData) => {
+    let medications = []
+    
+    if (analysisData.medications?.length > 0) {
+      medications = analysisData.medications.map(med => ({
+        name: med.prescribedName || med.genericName || med.brandName || med.name,
+        bangla: med.bangla || '',
+        strength: med.strength || med.dosage || '',
+        frequency: med.frequency || '',
+        duration: med.duration || '',
+        purpose: med.purpose || med.mechanism || ''
+      }))
+    }
+    
+    return medications
+  }
+
+  // Extract allergies information
+  const extractAllergies = (analysisData) => {
+    let allergies = []
+    
+    // Check safety warnings for allergy information
+    if (analysisData.safetyWarnings?.length > 0) {
+      analysisData.safetyWarnings.forEach(warning => {
+        if (warning.toLowerCase().includes('allerg') || warning.toLowerCase().includes('অ্যালার্জি')) {
+          allergies.push(warning)
+        }
+      })
+    }
+    
+    return allergies
+  }
+
+  // Get stored analyses from localStorage
+  const getStoredAnalyses = () => {
+    try {
+      const stored = localStorage.getItem('medilens_analyses')
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error('Error reading stored analyses:', error)
+      return []
+    }
+  }
+
+  // Get latest analysis from localStorage
+  const getLatestAnalysis = () => {
+    try {
+      const stored = localStorage.getItem('medilens_latest_analysis')
+      return stored ? JSON.parse(stored) : null
+    } catch (error) {
+      console.error('Error reading latest analysis:', error)
+      return null
+    }
+  }
+
+  // Save analysis to database
+  const saveAnalysisToDatabase = async (analysisData) => {
+    if (!currentUser) {
+      console.log('User not logged in, saving to localStorage only')
+      
+      // Create Bengali summary and colors
+      const bengaliSummary = createBengaliSummary(analysisData)
+      const colors = getAnalysisColors()
+      
+      // Store locally with colors
+      const storedData = storeAnalysisDataLocally(analysisData, bengaliSummary, colors)
+      
+      return storedData
+    }
+
+    try {
+      setIsSaving(true)
+      
+      // Create Bengali summary and colors
+      const bengaliSummary = createBengaliSummary(analysisData)
+      const colors = getAnalysisColors()
+      
+      // Store locally first
+      storeAnalysisDataLocally(analysisData, bengaliSummary, colors)
+      
+      // Extract key information from analysis for database storage
+      const analysisForDB = {
+        analysisSummary: createConciseSummary(analysisData),
+        bengaliSummary: bengaliSummary.shortDescription,
+        fullPrescriptionText: (extractedText || analysisData.extractedText || '').substring(0, 9999),
+        
+        // Detailed analysis sections
+        imageAnalysis: analysisData.imageAnalysis || null,
+        patientInformation: analysisData.patientInformation || null,
+        doctorInformation: analysisData.doctorInformation || null,
+        primaryDiagnosis: analysisData.primaryDiagnosis || null,
+        
+        // Medications with full details
+        medications: analysisData.medications || [],
+        medicineNames: safeArray(analysisData.medications?.map(med => 
+          med.prescribedName || med.correctedName || med.genericName || med.brandName || 
+          med.name || med.medication || med.drug || med.medicine || 'Unknown Medicine'
+        )),
+        
+        // Investigations/Tests with full details
+        investigations: analysisData.investigations || [],
+        
+        // Medical advice
+        medicalAdvice: analysisData.medicalAdvice || null,
+        
+        // Safety warnings
+        safetyWarnings: analysisData.safetyWarnings || [],
+        
+        // Cost analysis
+        costAnalysis: analysisData.costAnalysis || null,
+        
+        // Quality metrics
+        qualityMetrics: analysisData.qualityMetrics || null,
+        
+        // Legacy fields for compatibility
+        medicines: safeArray(analysisData.medications?.map(med => 
+          med.prescribedName || med.correctedName || med.genericName || med.brandName || 
+          med.name || med.medication || med.drug || med.medicine || 'Unknown Medicine'
+        )),
+        keyDiseases: safeArray(analysisData.primaryDiagnosis?.conditions || 
+                              [analysisData.primaryDiagnosis?.condition].filter(Boolean) ||
+                              analysisData.keyDiseases),
+        dosageInstructions: safeArray(analysisData.medications?.map(med => 
+          `${med.prescribedName || med.genericName || 'Medicine'}: ${med.frequency || ''} ${med.duration || ''} ${med.timing || ''}`.trim()
+        )),
+        doctorName: analysisData.doctorInformation?.name || analysisData.doctorInformation?.doctorName || analysisData.doctorName || null,
+        patientName: analysisData.patientInformation?.name || analysisData.patientInformation?.patientName || analysisData.patientName || null,
+        
+        // Add color information
+        analysisColors: colors,
+        
+        // Add extracted information for autofill
+        medicalHistory: extractMedicalHistory(analysisData),
+        currentMedications: extractCurrentMedications(analysisData),
+        allergies: extractAllergies(analysisData),
+        
+        // Analysis metadata
+        analysisMethod: analysisMethod,
+        timestamp: new Date().toISOString()
+      }
+
+      const token = getToken()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(analysisForDB),
+      })
+
+      if (response.ok) {
+        const savedAnalysis = await response.json()
+        setSavedAnalysisId(savedAnalysis.id)
+        console.log('✅ Analysis saved to database with colors and Bengali summary:', savedAnalysis.id)
+        return savedAnalysis
+      } else {
+        const errorText = await response.text()
+        console.error('Failed to save analysis to database:', response.status, errorText)
+        setError(`Failed to save analysis: ${errorText}`)
+        return null
+      }
+    } catch (error) {
+      console.error('Error saving analysis to database:', error)
+      return null
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleFileSelect = (event) => {
@@ -46,6 +403,39 @@ const AdvancedPrescriptionAnalyzer = () => {
     setIsAnalyzing(true)
     setError(null)
     setAnalysis(null)
+    setAnalysisProgress(0)
+    setAnalysisStage('প্রস্তুতি...')
+    setEstimatedTime(15) // 15 seconds estimate
+
+    // Progress simulation
+    const progressInterval = setInterval(() => {
+      setAnalysisProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval)
+          return 95
+        }
+        return prev + Math.random() * 10
+      })
+    }, 500)
+
+    // Stage updates
+    const stages = [
+      { stage: 'ছবি আপলোড করা হচ্ছে...', delay: 1000 },
+      { stage: 'টেক্সট বিশ্লেষণ করা হচ্ছে...', delay: 3000 },
+      { stage: 'ওষুধের তালিকা খোঁজা হচ্ছে...', delay: 5000 },
+      { stage: 'রোগ নির্ণয় করা হচ্ছে...', delay: 7000 },
+      { stage: 'চিকিৎসা পরামর্শ তৈরি করা হচ্ছে...', delay: 10000 },
+      { stage: 'চূড়ান্ত রিপোর্ট প্রস্তুত করা হচ্ছে...', delay: 13000 }
+    ]
+
+    stages.forEach(({ stage, delay }) => {
+      setTimeout(() => {
+        if (isAnalyzing) {
+          setAnalysisStage(stage)
+          setEstimatedTime(prev => Math.max(0, prev - 2))
+        }
+      }, delay)
+    })
 
     try {
       const formData = new FormData()
@@ -85,6 +475,15 @@ const AdvancedPrescriptionAnalyzer = () => {
         setExtractedText(result.extractedText || result.analysis?.extractedText || '')
         setAnalysis(result.analysis)
         console.log(`✅ ${methodName} analysis completed successfully`)
+        
+        setAnalysisProgress(100)
+        setAnalysisStage('সম্পন্ন!')
+        setEstimatedTime(0)
+        
+        // Save analysis to database if user is logged in
+        if (currentUser && result.analysis) {
+          await saveAnalysisToDatabase(result.analysis)
+        }
       } else {
         // If Google Lens fails, try Enhanced Medical as fallback
         if (analysisMethod === 'google-lens') {
@@ -102,6 +501,11 @@ const AdvancedPrescriptionAnalyzer = () => {
             setExtractedText(fallbackResult.analysis?.extractedText || '')
             setAnalysis(fallbackResult.analysis)
             console.log('✅ Fallback Enhanced Medical analysis successful')
+            
+            // Save fallback analysis to database if user is logged in
+            if (currentUser && fallbackResult.analysis) {
+              await saveAnalysisToDatabase(fallbackResult.analysis)
+            }
           } else {
             setError(`সব পদ্ধতিতে সমস্যা: ${result.error}`)
           }
@@ -114,6 +518,9 @@ const AdvancedPrescriptionAnalyzer = () => {
       setError('নেটওয়ার্ক সমস্যা বা সার্ভার ত্রুটি। আবার চেষ্টা করুন।')
     } finally {
       setIsAnalyzing(false)
+      setAnalysisProgress(0)
+      setAnalysisStage('')
+      setEstimatedTime(0)
     }
   }
 
@@ -123,6 +530,8 @@ const AdvancedPrescriptionAnalyzer = () => {
     setAnalysis(null)
     setError(null)
     setExtractedText('')
+    setSavedAnalysisId(null)
+    setIsSaving(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
@@ -817,6 +1226,28 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
         }
       `}</style>
       
+      {/* Login Required Notice */}
+      {!currentUser && (
+        <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+          <div className="flex items-start">
+            <div className="text-yellow-600 text-xl mr-3">⚠️</div>
+            <div>
+              <h3 className="font-semibold text-yellow-800 mb-2">লগইন প্রয়োজন</h3>
+              <p className="text-yellow-700 text-sm mb-3">
+                AI বিশ্লেষণের ইতিহাস সংরক্ষণ ও চ্যাট ফিচার ব্যবহারের জন্য লগইন করুন। 
+                লগইন ছাড়াও আপনি বিশ্লেষণ করতে পারেন, তবে তা সংরক্ষিত হবে না।
+              </p>
+              <button
+                onClick={() => router.push('/auth/login')}
+                className="btn btn-warning btn-sm"
+              >
+                🔐 লগইন করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       {/* Header */}
       <div className="text-center mb-8">
@@ -919,7 +1350,7 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
                   {isAnalyzing ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      বিশ্লেষণ করা হচ্ছে...
+                      বিশ্লেষণ করা হচ্ছে... {Math.round(analysisProgress)}%
                     </>
                   ) : (
                     <>
@@ -929,6 +1360,33 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
                     </>
                   )}
                 </button>
+
+                {/* Progress Bar */}
+                {isAnalyzing && (
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${analysisProgress}%` }}
+                    ></div>
+                  </div>
+                )}
+
+                {/* Progress Info */}
+                {isAnalyzing && (
+                  <div className="text-center space-y-2 mb-4">
+                    <p className="text-blue-700 font-medium">{analysisStage}</p>
+                    <p className="text-sm text-gray-600">
+                      আনুমানিক সময়: {estimatedTime} সেকেন্ড
+                    </p>
+                    <div className="flex justify-center items-center space-x-4 text-xs text-gray-500">
+                      <span>🔍 AI বিশ্লেষণ</span>
+                      <span>•</span>
+                      <span>📋 রিপোর্ট তৈরি</span>
+                      <span>•</span>
+                      <span>✅ সম্পূর্ণ</span>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={resetAnalyzer}
                   className="flex items-center px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
@@ -1003,12 +1461,138 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
       {/* Analysis Results */}
       {analysis && (
         <div className="space-y-6">
+          {/* Bengali Summary Display */}
+          {/* <BengaliSummaryCard 
+            analysis={{
+              id: savedAnalysisId || Date.now(),
+              timestamp: new Date().toISOString(),
+              analysis: analysis,
+              summary: createBengaliSummary(analysis),
+              colors: getAnalysisColors(),
+              extractedText: extractedText,
+              analysisMethod: analysisMethod,
+              medicalHistory: extractMedicalHistory(analysis),
+              currentMedications: extractCurrentMedications(analysis),
+              allergies: extractAllergies(analysis)
+            }}
+            showChatButton={!!currentUser && !!savedAnalysisId}
+          /> */}
+
+          {/* Medical Information Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-lg shadow-md">
+            {/* <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+              🏥 Medical Information
+              <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                📋 স্বয়ংক্রিয় তথ্য: আপনার সর্বশেষ AI বিশ্লেষণ থেকে চিকিৎসা ইতিহাস ও বর্তমান ওষুধের তথ্য স্বয়ংক্রিয়ভাবে যোগ করা হয়েছে। প্রয়োজনে সম্পাদনা করুন।
+              </span>
+            </h4> */}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Medical History */}
+              {/* <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  📋 Medical History
+                </label>
+                <div className="text-xs text-gray-500 mb-2">
+                  Enter each history item on a new line, or paste JSON array.
+                </div>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows="4"
+                  defaultValue={(() => {
+                    const history = extractMedicalHistory(analysis)
+                    return history.length > 0 ? history.join('\n') : 'No medical history detected from prescription'
+                  })()}
+                  placeholder="Previous medical conditions, surgeries, chronic diseases..."
+                  readOnly
+                />
+              </div> */}
+
+              {/* Allergies */}
+              {/* <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ⚠️ Allergies
+                </label>
+                <div className="text-xs text-gray-500 mb-2">
+                  List any food, drug, or other allergies
+                </div>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-yellow-50 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  rows="4"
+                  defaultValue={(() => {
+                    const allergies = extractAllergies(analysis)
+                    return allergies.length > 0 ? allergies.join('\n') : 'No known allergies detected from prescription'
+                  })()}
+                  placeholder="Food allergies, drug allergies, environmental allergies..."
+                  readOnly
+                />
+              </div> */}
+
+              {/* Current Medications */}
+              {/* <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  💊 Current Medications
+                </label>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-green-50 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  rows="6"
+                  defaultValue={(() => {
+                    const medications = extractCurrentMedications(analysis)
+                    if (medications.length > 0) {
+                      return medications.map((med, index) => 
+                        `${index + 1}. ${med.name || med}${med.bangla ? ` (${med.bangla})` : ''} - ${med.strength || ''} - ${med.frequency || ''}${med.duration ? ` - ${med.duration}` : ''}${med.purpose ? ` [${med.purpose}]` : ''}`
+                      ).join('\n')
+                    }
+                    return 'Current medications from prescription analysis'
+                  })()}
+                  placeholder="List current medications with dosage and frequency..."
+                  readOnly
+                />
+              </div> */}
+            </div>
+
+            {/* Detailed Report Generator */}
+            {/* <div className="mt-4 flex justify-center">
+              <DetailedAnalysisReportGenerator 
+                analysis={{
+                  id: savedAnalysisId || Date.now(),
+                  timestamp: new Date().toISOString(),
+                  analysis: analysis,
+                  analysisMethod: analysisMethod,
+                  extractedText: extractedText,
+                  imageAnalysis: analysis.imageAnalysis,
+                  patientInformation: analysis.patientInformation,
+                  doctorInformation: analysis.doctorInformation,
+                  primaryDiagnosis: analysis.primaryDiagnosis,
+                  medications: analysis.medications,
+                  investigations: analysis.investigations,
+                  medicalAdvice: analysis.medicalAdvice,
+                  safetyWarnings: analysis.safetyWarnings,
+                  costAnalysis: analysis.costAnalysis,
+                  qualityMetrics: analysis.qualityMetrics
+                }}
+              />
+            </div> */}
+          </div>
+
           {/* Header with download */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-green-800 flex items-center">
               <CheckCircle className="w-6 h-6 mr-2" />
               বিশ্লেষণ সম্পন্ন ({analysisMethod === 'enhanced-medical' ? 'Enhanced Medical AI' : 
                               analysisMethod === 'gemini-vision' ? 'Gemini Vision' : 'Google Lens'})
+              {isSaving && (
+                <span className="ml-3 text-sm text-blue-600 flex items-center">
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  সেভ করা হচ্ছে...
+                </span>
+              )}
+              {savedAnalysisId && !isSaving && (
+                <span className="ml-3 text-sm text-green-600 flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  সেভ হয়েছে
+                </span>
+              )}
             </h2>
             <div className="flex gap-2">
               <button
@@ -1027,6 +1611,44 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
                 <Download className="w-4 h-4 mr-2" />
                 💾 Save Data
               </button>
+              {currentUser && savedAnalysisId && (
+                <>
+                  <button
+                    onClick={() => router.push(`/analysis/${savedAnalysisId}`)}
+                    className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    📋 View Details
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = getToken()
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${savedAnalysisId}/send-to-chat`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                          },
+                        })
+                        
+                        if (response.ok) {
+                          alert('✅ বিশ্লেষণ চ্যাটে পাঠানো হয়েছে! এখন আপনি AI Assistant এর সাথে এই বিশ্লেষণ নিয়ে আলোচনা করতে পারেন।')
+                          router.push('/chat')
+                        } else {
+                          alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+                        }
+                      } catch (error) {
+                        console.error('Error sending to chat:', error)
+                        alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।')
+                      }
+                    }}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    💬 চ্যাটে আলোচনা করুন
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -1664,6 +2286,54 @@ Generated by MediLens AI • ${new Date().toLocaleDateString()}
             </div>
           )}
           </div> {/* End Simple Analysis Display - Website Only */}
+
+          {/* Bengali Summary Card & Report Generator */}
+          <div className="mt-8 space-y-6">
+            {/* BengaliSummaryCard commented out - not needed on Google Lens Test page */}
+            {/*
+            <BengaliSummaryCard 
+              analysis={{
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                analysis: analysis,
+                summary: createBengaliSummary(analysis),
+                colors: getAnalysisColors(),
+                medicalHistory: extractMedicalHistory(analysis),
+                currentMedications: extractCurrentMedications(analysis),
+                allergies: extractAllergies(analysis)
+              }} 
+              showChatButton={true} 
+            />
+            */}
+            
+            <DetailedAnalysisReportGenerator 
+              analysis={{
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                analysisMethod: analysisMethod,
+                
+                // Core analysis data
+                ...analysis,
+                
+                // Make sure all sections are included
+                patientInformation: analysis.patientInformation || null,
+                doctorInformation: analysis.doctorInformation || null,
+                primaryDiagnosis: analysis.primaryDiagnosis || null,
+                medications: analysis.medications || [],
+                investigations: analysis.investigations || [],
+                medicalAdvice: analysis.medicalAdvice || null,
+                safetyWarnings: analysis.safetyWarnings || [],
+                costAnalysis: analysis.costAnalysis || null,
+                qualityMetrics: analysis.qualityMetrics || null,
+                imageAnalysis: analysis.imageAnalysis || null,
+                
+                // Additional data for complete report
+                extractedText: extractedText,
+                bengaliSummary: createBengaliSummary(analysis),
+                colors: getAnalysisColors()
+              }} 
+            />
+          </div>
         </div>
       )}
 

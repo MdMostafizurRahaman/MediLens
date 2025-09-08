@@ -18,8 +18,8 @@ export default function Navigation() {
 
   const getNavigationItems = () => {
     const baseItems = [
-      // { href: '/upload', label: '📋 Upload Prescription' },
       { href: '/google-lens-test', label: '🔬 Google Lens Analysis' },
+      { href: '/analysis-history', label: '📋 My Analyses' },
       { href: '/chat', label: '💬 AI Assistant' },
       { href: '/doctors', label: '👨‍⚕️ Find Doctors' },
       { href: '/vitals', label: '🩺 Vital Signs' }
@@ -127,7 +127,7 @@ export default function Navigation() {
                 <li><Link href="/doctor-profile">👨‍⚕️ My Doctor Profile</Link></li>
               )}
               <li><Link href="/profile">⚙️ Account Settings</Link></li>
-              {/* <li><Link href="/upload">📋 Upload Prescription</Link></li> */}
+              <li><Link href="/google-lens-test">📋 Upload Prescription</Link></li>
               <li><Link href="/chat">💬 AI Assistant</Link></li>
               <div className="divider my-1"></div>
               <li><a onClick={handleLogout} className="text-error">🚪 Logout</a></li>

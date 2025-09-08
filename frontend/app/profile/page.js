@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation'
 export default function ProfilePage() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
   const [profileData, setProfileData] = useState(null)
+  const [analysisHistory, setAnalysisHistory] = useState([])
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -36,8 +37,50 @@ export default function ProfilePage() {
       return
     }
     
-    fetchProfileData()
+    fetchAnalysisHistory()
   }, [currentUser])
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchProfileData()
+    }
+  }, [currentUser, analysisHistory])
+
+  const fetchAnalysisHistory = async () => {
+    try {
+      // First load from localStorage (works for all users)
+      const localAnalyses = localStorage.getItem('medilens_analyses')
+      if (localAnalyses) {
+        const parsedLocal = JSON.parse(localAnalyses)
+        setAnalysisHistory(prev => [...parsedLocal.slice(0, 3), ...prev])
+      }
+
+      // Then load from server if logged in
+      if (currentUser) {
+        const token = getToken()
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/my-analyses`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Analysis history data:', data) // Debug log
+          setAnalysisHistory(prev => {
+            // Merge and deduplicate
+            const combined = [...prev, ...data.slice(0, 5)]
+            const unique = combined.filter((item, index, self) => 
+              index === self.findIndex((t) => t.id === item.id)
+            )
+            return unique.slice(0, 5) // Show only last 5 analyses
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching analysis history:', error)
+    }
+  }
 
   const fetchProfileData = async () => {
     try {
@@ -53,35 +96,153 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json()
         setProfileData(data)
-        setFormData({
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phoneNumber: data.phoneNumber || '',
-          address: data.address || '',
-          dateOfBirth: data.dateOfBirth || '',
-          gender: data.gender || '',
-          bloodGroup: data.bloodGroup || '',
-          emergencyContact: data.emergencyContact || '',
-          medicalHistory: Array.isArray(data.medicalHistory) ? data.medicalHistory : [],
-          allergies: data.allergies || '',
-          currentMedications: Array.isArray(data.currentMedications) ? data.currentMedications : []
-        })
+        
+        // Auto-fill medical info from latest analysis if profile fields are empty
+        if (analysisHistory.length > 0) {
+          const latestAnalysis = analysisHistory[0]
+          
+          // Extract medical history from both server and localStorage analysis
+          let medicalHistory = []
+          if (latestAnalysis.keyDiseases) {
+            // Server analysis
+            medicalHistory = latestAnalysis.keyDiseases.map(disease => ({ description: disease }))
+          } else if (latestAnalysis.medicalHistory) {
+            // localStorage analysis
+            medicalHistory = latestAnalysis.medicalHistory.map(item => ({ description: item }))
+          } else if (latestAnalysis.primaryDiagnosis?.condition) {
+            // Extract from primaryDiagnosis
+            medicalHistory = [{ description: latestAnalysis.primaryDiagnosis.condition }]
+          } else if (latestAnalysis.primaryDiagnosis?.conditions) {
+            // Extract from primaryDiagnosis conditions array
+            medicalHistory = latestAnalysis.primaryDiagnosis.conditions.map(condition => ({ description: condition }))
+          }
+          
+          // Extract current medications with detailed information
+          let currentMedications = []
+          if (latestAnalysis.medicines) {
+            // Server analysis - simple medicine names
+            currentMedications = latestAnalysis.medicines
+          } else if (latestAnalysis.medications) {
+            // localStorage analysis - detailed medication objects
+            currentMedications = latestAnalysis.medications.map(med => {
+              let medString = med.prescribedName || med.genericName || med.name || 'Unknown Medicine'
+              if (med.bangla) medString += ` (${med.bangla})`
+              if (med.strength) medString += ` - ${med.strength}`
+              if (med.frequency) medString += ` - ${med.frequency}`
+              if (med.duration) medString += ` - ${med.duration}`
+              if (med.purpose) medString += ` [${med.purpose}]`
+              return medString
+            })
+          } else if (latestAnalysis.currentMedications) {
+            // localStorage analysis - already processed medications
+            currentMedications = latestAnalysis.currentMedications.map(med => 
+              typeof med === 'string' ? med : `${med.name} - ${med.frequency} - ${med.duration || ''}`
+            )
+          }
+          
+          // Extract allergies from various sources
+          let allergies = ''
+          if (latestAnalysis.allergies && Array.isArray(latestAnalysis.allergies)) {
+            allergies = latestAnalysis.allergies.join(', ')
+          } else if (latestAnalysis.safetyWarnings) {
+            // Check safety warnings for allergy information
+            const allergyWarnings = latestAnalysis.safetyWarnings.filter(warning => 
+              warning.toLowerCase().includes('allerg') || warning.toLowerCase().includes('অ্যালার্জি')
+            )
+            allergies = allergyWarnings.join(', ')
+          }
+          
+          setFormData({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phoneNumber: data.phoneNumber || '',
+            address: data.address || '',
+            dateOfBirth: data.dateOfBirth || '',
+            gender: data.gender || '',
+            bloodGroup: data.bloodGroup || '',
+            emergencyContact: data.emergencyContact || '',
+            medicalHistory: Array.isArray(data.medicalHistory) && data.medicalHistory.length > 0 
+              ? data.medicalHistory 
+              : medicalHistory,
+            allergies: data.allergies || allergies,
+            currentMedications: Array.isArray(data.currentMedications) && data.currentMedications.length > 0
+              ? data.currentMedications
+              : currentMedications
+          })
+        } else {
+          setFormData({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phoneNumber: data.phoneNumber || '',
+            address: data.address || '',
+            dateOfBirth: data.dateOfBirth || '',
+            gender: data.gender || '',
+            bloodGroup: data.bloodGroup || '',
+            emergencyContact: data.emergencyContact || '',
+            medicalHistory: Array.isArray(data.medicalHistory) ? data.medicalHistory : [],
+            allergies: data.allergies || '',
+            currentMedications: Array.isArray(data.currentMedications) ? data.currentMedications : []
+          })
+        }
       } else if (response.status === 404) {
-        setFormData({
-          firstName: currentUser?.firstName || '',
-          lastName: currentUser?.lastName || '',
-          email: currentUser?.email || '',
-          phoneNumber: '',
-          address: '',
-          dateOfBirth: '',
-          gender: '',
-          bloodGroup: '',
-          emergencyContact: '',
-          medicalHistory: [],
-          allergies: '',
-          currentMedications: []
-        })
+        // Auto-fill from latest analysis for new users
+        if (analysisHistory.length > 0) {
+          const latestAnalysis = analysisHistory[0]
+          
+          // Extract medical history from both server and localStorage analysis
+          let medicalHistory = []
+          if (latestAnalysis.keyDiseases) {
+            // Server analysis
+            medicalHistory = latestAnalysis.keyDiseases.map(disease => ({ description: disease }))
+          } else if (latestAnalysis.medicalHistory) {
+            // localStorage analysis
+            medicalHistory = latestAnalysis.medicalHistory.map(item => ({ description: item }))
+          }
+          
+          // Extract current medications
+          let currentMedications = []
+          if (latestAnalysis.medicines) {
+            // Server analysis
+            currentMedications = latestAnalysis.medicines
+          } else if (latestAnalysis.currentMedications) {
+            // localStorage analysis
+            currentMedications = latestAnalysis.currentMedications.map(med => 
+              typeof med === 'string' ? med : `${med.name} - ${med.frequency} - ${med.duration || ''}`
+            )
+          }
+          
+          setFormData({
+            firstName: currentUser?.firstName || '',
+            lastName: currentUser?.lastName || '',
+            email: currentUser?.email || '',
+            phoneNumber: '',
+            address: '',
+            dateOfBirth: '',
+            gender: '',
+            bloodGroup: '',
+            emergencyContact: '',
+            medicalHistory: medicalHistory,
+            allergies: latestAnalysis.allergies ? latestAnalysis.allergies.join(', ') : '',
+            currentMedications: currentMedications
+          })
+        } else {
+          setFormData({
+            firstName: currentUser?.firstName || '',
+            lastName: currentUser?.lastName || '',
+            email: currentUser?.email || '',
+            phoneNumber: '',
+            address: '',
+            dateOfBirth: '',
+            gender: '',
+            bloodGroup: '',
+            emergencyContact: '',
+            medicalHistory: [],
+            allergies: '',
+            currentMedications: []
+          })
+        }
       }
     } catch (error) {
       console.error('Error fetching profile data:', error)
@@ -98,19 +259,31 @@ export default function ProfilePage() {
       // Expecting JSON array of objects or comma-separated values
       let arr = []
       try {
-        arr = JSON.parse(value)
-        if (!Array.isArray(arr)) arr = []
+        // First try to parse as JSON
+        const parsed = JSON.parse(value)
+        if (Array.isArray(parsed)) {
+          arr = parsed
+        } else {
+          // If not array, treat as single item
+          arr = [{ description: String(parsed) }]
+        }
       } catch {
-        // fallback: split by newlines, wrap as objects
-        arr = value.split('\n').filter(Boolean).map((item) => ({ description: item }))
+        // If JSON parse fails, split by newlines and wrap as objects
+        arr = value.split('\n').filter(Boolean).map((item) => ({ description: item.trim() }))
       }
       setFormData(prev => ({ ...prev, medicalHistory: arr }))
     } else if (name === 'currentMedications') {
       let arr = []
       try {
-        arr = JSON.parse(value)
-        if (!Array.isArray(arr)) arr = []
+        // First try to parse as JSON
+        const parsed = JSON.parse(value)
+        if (Array.isArray(parsed)) {
+          arr = parsed.map(item => String(item))
+        } else {
+          arr = [String(parsed)]
+        }
       } catch {
+        // If JSON parse fails, split by comma or newlines
         arr = value.split(/,|\n/).map(s => s.trim()).filter(Boolean)
       }
       setFormData(prev => ({ ...prev, currentMedications: arr }))
@@ -250,6 +423,115 @@ export default function ProfilePage() {
               <div className="stat-desc text-accent-content/60">Year Joined</div>
             </div>
           </div>
+
+          {/* Recent Analysis History */}
+          {/* <div className="card bg-gradient-to-br from-white to-purple-50 shadow-xl border border-purple-100 mb-8">
+            <div className="card-body">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-primary">
+                  📊 সাম্প্রতিক বিশ্লেষণ
+                </h2>
+                <button
+                  onClick={() => router.push('/analysis-history')}
+                  className="btn btn-outline btn-sm"
+                >
+                  সব দেখুন
+                </button>
+              </div>
+
+              {analysisHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">📝</div>
+                  <p className="text-base-content/70 mb-4">
+                    এখনো কোন বিশ্লেষণ করা হয়নি
+                  </p>
+                  <button
+                    onClick={() => router.push('/google-lens-test')}
+                    className="btn btn-primary btn-sm"
+                  >
+                    📸 প্রথম বিশ্লেষণ করুন
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {analysisHistory.map((analysis) => (
+                    <div key={analysis.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-purple-100">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-sm font-semibold text-purple-600">
+                            #{analysis.id}
+                          </span>
+                          <span className="text-sm text-base-content/70">
+                            📅 {new Date(analysis.analysisDate).toLocaleDateString('bn-BD')}
+                          </span>
+                        </div>
+                        
+                        {analysis.keyDiseases && analysis.keyDiseases.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {analysis.keyDiseases.slice(0, 2).map((disease, index) => (
+                              <span key={index} className="badge badge-primary badge-sm">
+                                {disease}
+                              </span>
+                            ))}
+                            {analysis.keyDiseases.length > 2 && (
+                              <span className="badge badge-ghost badge-sm">
+                                +{analysis.keyDiseases.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-base-content/60">
+                          💊 {analysis.medicines?.length || 0} টি ঔষধ
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => router.push(`/analysis/${analysis.id}`)}
+                          className="btn btn-primary btn-xs"
+                        >
+                          দেখুন
+                        </button>
+                        
+                        {!analysis.sentToChat && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const token = getToken()
+                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${analysis.id}/send-to-chat`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                  },
+                                })
+                                
+                                if (response.ok) {
+                                  fetchAnalysisHistory() // Refresh list
+                                  alert('✅ চ্যাটে পাঠানো হয়েছে!')
+                                } else {
+                                  const errorText = await response.text()
+                                  console.error('Send to chat error:', errorText)
+                                  alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে: ' + errorText)
+                                }
+                              } catch (error) {
+                                console.error('Error sending to chat:', error)
+                                alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে।')
+                              }
+                            }}
+                            className="btn btn-success btn-xs"
+                          >
+                            💬
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div> */}
 
           {error && (
             <div className="alert alert-error mb-4">
@@ -453,6 +735,16 @@ export default function ProfilePage() {
                 <div className="divider">
                   <span className="text-lg font-bold text-primary">🏥 Medical Information</span>
                 </div>
+
+                {/* Auto-fill notice */}
+                {analysisHistory.length > 0 && (
+                  <div className="alert alert-info mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>
+                      📋 <strong>স্বয়ংক্রিয় তথ্য:</strong> আপনার সর্বশেষ AI বিশ্লেষণ থেকে চিকিৎসা ইতিহাস ও বর্তমান ওষুধের তথ্য স্বয়ংক্রিয়ভাবে যোগ করা হয়েছে। প্রয়োজনে সম্পাদনা করুন।
+                    </span>
+                  </div>
+                )}
 
                 <div className="form-control">
                   <label className="label">

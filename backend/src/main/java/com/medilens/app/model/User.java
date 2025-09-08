@@ -1,5 +1,6 @@
 package com.medilens.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -29,6 +30,7 @@ public class User {
     private String emergencyContact;
     private String address;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<PrescriptionAnalysis> medicalHistory;
 
     @Column(length = 1000)
@@ -42,6 +44,7 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     List<Chat> chats;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

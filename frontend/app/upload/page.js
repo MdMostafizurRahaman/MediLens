@@ -21,9 +21,18 @@ export default function EnhancedUploadPage() {
   const [currentResponse, setCurrentResponse] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisStep, setAnalysisStep] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedAnalysisId, setSavedAnalysisId] = useState(null)
   const fileInputRef = useRef(null)
-  const { currentUser } = useAuth()
+  const { currentUser, getToken } = useAuth()
   const router = useRouter()
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!currentUser) {
+      router.push('/auth/login')
+    }
+  }, [currentUser, router])
 
   // Auto-scroll to bottom when analysis updates
   const analysisEndRef = useRef(null)
@@ -217,6 +226,45 @@ export default function EnhancedUploadPage() {
     }
   }
 
+  const saveAnalysisToBackend = async (analysis, fullText) => {
+    try {
+      setIsSaving(true)
+      const token = getToken()
+      
+      // Extract key information from analysis
+      const analysisData = {
+        analysisSummary: analysis.summary || '',
+        fullPrescriptionText: fullText || '',
+        medicines: analysis.medicines || [],
+        keyDiseases: analysis.conditions || analysis.diseases || [],
+        dosageInstructions: analysis.dosages || analysis.instructions || [],
+        doctorName: analysis.doctorName || '',
+        patientName: analysis.patientName || ''
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(analysisData)
+      })
+
+      if (response.ok) {
+        const savedAnalysis = await response.json()
+        setSavedAnalysisId(savedAnalysis.id)
+        console.log('Analysis saved successfully:', savedAnalysis.id)
+      } else {
+        console.error('Failed to save analysis')
+      }
+    } catch (error) {
+      console.error('Error saving analysis:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
   const analyzeWithAI = async (text, fileName) => {
@@ -255,6 +303,11 @@ export default function EnhancedUploadPage() {
         setCurrentResponse('')
         setMedicalAnalysis(result.analysis)
         setAnalysisStep('✅ বিশ্লেষণ সম্পূর্ণ!')
+        
+        // Auto-save analysis for registered users
+        if (currentUser) {
+          await saveAnalysisToBackend(result.analysis, text)
+        }
       } else {
         throw new Error('Invalid analysis response')
       }
@@ -478,11 +531,93 @@ export default function EnhancedUploadPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
+                className="space-y-6"
               >
                 <MedicalReportDisplay 
                   reportData={medicalAnalysis} 
                   fileName={selectedFile.name}
                 />
+                
+                {/* Action Buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-white rounded-xl shadow-sm border p-6"
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    ⚡ পরবর্তী পদক্ষেপ
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-4">
+                    {savedAnalysisId ? (
+                      <>
+                        <button
+                          onClick={() => router.push(`/analysis/${savedAnalysisId}`)}
+                          className="btn btn-primary"
+                        >
+                          📊 বিস্তারিত দেখুন
+                        </button>
+                        
+                        <button
+                          onClick={async () => {
+                            try {
+                              const token = getToken()
+                              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${savedAnalysisId}/send-to-chat`, {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`,
+                                  'Content-Type': 'application/json',
+                                },
+                              })
+                              
+                              if (response.ok) {
+                                router.push('/chat')
+                              } else {
+                                alert('চ্যাটে পাঠাতে সমস্যা হয়েছে')
+                              }
+                            } catch (error) {
+                              console.error('Error sending to chat:', error)
+                              alert('চ্যাটে পাঠাতে সমস্যা হয়েছে')
+                            }
+                          }}
+                          className="btn btn-success"
+                        >
+                          💬 চ্যাটে পাঠান
+                        </button>
+                      </>
+                    ) : (
+                      isSaving && (
+                        <div className="flex items-center gap-2 text-blue-600">
+                          <span className="loading loading-spinner loading-sm"></span>
+                          <span>সেভ করা হচ্ছে...</span>
+                        </div>
+                      )
+                    )}
+                    
+                    <button
+                      onClick={() => router.push('/analysis-history')}
+                      className="btn btn-outline"
+                    >
+                      📋 সকল বিশ্লেষণ দেখুন
+                    </button>
+                    
+                    <button
+                      onClick={clearAll}
+                      className="btn btn-ghost"
+                    >
+                      🔄 নতুন বিশ্লেষণ
+                    </button>
+                  </div>
+                  
+                  {savedAnalysisId && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        ✅ আপনার বিশ্লেষণ সফলভাবে সেভ হয়েছে! আপনি এটি আপনার প্রোফাইলে দেখতে পাবেন।
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
               </motion.div>
             )}
 

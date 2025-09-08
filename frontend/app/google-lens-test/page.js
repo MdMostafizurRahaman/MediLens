@@ -8,7 +8,7 @@ export default function GoogleLensTestPage() {
       <div className="container mx-auto py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-900 mb-4">
-            🔬 Gemini Vision AI
+            🔬 Prescription Analysis
           </h1>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto">
             সরাসরি ছবি বিশ্লেষণ + চিকিৎসা পরামর্শ

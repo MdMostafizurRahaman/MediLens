@@ -19,9 +19,9 @@ export default function ProfilePage() {
     gender: '',
     bloodGroup: '',
     emergencyContact: '',
-    medicalHistory: '',
+    medicalHistory: [], // Array of objects
     allergies: '',
-    currentMedications: ''
+    currentMedications: [] // Array of strings
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -43,35 +43,31 @@ export default function ProfilePage() {
     try {
       setLoading(true)
       const token = getToken()
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/profile`, {
+      const email = currentUser?.email
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/${email}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
-
       if (response.ok) {
         const data = await response.json()
         setProfileData(data)
-        
-        // Populate form with existing data
         setFormData({
-          firstName: data.firstName || currentUser?.firstName || '',
-          lastName: data.lastName || currentUser?.lastName || '',
-          email: data.email || currentUser?.email || '',
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
           phoneNumber: data.phoneNumber || '',
           address: data.address || '',
           dateOfBirth: data.dateOfBirth || '',
           gender: data.gender || '',
           bloodGroup: data.bloodGroup || '',
           emergencyContact: data.emergencyContact || '',
-          medicalHistory: data.medicalHistory || '',
+          medicalHistory: Array.isArray(data.medicalHistory) ? data.medicalHistory : [],
           allergies: data.allergies || '',
-          currentMedications: data.currentMedications || ''
+          currentMedications: Array.isArray(data.currentMedications) ? data.currentMedications : []
         })
       } else if (response.status === 404) {
-        // Profile doesn't exist yet, use current user data
         setFormData({
           firstName: currentUser?.firstName || '',
           lastName: currentUser?.lastName || '',
@@ -82,9 +78,9 @@ export default function ProfilePage() {
           gender: '',
           bloodGroup: '',
           emergencyContact: '',
-          medicalHistory: '',
+          medicalHistory: [],
           allergies: '',
-          currentMedications: ''
+          currentMedications: []
         })
       }
     } catch (error) {
@@ -97,10 +93,33 @@ export default function ProfilePage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    // For medicalHistory and currentMedications, parse textarea value to array
+    if (name === 'medicalHistory') {
+      // Expecting JSON array of objects or comma-separated values
+      let arr = []
+      try {
+        arr = JSON.parse(value)
+        if (!Array.isArray(arr)) arr = []
+      } catch {
+        // fallback: split by newlines, wrap as objects
+        arr = value.split('\n').filter(Boolean).map((item) => ({ description: item }))
+      }
+      setFormData(prev => ({ ...prev, medicalHistory: arr }))
+    } else if (name === 'currentMedications') {
+      let arr = []
+      try {
+        arr = JSON.parse(value)
+        if (!Array.isArray(arr)) arr = []
+      } catch {
+        arr = value.split(/,|\n/).map(s => s.trim()).filter(Boolean)
+      }
+      setFormData(prev => ({ ...prev, currentMedications: arr }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -111,22 +130,23 @@ export default function ProfilePage() {
 
     try {
       const token = getToken()
-      
-      const isUpdate = profileData !== null
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/profile`
-      const method = isUpdate ? 'PUT' : 'POST'
-
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user`
+      // Prepare payload: medicalHistory and currentMedications as arrays
+      const payload = {
+        ...formData,
+        medicalHistory: formData.medicalHistory,
+        currentMedications: formData.currentMedications
+      }
       const response = await fetch(url, {
-        method,
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
-
       if (response.ok) {
-        setSuccess(isUpdate ? 'Profile updated successfully!' : 'Profile created successfully!')
+        setSuccess('Profile updated successfully!')
         setIsEditing(false)
         await fetchProfileData() // Refresh data
       } else {
@@ -184,16 +204,14 @@ export default function ProfilePage() {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="avatar mb-4">
-              <div className="w-24 rounded-full bg-primary flex items-center justify-center text-primary-content text-3xl font-bold">
-                {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
-              </div>
-            </div>
             <h1 className="text-3xl font-bold text-primary mb-2">
-              আপনার প্রোফাইল
+              Your Profile
             </h1>
+            <div className="text-xl font-semibold text-base-content mb-2">
+              {currentUser?.firstName} {currentUser?.lastName}
+            </div>
             <p className="text-base-content/70">
-              আপনার ব্যক্তিগত ও স্বাস্থ্য তথ্য পরিচালনা করুন
+              Manage your personal and health information
             </p>
           </div>
 
@@ -203,12 +221,12 @@ export default function ProfilePage() {
               <div className="stat-figure">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
-              <div className="stat-title text-primary-content/80">অ্যাকাউন্ট স্ট্যাটাস</div>
+              <div className="stat-title text-primary-content/80">Account Status</div>
               <div className="stat-value text-sm">
-                {hasRole('doctor') ? '👨‍⚕️ ডাক্তার' : '👤 রোগী'}
+                {hasRole('doctor') ? '👨‍⚕️ Doctor' : '👤 Patient'}
               </div>
               <div className="stat-desc text-primary-content/60">
-                {hasRole('doctor') ? 'ডাক্তার অ্যাকাউন্ট' : 'রোগী অ্যাকাউন্ট'}
+                {hasRole('doctor') ? 'Doctor Account' : 'Patient Account'}
               </div>
             </div>
 
@@ -216,20 +234,20 @@ export default function ProfilePage() {
               <div className="stat-figure">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path></svg>
               </div>
-              <div className="stat-title text-secondary-content/80">শেষ আপডেট</div>
+              <div className="stat-title text-secondary-content/80">Last Updated</div>
               <div className="stat-value text-sm">
-                {profileData?.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('bn-BD') : 'নেই'}
+                {profileData?.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('en-US') : 'N/A'}
               </div>
-              <div className="stat-desc text-secondary-content/60">প্রোফাইল আপডেট</div>
+              <div className="stat-desc text-secondary-content/60">Profile Updated</div>
             </div>
 
             <div className="stat bg-accent text-accent-content rounded-lg">
               <div className="stat-figure">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               </div>
-              <div className="stat-title text-accent-content/80">MediLens সদস্য</div>
-              <div className="stat-value text-sm">২০২৫</div>
-              <div className="stat-desc text-accent-content/60">যোগদানের সাল</div>
+              <div className="stat-title text-accent-content/80">MediLens Member</div>
+              <div className="stat-value text-sm">2025</div>
+              <div className="stat-desc text-accent-content/60">Year Joined</div>
             </div>
           </div>
 
@@ -250,14 +268,14 @@ export default function ProfilePage() {
             <div className="card-body">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-primary">
-                  {isEditing ? '✏️ প্রোফাইল সম্পাদনা' : '📋 প্রোফাইল তথ্য'}
+                  {isEditing ? '✏️ Edit Profile' : '📋 Profile Information'}
                 </h2>
                 {!isEditing && (
                   <button
                     onClick={() => setIsEditing(true)}
                     className="btn btn-primary btn-sm"
                   >
-                    ✏️ সম্পাদনা
+                    ✏️ Edit
                   </button>
                 )}
               </div>
@@ -268,13 +286,13 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        👤 <span>প্রথম নাম</span>
+                        👤 <span>First Name</span>
                       </span>
                     </label>
                     <input
                       type="text"
                       name="firstName"
-                      placeholder="আপনার প্রথম নাম"
+                      placeholder="Your first name"
                       className="input input-bordered focus:input-primary"
                       value={formData.firstName}
                       onChange={handleInputChange}
@@ -286,13 +304,13 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        👤 <span>শেষ নাম</span>
+                        👤 <span>Last Name</span>
                       </span>
                     </label>
                     <input
                       type="text"
                       name="lastName"
-                      placeholder="আপনার শেষ নাম"
+                      placeholder="Your last name"
                       className="input input-bordered focus:input-primary"
                       value={formData.lastName}
                       onChange={handleInputChange}
@@ -304,13 +322,13 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        📧 <span>ইমেইল</span>
+                        📧 <span>Email</span>
                       </span>
                     </label>
                     <input
                       type="email"
                       name="email"
-                      placeholder="আপনার ইমেইল"
+                      placeholder="Your email address"
                       className="input input-bordered focus:input-primary"
                       value={formData.email}
                       onChange={handleInputChange}
@@ -322,7 +340,7 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        📞 <span>ফোন নম্বর</span>
+                        📞 <span>Phone Number</span>
                       </span>
                     </label>
                     <input
@@ -339,7 +357,7 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        🎂 <span>জন্মতারিখ</span>
+                        🎂 <span>Date of Birth</span>
                       </span>
                     </label>
                     <input
@@ -355,7 +373,7 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        ⚧️ <span>লিঙ্গ</span>
+                        ⚧️ <span>Gender</span>
                       </span>
                     </label>
                     <select
@@ -365,17 +383,17 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                     >
-                      <option value="">নির্বাচন করুন</option>
-                      <option value="male">পুরুষ</option>
-                      <option value="female">মহিলা</option>
-                      <option value="other">অন্যান্য</option>
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
 
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        🩸 <span>রক্তের গ্রুপ</span>
+                        🩸 <span>Blood Group</span>
                       </span>
                     </label>
                     <select
@@ -385,7 +403,7 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                     >
-                      <option value="">নির্বাচন করুন</option>
+                      <option value="">Select Blood Group</option>
                       <option value="A+">A+</option>
                       <option value="A-">A-</option>
                       <option value="B+">B+</option>
@@ -400,13 +418,13 @@ export default function ProfilePage() {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-bold text-lg flex items-center gap-2">
-                        🚨 <span>জরুরি যোগাযোগ</span>
+                        🚨 <span>Emergency Contact</span>
                       </span>
                     </label>
                     <input
                       type="tel"
                       name="emergencyContact"
-                      placeholder="জরুরি পরিস্থিতিতে যোগাযোগের নম্বর"
+                      placeholder="Emergency contact number"
                       className="input input-bordered focus:input-primary"
                       value={formData.emergencyContact}
                       onChange={handleInputChange}
@@ -418,12 +436,12 @@ export default function ProfilePage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-bold text-lg flex items-center gap-2">
-                      🏠 <span>ঠিকানা</span>
+                      🏠 <span>Address</span>
                     </span>
                   </label>
                   <textarea
                     name="address"
-                    placeholder="আপনার সম্পূর্ণ ঠিকানা"
+                    placeholder="Your complete address"
                     className="textarea textarea-bordered focus:textarea-primary h-24"
                     value={formData.address}
                     onChange={handleInputChange}
@@ -433,20 +451,20 @@ export default function ProfilePage() {
 
                 {/* Medical Information */}
                 <div className="divider">
-                  <span className="text-lg font-bold text-primary">🏥 স্বাস্থ্য তথ্য</span>
+                  <span className="text-lg font-bold text-primary">🏥 Medical Information</span>
                 </div>
 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-bold text-lg flex items-center gap-2">
-                      📋 <span>চিকিৎসা ইতিহাস</span>
+                      📋 <span>Medical History</span>
                     </span>
                   </label>
                   <textarea
                     name="medicalHistory"
-                    placeholder="আপনার পূর্ববর্তী রোগ, অপারেশন, বা গুরুত্বপূর্ণ চিকিৎসা ইতিহাস"
+                    placeholder="Enter each history item on a new line, or paste JSON array."
                     className="textarea textarea-bordered focus:textarea-primary h-32"
-                    value={formData.medicalHistory}
+                    value={Array.isArray(formData.medicalHistory) ? formData.medicalHistory.map(h => h.description || '').join('\n') : ''}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                   ></textarea>
@@ -455,12 +473,12 @@ export default function ProfilePage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-bold text-lg flex items-center gap-2">
-                      ⚠️ <span>এলার্জি</span>
+                      ⚠️ <span>Allergies</span>
                     </span>
                   </label>
                   <textarea
                     name="allergies"
-                    placeholder="কোন খাবার, ওষুধ বা অন্য কিছুতে এলার্জি থাকলে উল্লেখ করুন"
+                    placeholder="List any food, drug, or other allergies"
                     className="textarea textarea-bordered focus:textarea-primary h-24"
                     value={formData.allergies}
                     onChange={handleInputChange}
@@ -471,14 +489,14 @@ export default function ProfilePage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-bold text-lg flex items-center gap-2">
-                      💊 <span>বর্তমান ওষুধ</span>
+                      💊 <span>Current Medications</span>
                     </span>
                   </label>
                   <textarea
                     name="currentMedications"
-                    placeholder="এখন যেসব ওষুধ সেবন করছেন সেগুলো উল্লেখ করুন"
+                    placeholder="Enter each medication on a new line, or comma separated."
                     className="textarea textarea-bordered focus:textarea-primary h-24"
-                    value={formData.currentMedications}
+                    value={Array.isArray(formData.currentMedications) ? formData.currentMedications.join('\n') : ''}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                   ></textarea>
@@ -494,7 +512,7 @@ export default function ProfilePage() {
                       }}
                       className="btn btn-outline"
                     >
-                      ❌ বাতিল
+                      ❌ Cancel
                     </button>
                     <button 
                       type="submit" 
@@ -504,11 +522,11 @@ export default function ProfilePage() {
                       {submitting ? (
                         <>
                           <span className="loading loading-spinner"></span>
-                          সেভ করা হচ্ছে...
+                          Saving...
                         </>
                       ) : (
                         <>
-                          💾 সেভ করুন
+                          💾 Save Profile
                         </>
                       )}
                     </button>
@@ -523,14 +541,14 @@ export default function ProfilePage() {
                       onClick={() => router.push('/doctor-profile')}
                       className="btn btn-secondary"
                     >
-                      👨‍⚕️ ডাক্তার প্রোফাইল
+                      👨‍⚕️ Doctor Profile
                     </button>
                   )}
                   <button
                     onClick={handleLogout}
                     className="btn btn-error"
                   >
-                    🚪 লগ আউট
+                    🚪 Logout
                   </button>
                 </div>
               )}

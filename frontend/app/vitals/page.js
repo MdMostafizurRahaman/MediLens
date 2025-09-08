@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import BackButton from "../../components/BackButton";
+import Navigation from '@/components/Navigation';
 
 export default function VitalsPage() {
   const [vitals, setVitals] = useState({
@@ -33,8 +34,8 @@ export default function VitalsPage() {
   }
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true)
-    
     // Simulate API call
     setTimeout(() => {
       const analysis = analyzeVitals(vitals)
@@ -107,9 +108,9 @@ export default function VitalsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-100 p-4">
-      <div className="container mx-auto max-w-6xl">
-        <BackButton />
+    <div className="min-h-screen bg-base-100">
+      <Navigation />
+      <div className="container mx-auto max-w-6xl p-4">
         <motion.div 
           className="text-center mb-8"
           initial={{ opacity: 0, y: 30 }}
@@ -322,6 +323,24 @@ export default function VitalsPage() {
                 <div className="stat-desc">Adult range</div>
               </div>
             </div>
+          </div>
+        </motion.div>
+        {/* Educational Note for Doctor Communication */}
+        <motion.div 
+          className="mb-6 card bg-info/10 border-l-4 border-info shadow-md"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="card-body">
+            <h2 className="card-title text-info">📝 Vital Signs Note</h2>
+            <p className="text-base-content/80 text-md">
+              <span className="font-semibold">নোট:</span> আপনার শরীরের গুরুত্বপূর্ণ চিহ্ন (ভিটাল সাইন) যেমন রক্তচাপ, শরীরের তাপমাত্রা, হৃদস্পন্দন, অক্সিজেনের মাত্রা ও শ্বাসপ্রশ্বাসের হার নিয়মিত পর্যবেক্ষণ করা অত্যন্ত গুরুত্বপূর্ণ। এই তথ্যগুলো ডাক্তারের সাথে শেয়ার করলে রোগ নির্ণয় ও চিকিৎসা আরও সহজ হয়।
+              <br/><br/>
+              <span className="font-semibold">ডাক্তারের সাথে যোগাযোগের সময়:</span> আপনার ভিটাল সাইন রিপোর্টটি সংরক্ষণ করুন এবং প্রয়োজনে ডাক্তারের সাথে শেয়ার করুন। এতে চিকিৎসক আপনার বর্তমান স্বাস্থ্য পরিস্থিতি দ্রুত বুঝতে পারবেন এবং সঠিক পরামর্শ দিতে পারবেন।
+              <br/><br/>
+              <span className="italic">এই নোটটি শিক্ষামূলক উদ্দেশ্যে ব্যবহার করা যেতে পারে। স্বাস্থ্য সংক্রান্ত যেকোনো সিদ্ধান্তের জন্য অবশ্যই চিকিৎসকের পরামর্শ নিন।</span>
+            </p>
           </div>
         </motion.div>
       </div>

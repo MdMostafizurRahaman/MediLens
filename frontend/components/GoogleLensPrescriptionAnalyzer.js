@@ -523,9 +523,6 @@ const GoogleLensPrescriptionAnalyzer = () => {
 
       {/* Footer */}
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>
-          🔬 Powered by Google Lens API + Fine-tuned Medical AI
-        </p>
         <p className="mt-1">
           ⚠️ এই বিশ্লেষণ শুধুমাত্র তথ্যগত উদ্দেশ্যে। চিকিৎসকের পরামর্শ নিন।
         </p>

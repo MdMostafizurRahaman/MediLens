@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface PrescriptionAnalysisRepository extends JpaRepository<PrescriptionAnalysis, Long> {
-    List<PrescriptionAnalysis> findByUserEmailOrderByAnalysisDateDesc(String userEmail);
+    List<PrescriptionAnalysis> findByUser_EmailOrderByAnalysisDateDesc(String userEmail);
 }

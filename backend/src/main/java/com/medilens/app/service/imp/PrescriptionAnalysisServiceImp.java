@@ -56,12 +56,15 @@ public class PrescriptionAnalysisServiceImp implements PrescriptionAnalysisServi
     public List<PrescriptionAnalysisDTO> getUserAnalyses(String userEmail) throws NotFoundException {
         User user = userRepository.getUserByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        
-        List<PrescriptionAnalysis> analyses = analysisRepository.findByUserEmailOrderByAnalysisDateDesc(userEmail);
+
+        List<PrescriptionAnalysis> analyses = analysisRepository
+                .findByUser_EmailOrderByAnalysisDateDesc(userEmail);
+
         return analyses.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public PrescriptionAnalysisDTO getAnalysisById(Long id) throws NotFoundException {

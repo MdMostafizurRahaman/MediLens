@@ -7,6 +7,9 @@ import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import AnalysisHistory from '@/components/AnalysisHistory'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function AnalysisHistoryPage() {
   const { currentUser, getToken } = useAuth()
   const [analyses, setAnalyses] = useState([])
@@ -43,7 +46,7 @@ export default function AnalysisHistoryPage() {
     try {
       setLoading(true)
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/my-analyses`, {
+      const response = await fetch(`${API_BASE_URL}/analysis/my-analyses`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -67,7 +70,7 @@ export default function AnalysisHistoryPage() {
   const sendToChat = async (analysisId) => {
     try {
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${analysisId}/send-to-chat`, {
+      const response = await fetch(`${API_BASE_URL}/analysis/${analysisId}/send-to-chat`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

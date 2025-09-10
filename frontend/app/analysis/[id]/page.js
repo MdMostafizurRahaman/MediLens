@@ -7,6 +7,9 @@ import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import BackButton from '@/components/BackButton'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function AnalysisDetailPage({ params }) {
   const { currentUser, getToken } = useAuth()
   const [analysis, setAnalysis] = useState(null)
@@ -30,7 +33,7 @@ export default function AnalysisDetailPage({ params }) {
     try {
       setLoading(true)
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${analysisId}`, {
+      const response = await fetch(`${API_BASE_URL}/analysis/${analysisId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -54,7 +57,7 @@ export default function AnalysisDetailPage({ params }) {
   const sendToChat = async () => {
     try {
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${analysisId}/send-to-chat`, {
+      const response = await fetch(`${API_BASE_URL}/analysis/${analysisId}/send-to-chat`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

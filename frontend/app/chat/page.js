@@ -6,6 +6,9 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 // Lazy load Navigation component
 const Navigation = dynamic(() => import('@/components/Navigation'), {
   loading: () => <div className="h-16 bg-primary animate-pulse"></div>
@@ -217,7 +220,7 @@ export default function ChatPage() {
   const loadChatHistory = async () => {
     try {
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/chat`, {
+      const response = await fetch(`${API_BASE_URL}/user/chat`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -243,7 +246,7 @@ export default function ChatPage() {
   const loadChatMessages = async (chatId) => {
     try {
       const token = getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
+      const response = await fetch(`${API_BASE_URL}/chat/${chatId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -383,7 +386,7 @@ export default function ChatPage() {
         chatTitle = '💊 প্রেসক্রিপশন বিশ্লেষণ'
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/create`, {
+      const response = await fetch(`${API_BASE_URL}/chat/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -418,7 +421,7 @@ export default function ChatPage() {
       const newTitle = await generateChatTitle(messages)
       const token = getToken()
       
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}/title`, {
+      await fetch(`${API_BASE_URL}/chat/${chatId}/title`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -448,7 +451,7 @@ export default function ChatPage() {
             message: message
           }
           
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
+          await fetch(`${API_BASE_URL}/chat/${chatId}`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -503,7 +506,7 @@ export default function ChatPage() {
                 message: aiResult.response
               }
               
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/chat/${chatId}`, {
+              await fetch(`${API_BASE_URL}/chat/${chatId}`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${token}`,

@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function AdminDashboard() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
   const [pendingDoctors, setPendingDoctors] = useState([])
@@ -41,7 +44,7 @@ export default function AdminDashboard() {
       const token = getToken()
       
       // Fetch all doctors
-      const doctorsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/all`, {
+      const doctorsResponse = await fetch(`${API_BASE_URL}/doctor/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -62,7 +65,7 @@ export default function AdminDashboard() {
       }
 
       // Fetch user statistics
-      const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/user/all`, {
+      const usersResponse = await fetch(`${API_BASE_URL}/user/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -97,7 +100,7 @@ export default function AdminDashboard() {
       const token = getToken()
       
       const status = action === 'approve' ? 'ACTIVE' : 'DISABLED'
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/status/${doctorEmail}`
+      const apiUrl = `${API_BASE_URL}/doctor/status/${doctorEmail}`
       
       console.log('API URL:', apiUrl)
       console.log('Status:', status)

@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function ProfilePage() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
   const [profileData, setProfileData] = useState(null)
@@ -58,7 +61,7 @@ export default function ProfilePage() {
       // Then load from server if logged in
       if (currentUser) {
         const token = getToken()
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/my-analyses`, {
+        const response = await fetch(`${API_BASE_URL}/analysis/my-analyses`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -87,7 +90,7 @@ export default function ProfilePage() {
       setLoading(true)
       const token = getToken()
       const email = currentUser?.email
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user/${email}`, {
+      const response = await fetch(`${API_BASE_URL}/user/${email}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -303,7 +306,7 @@ export default function ProfilePage() {
 
     try {
       const token = getToken()
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/user`
+      const url = `${API_BASE_URL}/user`
       // Prepare payload: medicalHistory and currentMedications as arrays
       const payload = {
         ...formData,
@@ -499,7 +502,7 @@ export default function ProfilePage() {
                             onClick={async () => {
                               try {
                                 const token = getToken()
-                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${analysis.id}/send-to-chat`, {
+                                const response = await fetch(`${API_BASE_URL}/analysis/${analysis.id}/send-to-chat`, {
                                   method: 'POST',
                                   headers: {
                                     'Authorization': `Bearer ${token}`,

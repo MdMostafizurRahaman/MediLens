@@ -9,6 +9,9 @@ import MedicalReportDisplay from '@/components/MedicalReportDisplay'
 import { Upload, File, Loader2, Eye, Trash2, Download, Share2, FileText, Image as ImageIcon, AlertCircle } from 'lucide-react'
 import pdfToText from 'react-pdftotext'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function EnhancedUploadPage() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -242,7 +245,7 @@ export default function EnhancedUploadPage() {
         patientName: analysis.patientName || ''
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/save`, {
+      const response = await fetch(`${API_BASE_URL}/analysis/save`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -563,7 +566,7 @@ export default function EnhancedUploadPage() {
                           onClick={async () => {
                             try {
                               const token = getToken()
-                              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/analysis/${savedAnalysisId}/send-to-chat`, {
+                              const response = await fetch(`${API_BASE_URL}/analysis/${savedAnalysisId}/send-to-chat`, {
                                 method: 'POST',
                                 headers: {
                                   'Authorization': `Bearer ${token}`,

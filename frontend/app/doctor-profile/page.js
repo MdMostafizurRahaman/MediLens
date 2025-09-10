@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function DoctorProfile() {
   const { currentUser, hasRole, getToken, logout } = useAuth()
   const [doctorData, setDoctorData] = useState(null)
@@ -45,7 +48,7 @@ export default function DoctorProfile() {
       setLoading(true)
       const token = getToken()
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/${currentUser?.email}`, {
+      const response = await fetch(`${API_BASE_URL}/doctor/${currentUser?.email}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -129,7 +132,7 @@ export default function DoctorProfile() {
       }
 
       const isUpdate = doctorData !== null
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor${isUpdate ? '' : '/add'}`
+      const url = `${API_BASE_URL}/doctor${isUpdate ? '' : '/add'}`
       const method = isUpdate ? 'PUT' : 'POST'
 
       const response = await fetch(url, {

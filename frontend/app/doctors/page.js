@@ -6,6 +6,9 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 
+// API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
 export default function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSpecialty, setSelectedSpecialty] = useState('')
@@ -58,7 +61,7 @@ export default function DoctorsPage() {
       setLoading(true)
       setError('')
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/doctor/all`, {
+      const response = await fetch(`${API_BASE_URL}/doctor/all`, {
         headers: {
           'Content-Type': 'application/json',
         },

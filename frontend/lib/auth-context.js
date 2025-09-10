@@ -95,6 +95,9 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('userInfo', JSON.stringify(userData))
       setCurrentUser(userData)
+      console.log('Login successful - User data:', userData)
+      console.log('User role:', userData.role)
+      console.log('Has doctor role:', userData.role?.toLowerCase() === 'doctor')
       
       return userData
     } catch (error) {
@@ -134,7 +137,11 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user has specific role
   const hasRole = (role) => {
-    return currentUser?.role?.toLowerCase() === role.toLowerCase()
+    if (!currentUser?.role) return false
+    const userRole = currentUser.role.toLowerCase()
+    const checkRole = role.toLowerCase()
+    console.log('Checking role:', { userRole, checkRole, match: userRole === checkRole })
+    return userRole === checkRole || userRole === `role_${checkRole}`
   }
 
   const value = {

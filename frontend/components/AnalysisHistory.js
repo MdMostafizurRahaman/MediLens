@@ -8,10 +8,22 @@ const AnalysisHistory = () => {
   const [analyses, setAnalyses] = useState([])
   const [selectedAnalysis, setSelectedAnalysis] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(4) // Show 4 items per page for window layout
 
   useEffect(() => {
     loadAnalyses()
   }, [])
+
+  // Pagination logic
+  const totalPages = Math.ceil(analyses.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedAnalyses = analyses.slice(startIndex, startIndex + itemsPerPage)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const loadAnalyses = () => {
     try {
@@ -112,72 +124,60 @@ ${analysis.currentMedications?.map(med => `• ${med.name} - ${med.frequency}`).
           <p className="text-gray-500">প্রথমে একটি প্রেসক্রিপশন বিশ্লেষণ করুন</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {analyses.map((analysis) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {paginatedAnalyses.map((analysis) => (
             <div
               key={analysis.id}
-              className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow p-6"
+              className="bg-gradient-to-br from-white to-primary-25 rounded-xl border-2 border-primary-100 shadow-lg hover:shadow-2xl transition-all duration-300 p-8 relative overflow-hidden group"
+              style={{ minHeight: '350px' }}
             >
-              {/* Header */}
-              <div className="flex justify-between items-start mb-4">
+              {/* Window-style header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary-200">
                 <div>
-                  <h3 className="font-semibold text-gray-800 flex items-center">
-                    📊 বিশ্লেষণ #{analysis.id.toString().slice(-6)}
+                  <h3 className="font-bold text-gray-800 flex items-center text-lg">
+                    📊 Analysis #{analysis.id.toString().slice(-6)}
                   </h3>
                   <p className="text-sm text-gray-500 flex items-center mt-1">
                     <Calendar className="w-4 h-4 mr-1" />
                     {formatDate(analysis.timestamp)}
                   </p>
                 </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      setSelectedAnalysis(analysis)
-                      setShowModal(true)
-                    }}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="বিস্তারিত দেখুন"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => deleteAnalysis(analysis.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="মুছে ফেলুন"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
                 </div>
               </div>
 
               {/* Summary */}
-              <div className="space-y-3 mb-4">
+              <div className="space-y-4 mb-6 flex-1">
                 {analysis.summary.condition && (
-                  <div className="flex items-center p-3 bg-red-50 rounded-lg border-l-4 border-red-400">
-                    <div className="text-red-600 mr-3">🏥</div>
+                  <div className="flex items-center p-4 bg-red-50 rounded-xl border-l-4 border-red-400">
+                    <div className="text-red-600 mr-3 text-xl">🏥</div>
                     <div>
-                      <div className="text-sm text-red-700 font-medium">রোগ নির্ণয়</div>
-                      <div className="text-red-800">{analysis.summary.condition}</div>
+                      <div className="text-sm text-red-700 font-semibold">রোগ নির্ণয়</div>
+                      <div className="text-red-800 font-medium">{analysis.summary.condition}</div>
                     </div>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
                   {analysis.summary.medicines > 0 && (
-                    <div className="flex items-center p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-                      <Pill className="w-5 h-5 text-green-600 mr-2" />
+                    <div className="flex items-center p-3 bg-green-50 rounded-xl border-l-4 border-green-400">
+                      <div className="text-green-600 mr-2 text-lg">💊</div>
                       <div>
-                        <div className="text-sm text-green-700">ওষুধ</div>
+                        <div className="text-sm text-green-700 font-semibold">ওষুধ</div>
                         <div className="font-medium text-green-800">{analysis.summary.medicines} টি</div>
                       </div>
                     </div>
                   )}
 
                   {analysis.summary.tests > 0 && (
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                      <TestTube className="w-5 h-5 text-blue-600 mr-2" />
+                    <div className="flex items-center p-3 bg-blue-50 rounded-xl border-l-4 border-blue-400">
+                      <div className="text-blue-600 mr-2 text-lg">🔬</div>
                       <div>
-                        <div className="text-sm text-blue-700">টেস্ট</div>
+                        <div className="text-sm text-blue-700 font-semibold">টেস্ট</div>
                         <div className="font-medium text-blue-800">{analysis.summary.tests} টি</div>
                       </div>
                     </div>
@@ -185,19 +185,88 @@ ${analysis.currentMedications?.map(med => `• ${med.name} - ${med.frequency}`).
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex space-x-2">
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center mt-auto">
                 <button
-                  onClick={() => sendToChat(analysis)}
-                  className="flex-1 flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  onClick={() => {
+                    setSelectedAnalysis(analysis)
+                    setShowModal(true)
+                  }}
+                  className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                  title="বিস্তারিত দেখুন"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  চ্যাটে আলোচনা
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Details
                 </button>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => sendToChat(analysis)}
+                    className="flex items-center px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                    title="চ্যাটে আলোচনা করুন"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat
+                  </button>
+                  
+                  <button
+                    onClick={() => deleteAnalysis(analysis.id)}
+                    className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-red-200 hover:border-red-300"
+                    title="মুছে ফেলুন"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-12">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              ← Previous
+            </button>
+            
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-10 h-10 rounded-xl transition-all duration-200 font-semibold ${
+                    currentPage === page
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* Modal for detailed view */}

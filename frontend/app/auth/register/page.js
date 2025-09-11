@@ -56,26 +56,129 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute top-10 right-10 w-40 h-40 bg-gradient-to-r from-success-200/30 to-warning-200/30 rounded-full blur-2xl"
+          animate={{
+            x: [0, -60, 0],
+            y: [0, 40, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-10 left-10 w-28 h-28 bg-gradient-to-r from-error-400 to-primary-400 rounded-full opacity-25 blur-xl"
+          animate={{
+            x: [0, 150, 0],
+            y: [0, -100, 0],
+            rotate: [0, 270, 360],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute top-1/3 left-1/4 w-20 h-20 bg-gradient-to-r from-accent-300 to-success-300 rounded-full opacity-30 blur-lg"
+          animate={{
+            scale: [1, 1.8, 1],
+            opacity: [0.3, 0.7, 0.3],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-gradient-to-r from-secondary-300 to-warning-300 rounded-full opacity-25 blur-md"
+          animate={{
+            y: [0, -60, 0],
+            x: [0, 40, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
       <motion.div 
-        className="card w-full max-w-md bg-base-100 shadow-2xl"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        className="card w-full max-w-lg bg-white/96 backdrop-blur-xl shadow-2xl border border-white/30 relative z-10"
+        initial={{ opacity: 0, y: 60, scale: 0.85 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, type: "spring", bounce: 0.2 }}
       >
-        <div className="card-body">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary">🏥 MediLens</h1>
-            <p className="text-base-content/70 mt-2">Create your account to get started</p>
-          </div>
+        <div className="card-body p-8">
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <motion.div
+              className="text-6xl mb-4 inline-block relative"
+              animate={{ 
+                rotate: [0, 8, -8, 0],
+                scale: [1, 1.15, 1]
+              }}
+              transition={{ 
+                duration: 5, 
+                repeat: Infinity, 
+                repeatDelay: 3 
+              }}
+            >
+              🏥
+              <motion.div
+                className="absolute -inset-4 bg-gradient-to-r from-accent-400/30 to-primary-400/30 rounded-full blur-xl"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.7, 0.3],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+            <h1 className="text-4xl font-bold text-gradient-accent mb-2">MediLens</h1>
+            <p className="text-gray-600 text-lg font-medium">Create your account to get started</p>
+            <motion.div
+              className="h-1 w-24 bg-gradient-to-r from-accent-500 to-primary-500 mx-auto rounded-full mt-4"
+              initial={{ width: 0 }}
+              animate={{ width: 96 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            />
+          </motion.div>
 
           {error && (
-            <div className="alert alert-error mb-4">
-              <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <motion.div 
+              className="alert bg-gradient-to-r from-error-100 to-error-50 border border-error-200 text-error-700 mb-6 rounded-xl"
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.svg 
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none" 
+                viewBox="0 0 24 24"
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ duration: 0.6 }}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-sm">{error}</span>
-            </div>
+              </motion.svg>
+              <span className="text-sm font-medium">{error}</span>
+            </motion.div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">

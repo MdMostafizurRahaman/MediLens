@@ -35,7 +35,12 @@ export default function DoctorProfile() {
       return
     }
     
+    console.log('Doctor profile page - Current user:', currentUser)
+    console.log('Current user role:', currentUser.role)
+    console.log('Has doctor role check:', hasRole('doctor'))
+    
     if (!hasRole('doctor')) {
+      console.log('User does not have doctor role, redirecting...')
       router.push('/')
       return
     }
@@ -118,11 +123,19 @@ export default function DoctorProfile() {
     e.preventDefault()
     setSubmitting(true)
     setError('')
-    setSuccess('')
+
+    // Prevent non-doctor users from submitting
+    if (!hasRole('doctor')) {
+      console.log('Frontend role check failed - User role:', currentUser?.role)
+      setError('শুধুমাত্র ডাক্তাররা প্রোফাইল তৈরি বা আপডেট করতে পারবেন। আপনার রোল: ' + (currentUser?.role || 'অজানা'))
+      setSubmitting(false)
+      return
+    }
 
     try {
       const token = getToken()
-      
+      console.log('Submitting with token:', token ? 'Present' : 'Missing')
+      console.log('User role:', currentUser?.role)
       // Filter out empty strings from arrays
       const cleanedData = {
         ...formData,
@@ -134,6 +147,8 @@ export default function DoctorProfile() {
       const isUpdate = doctorData !== null
       const url = `${API_BASE_URL}/doctor${isUpdate ? '' : '/add'}`
       const method = isUpdate ? 'PUT' : 'POST'
+      
+      console.log('Making request to:', url, 'Method:', method)
 
       const response = await fetch(url, {
         method,
@@ -144,20 +159,26 @@ export default function DoctorProfile() {
         body: JSON.stringify(cleanedData),
       })
 
+      console.log('Response status:', response.status)
+
       if (response.ok) {
         setSuccess(isUpdate ? 'প্রোফাইল সফলভাবে আপডেট হয়েছে! পরিবর্তনগুলি অ্যাডমিনের পর্যালোচনায় রয়েছে।' : 'প্রোফাইল সফলভাবে তৈরি হয়েছে! অ্যাডমিনের অনুমোদনের অপেক্ষায় রয়েছে।')
-        
         // Refresh the data to get the updated status
         setTimeout(async () => {
           await fetchDoctorData()
         }, 1000)
+      } else if (response.status === 403) {
+        console.log('403 Forbidden - Token or role issue')
+        setError('আপনার অনুমতি নেই। আপনি ডাক্তার হিসেবে নিবন্ধিত নন বা টোকেন সমস্যা আছে। দয়া করে আবার লগইন করুন।')
       } else {
         const errorText = await response.text()
+        console.log('Error response:', errorText)
         setError(errorText || 'প্রোফাইল সেভ করতে ব্যর্থ')
       }
     } catch (error) {
       console.error('Error saving doctor profile:', error)
       setError('An error occurred while saving your profile')
+  // ...existing code...
     } finally {
       setSubmitting(false)
     }

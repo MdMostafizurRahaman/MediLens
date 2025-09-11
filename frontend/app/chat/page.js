@@ -17,54 +17,61 @@ const Navigation = dynamic(() => import('@/components/Navigation'), {
 // Memoized message component for performance
 const MessageItem = memo(({ message, isTyping = false }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: 0.3, ease: "easeOut" }}
+    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
   >
-    <div
-      className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-3 rounded-2xl ${
-        message.type === 'user'
-          ? 'bg-primary text-primary-content ml-auto'
-          : 'bg-base-200 text-base-content'
-      }`}
-    >
-      {message.type === 'bot' && (
-        <div className="flex items-center mb-2">
-          <span className="text-lg mr-2">🤖</span>
-          <span className="text-sm font-medium">MediLens AI</span>
-          {message.timestamp && (
-            <span className="text-xs opacity-60 ml-auto">
-              {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </span>
-          )}
-        </div>
-      )}
-      
-      {message.type === 'user' && message.timestamp && (
-        <div className="text-xs opacity-80 mb-1 text-right">
-          {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </div>
-      )}
-      
-      <div className="whitespace-pre-wrap break-words">
-        {isTyping ? (
-          <div className="flex items-center">
-            <span>টাইপ করছি</span>
-            <div className="ml-2 flex space-x-1">
-              <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+    <div className={`relative max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl`}>
+      <div
+        className={`chat-bubble-enhanced ${
+          message.type === 'user'
+            ? 'chat-bubble-user'
+            : 'chat-bubble-ai'
+        } ${isTyping ? 'animate-pulse' : ''}`}
+      >
+        {message.type === 'bot' && (
+          <div className="flex items-center mb-3 pb-2 border-b border-gray-200/50">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+              <span className="text-white text-lg">🤖</span>
+            </div>
+            <div className="flex-1">
+              <span className="text-sm font-semibold text-gray-800">MediLens AI</span>
+              {message.timestamp && (
+                <span className="text-xs text-gray-500 ml-2">
+                  {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              )}
             </div>
           </div>
-        ) : (
-          message.content
         )}
+        
+        {message.type === 'user' && message.timestamp && (
+          <div className="text-xs text-white/80 mb-2 text-right">
+            {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
+        )}
+        
+        <div className="whitespace-pre-wrap break-words leading-relaxed">
+          {isTyping ? (
+            <div className="flex items-center">
+              <span className="mr-2">টাইপ করছি</span>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          ) : (
+            message.content
+          )}
+        </div>
       </div>
     </div>
   </motion.div>
@@ -72,19 +79,38 @@ const MessageItem = memo(({ message, isTyping = false }) => (
 
 // Memoized chat item for performance
 const ChatItem = memo(({ chat, isSelected, onSelect }) => (
-  <div
-    className={`p-3 border-b cursor-pointer hover:bg-base-300 transition-colors ${
-      isSelected ? 'bg-base-300' : ''
+  <motion.div
+    whileHover={{ scale: 1.02, x: 4 }}
+    whileTap={{ scale: 0.98 }}
+    className={`card-enhanced cursor-pointer transition-all duration-300 mb-2 ${
+      isSelected 
+        ? 'bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200 shadow-md' 
+        : 'hover:bg-gray-50 border-gray-200'
     }`}
     onClick={onSelect}
   >
-    <h4 className="text-sm font-medium truncate">
-      {chat.title || `চ্যাট ${chat.id}`}
-    </h4>
-    <p className="text-xs text-base-content/60">
-      {new Date(chat.createdAt).toLocaleDateString('bn-BD')}
-    </p>
-  </div>
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className={`text-sm font-semibold truncate ${
+          isSelected ? 'text-primary-800' : 'text-gray-800'
+        }`}>
+          {chat.title || `চ্যাট ${chat.id}`}
+        </h4>
+        {isSelected && (
+          <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 flex items-center gap-1">
+        <span className="text-lg">📅</span>
+        {new Date(chat.createdAt).toLocaleDateString('bn-BD')}
+      </p>
+      {chat.lastMessage && (
+        <p className="text-xs text-gray-600 mt-2 truncate">
+          {chat.lastMessage.substring(0, 50)}...
+        </p>
+      )}
+    </div>
+  </motion.div>
 ))
 
 export default function ChatPage() {
@@ -697,10 +723,18 @@ export default function ChatPage() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <Navigation />
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Please log in to chat</h1>
-          <a href="/auth/login" className="btn btn-primary">Login</a>
+          <div className="card-enhanced p-12 max-w-md mx-auto">
+            <div className="text-6xl mb-6 animate-float">🔐</div>
+            <h1 className="text-2xl font-bold text-white mb-4">Login Required</h1>
+            <p className="text-gray-600 mb-6">Please log in to access the AI chat assistant</p>
+            <a href="/auth/login" className="btn btn-enhanced btn-lg px-8">
+              <span className="mr-2">🚪</span>
+              Login Now
+            </a>
+          </div>
         </div>
       </div>
     )
@@ -708,30 +742,40 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <Navigation />
         <div className="text-center">
-          <span className="loading loading-spinner loading-lg"></span>
-          <p className="mt-4">Loading your chat...</p>
+          <div className="card-enhanced p-12">
+            <div className="loading-enhanced mx-auto mb-6"></div>
+            <p className="text-lg text-gray-600">Loading your chat...</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Navigation />
-      <div className="flex h-screen pt-16">
-        {/* Sidebar - Chat History - Hidden on mobile, shown on desktop */}
-        <div className="hidden lg:block w-1/4 bg-base-200 border-r">
-          <div className="p-4 border-b">
-            <button 
+      <div className="flex h-screen pt-20">
+        {/* Sidebar - Chat History - Enhanced Design */}
+        <div className="hidden lg:block w-80 glass-effect border-r border-white/20 backdrop-blur-xl">
+          <div className="p-6 border-b border-white/10">
+            <motion.button 
               onClick={() => createNewChat()}
-              className="btn btn-primary btn-sm w-full"
+              className="btn btn-enhanced w-full py-3 shadow-glow-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              ➕ নতুন চ্যাট
-            </button>
+              <span className="text-xl mr-2">➕</span>
+              নতুন চ্যাট
+            </motion.button>
           </div>
-          <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto h-full p-4 space-y-2">
+            <h3 className="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2">
+              <span className="text-lg">📝</span>
+              Chat History
+            </h3>
             {chatHistory.map((chat) => (
               <ChatItem
                 key={chat.id}
@@ -744,31 +788,49 @@ export default function ChatPage() {
               />
             ))}
             {chatHistory.length === 0 && (
-              <div className="p-4 text-center text-base-content/60">
-                <p className="text-sm">কোন চ্যাট নেই</p>
-                <p className="text-xs mt-1">নতুন চ্যাট শুরু করুন</p>
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4 opacity-50">💬</div>
+                <p className="text-gray-500 text-sm mb-2">No conversations yet</p>
+                <p className="text-gray-400 text-xs">Start a new chat to begin</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto">
-          {/* Header */}
+        {/* Main Chat Area - Enhanced */}
+        <div className="flex-1 flex flex-col">
+          {/* Header - Enhanced */}
           <motion.div 
-            className={`${prescriptionData ? 'bg-success' : 'bg-primary'} text-primary-content p-4`}
+            className="glass-effect border-b border-white/20 p-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between max-w-4xl mx-auto">
               <div className="text-center flex-1">
-                <h1 className="text-xl lg:text-2xl font-bold">
-                  {prescriptionData ? '🔬 প্রেসক্রিপশন AI সহায়ক' : '🤖 MediLens AI Assistant'}
-                </h1>
-                <p className="text-primary-content/80 text-sm lg:text-base">
-                  {prescriptionData ? 'আপনার প্রেসক্রিপশন বিষয়ক সহায়ক' : 'আপনার স্বাস্থ্য বিষয়ক সহায়ক'}
-                </p>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${
+                    prescriptionData 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                      : 'bg-gradient-to-r from-primary-500 to-blue-600'
+                  } shadow-lg text-white`}>
+                    {prescriptionData ? '🔬' : '🤖'}
+                  </div>
+                  <div>
+                    <h1 className="text-xl lg:text-2xl font-bold text-gray-800">
+                      {prescriptionData ? 'Prescription AI Assistant' : 'MediLens AI Assistant'}
+                    </h1>
+                    <p className="text-gray-600 text-sm lg:text-base">
+                      {prescriptionData ? 'আপনার প্রেসক্রিপশন বিষয়ক সহায়ক' : 'আপনার স্বাস্থ্য বিষয়ক সহায়ক'}
+                    </p>
+                  </div>
+                </div>
+                {prescriptionData && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Prescription Data Loaded
+                  </div>
+                )}
               </div>
               {/* Mobile: New Chat Button */}
               <div className="lg:hidden">
@@ -784,57 +846,121 @@ export default function ChatPage() {
           </motion.div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 bg-base-100">
-            <div className="space-y-4">
-              {messages.filter(message => !message.isHidden).map((message) => (
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gradient-to-br from-base-100 via-base-200/30 to-base-100 relative">
+            {/* Decorative Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-20 right-10 w-32 h-32 bg-primary/5 rounded-full blur-xl"></div>
+              <div className="absolute bottom-40 left-10 w-24 h-24 bg-secondary/5 rounded-full blur-lg"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-accent/3 rounded-full blur-2xl"></div>
+            </div>
+            
+            <div className="relative space-y-6 max-w-4xl mx-auto">
+              {messages.filter(message => !message.isHidden).map((message, index) => (
                 <motion.div
                   key={message.id}
                   className={`chat ${message.type === 'user' ? 'chat-end' : 'chat-start'}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.05,
+                    type: "spring",
+                    bounce: 0.3
+                  }}
                 >
                   <div className="chat-image avatar">
-                    <div className="w-10 rounded-full">
+                    <motion.div 
+                      className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-base-300 shadow-lg"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ type: "spring", bounce: 0.5 }}
+                    >
                       {message.type === 'user' ? (
-                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold">
+                        <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg shadow-inner">
                           {currentUser?.firstName?.[0] || 'U'}
                         </div>
                       ) : (
-                        <div className={`w-10 h-10 rounded-full ${prescriptionData ? 'bg-success' : 'bg-secondary'} flex items-center justify-center text-secondary-content`}>
+                        <div className={`w-full h-full ${prescriptionData 
+                          ? 'bg-gradient-to-br from-success-400 to-success-600' 
+                          : 'bg-gradient-to-br from-secondary-400 to-secondary-600'
+                        } flex items-center justify-center text-white text-lg shadow-inner`}>
                           {prescriptionData ? '🔬' : '🤖'}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
-                  <div className="chat-header">
-                    {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : (prescriptionData ? 'প্রেসক্রিপশন AI' : 'MediLens AI')}
-                    <time className="text-xs opacity-50 ml-2">
+                  
+                  <div className={`chat-header mb-2 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
+                    <span className="font-semibold text-base-content/80">
+                      {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : (prescriptionData ? 'প্রেসক্রিপশন AI' : 'MediLens AI')}
+                    </span>
+                    <time className="text-xs text-base-content/50 ml-2 font-medium">
                       {message.timestamp.toLocaleTimeString('bn-BD')}
                     </time>
                   </div>
-                  <div className={`chat-bubble ${message.type === 'user' ? 'chat-bubble-primary' : (prescriptionData ? 'chat-bubble-success' : 'chat-bubble-secondary')} whitespace-pre-line`}>
+                  
+                  <motion.div 
+                    className={`chat-bubble-enhanced ${message.type === 'user' 
+                      ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white border-primary-300' 
+                      : prescriptionData 
+                        ? 'bg-gradient-to-br from-success-50 to-success-100 text-success-800 border-success-200' 
+                        : 'bg-gradient-to-br from-secondary-50 to-secondary-100 text-secondary-800 border-secondary-200'
+                    } max-w-xs lg:max-w-md xl:max-w-lg shadow-lg backdrop-blur-sm whitespace-pre-line leading-relaxed`}
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: message.type === 'user' 
+                        ? "0 10px 25px rgba(99, 102, 241, 0.25)" 
+                        : prescriptionData 
+                          ? "0 10px 25px rgba(34, 197, 94, 0.25)"
+                          : "0 10px 25px rgba(168, 85, 247, 0.25)"
+                    }}
+                    transition={{ type: "spring", bounce: 0.3 }}
+                  >
                     {message.content}
-                  </div>
+                  </motion.div>
                 </motion.div>
               ))}
               
               {isTyping && (
                 <motion.div
                   className="chat chat-start"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
                 >
                   <div className="chat-image avatar">
-                    <div className={`w-10 rounded-full ${prescriptionData ? 'bg-success' : 'bg-secondary'} flex items-center justify-center text-secondary-content`}>
-                      {prescriptionData ? '🔬' : '🤖'}
+                    <motion.div 
+                      className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-base-300 shadow-lg"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <div className={`w-full h-full ${prescriptionData 
+                        ? 'bg-gradient-to-br from-success-400 to-success-600' 
+                        : 'bg-gradient-to-br from-secondary-400 to-secondary-600'
+                      } flex items-center justify-center text-white text-lg shadow-inner`}>
+                        {prescriptionData ? '🔬' : '🤖'}
+                      </div>
+                    </motion.div>
+                  </div>
+                  
+                  <motion.div 
+                    className={`chat-bubble-enhanced ${prescriptionData 
+                      ? 'bg-gradient-to-br from-success-50 to-success-100 text-success-800 border-success-200' 
+                      : 'bg-gradient-to-br from-secondary-50 to-secondary-100 text-secondary-800 border-secondary-200'
+                    } shadow-lg backdrop-blur-sm`}
+                    animate={{ 
+                      boxShadow: [
+                        prescriptionData ? "0 4px 15px rgba(34, 197, 94, 0.15)" : "0 4px 15px rgba(168, 85, 247, 0.15)",
+                        prescriptionData ? "0 8px 25px rgba(34, 197, 94, 0.25)" : "0 8px 25px rgba(168, 85, 247, 0.25)",
+                        prescriptionData ? "0 4px 15px rgba(34, 197, 94, 0.15)" : "0 4px 15px rgba(168, 85, 247, 0.15)"
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="loading loading-dots loading-sm"></span>
+                      <span className="font-medium">চিন্তা করছি...</span>
                     </div>
-                  </div>
-                  <div className={`chat-bubble ${prescriptionData ? 'chat-bubble-success' : 'chat-bubble-secondary'}`}>
-                    <span className="loading loading-dots loading-sm"></span>
-                    <span className="ml-2">চিন্তা করছি...</span>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
               <div ref={messagesEndRef} />
@@ -842,53 +968,165 @@ export default function ChatPage() {
           </div>
 
           {/* Quick Questions */}
-          <div className="p-3 lg:p-4 bg-base-200 border-t">
-            <p className="text-xs lg:text-sm text-base-content/70 mb-2">
-              {prescriptionData ? 'প্রেসক্রিপশন সম্পর্কিত প্রশ্ন:' : 'দ্রুত প্রশ্ন:'}
-            </p>
-            <div className="flex flex-wrap gap-1 lg:gap-2">
-              {quickQuestions.slice(0, 8).map((question, index) => (
-                <button
-                  key={index}
-                  className="btn btn-xs lg:btn-sm btn-outline text-xs"
-                  onClick={() => {
-                    if (!isTyping && !isSending) {
-                      setInputMessage(question)
-                    }
-                  }}
-                  disabled={isTyping || isSending}
-                >
-                  {question}
-                </button>
-              ))}
+          <motion.div 
+            className="p-4 lg:p-6 bg-gradient-to-r from-base-200/80 via-base-100/50 to-base-200/80 backdrop-blur-sm border-t border-base-300/50 relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5"></div>
+            
+            <div className="relative">
+              <motion.p 
+                className="text-sm lg:text-base text-base-content/80 mb-3 font-medium flex items-center gap-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                {prescriptionData ? 'প্রেসক্রিপশন সম্পর্কিত প্রশ্ন:' : 'দ্রুত প্রশ্ন:'}
+              </motion.p>
+              
+              <div className="flex flex-wrap gap-2 lg:gap-3">
+                {quickQuestions.slice(0, 8).map((question, index) => (
+                  <motion.button
+                    key={index}
+                    className={`btn btn-sm btn-outline ${prescriptionData 
+                      ? 'btn-outline-success hover:btn-success' 
+                      : 'btn-outline-primary hover:btn-primary'
+                    } text-xs lg:text-sm font-medium transition-all duration-300 
+                    hover:scale-105 hover:shadow-lg backdrop-blur-sm
+                    ${prescriptionData 
+                      ? 'hover:shadow-success/25' 
+                      : 'hover:shadow-primary/25'
+                    }`}
+                    onClick={() => {
+                      if (!isTyping && !isSending) {
+                        setInputMessage(question)
+                      }
+                    }}
+                    disabled={isTyping || isSending}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      duration: 0.3, 
+                      delay: 0.4 + (index * 0.05),
+                      type: "spring",
+                      bounce: 0.3
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {question}
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Input */}
-          <form onSubmit={handleSendMessage} className="p-3 lg:p-4 bg-base-200">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={prescriptionData ? "প্রেসক্রিপশন সম্পর্কে প্রশ্ন করুন..." : "আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন..."}
-                className="input input-bordered flex-1 text-sm lg:text-base"
-                disabled={isTyping || isSending}
-              />
-              <button
+          <motion.form 
+            onSubmit={handleSendMessage} 
+            className="p-4 lg:p-6 bg-gradient-to-r from-base-100 via-base-50 to-base-100 backdrop-blur-sm border-t border-base-300/50 relative overflow-hidden"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            {/* Background Elements */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/3 via-transparent to-secondary/3"></div>
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-secondary/10 rounded-full blur-xl"></div>
+            
+            <div className="relative flex gap-3 lg:gap-4 items-end max-w-4xl mx-auto">
+              <div className="flex-1 relative">
+                <motion.input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder={prescriptionData ? "প্রেসক্রিপশন সম্পর্কে প্রশ্ন করুন..." : "আপনার স্বাস্থ্য বিষয়ক প্রশ্ন লিখুন..."}
+                  className={`input input-bordered w-full text-sm lg:text-base bg-white/90 backdrop-blur-sm 
+                  border-2 transition-all duration-300 shadow-lg
+                  ${prescriptionData 
+                    ? 'border-success/30 focus:border-success focus:shadow-success/25' 
+                    : 'border-primary/30 focus:border-primary focus:shadow-primary/25'
+                  } 
+                  focus:shadow-xl focus:scale-[1.02] placeholder:text-base-content/50`}
+                  disabled={isTyping || isSending}
+                  whileFocus={{ scale: 1.02 }}
+                  transition={{ type: "spring", bounce: 0.3 }}
+                />
+                
+                {/* Input Enhancement Indicators */}
+                {inputMessage.trim() && (
+                  <motion.div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", bounce: 0.5 }}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${prescriptionData ? 'bg-success' : 'bg-primary'} animate-pulse`}></div>
+                  </motion.div>
+                )}
+              </div>
+              
+              <motion.button
                 type="submit"
-                className={`btn ${prescriptionData ? 'btn-success' : 'btn-primary'} ${(isTyping || isSending) ? 'loading' : ''}`}
+                className={`btn ${prescriptionData ? 'btn-success' : 'btn-primary'} 
+                min-h-[3rem] px-4 lg:px-6 shadow-lg backdrop-blur-sm
+                ${prescriptionData 
+                  ? 'hover:shadow-success/30' 
+                  : 'hover:shadow-primary/30'
+                } hover:shadow-xl transition-all duration-300
+                ${(isTyping || isSending) ? 'loading' : ''}`}
                 disabled={!inputMessage.trim() || isTyping || isSending}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", bounce: 0.3 }}
               >
-                <span className="hidden lg:inline">
-                  {isTyping ? 'পাঠাচ্ছি...' : '📤 Send'}
-                </span>
-                <span className="lg:hidden">
-                  {isTyping ? '...' : '📤'}
-                </span>
-              </button>
+                {!isTyping && !isSending && (
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <span className="hidden lg:inline font-medium">
+                      📤 Send
+                    </span>
+                    <span className="lg:hidden text-lg">
+                      📤
+                    </span>
+                  </motion.div>
+                )}
+                {(isTyping || isSending) && (
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <span className="loading loading-spinner loading-sm"></span>
+                    <span className="hidden lg:inline text-sm">পাঠাচ্ছি...</span>
+                  </motion.div>
+                )}
+              </motion.button>
             </div>
-          </form>
+            
+            {/* Input Helper Text */}
+            <motion.div 
+              className="mt-3 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="text-xs text-base-content/50">
+                {prescriptionData 
+                  ? 'আপনার প্রেসক্রিপশন সম্পর্কে যেকোনো প্রশ্ন করুন' 
+                  : 'স্বাস্থ্য সম্পর্কিত যেকোনো প্রশ্ন করতে পারেন'
+                }
+              </p>
+            </motion.div>
+          </motion.form>
         </div>
       </div>
     </div>

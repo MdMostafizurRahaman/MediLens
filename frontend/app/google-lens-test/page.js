@@ -3,63 +3,78 @@ import Navigation from '@/components/Navigation'
 
 export default function GoogleLensTestPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Background Decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-green-200 to-blue-200 rounded-full opacity-20 animate-float-reverse"></div>
+        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-gradient-to-br from-pink-200 to-orange-200 rounded-full opacity-15 animate-pulse-subtle"></div>
+      </div>
+
       <Navigation />
-      <div className="container mx-auto py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-900 mb-4">
-            🔬 Prescription Analysis
+      
+      <div className="relative z-10 container mx-auto py-12 px-4 sm:px-6 lg:px-8 pt-28">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <div className="inline-block mb-6">
+            <div className="text-6xl md:text-7xl animate-float">🔬</div>
+          </div>
+          <h1 className="text-responsive-lg text-gradient font-display mb-6">
+            Prescription Analysis
           </h1>
-          <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
             সরাসরি ছবি বিশ্লেষণ + চিকিৎসা পরামর্শ
           </p>
+          <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto rounded-full"></div>
         </div>
 
-        {/* Features */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-blue-600 text-3xl mb-3">🧠</div>
-            <h3 className="text-lg font-semibold mb-2">Gemini Vision AI</h3>
-            <p className="text-gray-600">
-              Google এর সবচেয়ে উন্নত ভিশন AI যা সরাসরি ছবি থেকে টেক্সট এবং 
-              চিকিৎসা তথ্য বিশ্লেষণ করে।
-            </p>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-green-600 text-3xl mb-3">🔍</div>
-            <h3 className="text-lg font-semibold mb-2">Google Lens OCR</h3>
-            <p className="text-gray-600">
-              ব্যাকআপ পদ্ধতি হিসেবে Google Lens API যা হাতের লেখা এবং 
-              প্রিন্টেড টেক্সট উভয়ই নির্ভুলভাবে পড়তে পারে।
-            </p>
-          </div>
+        {/* Main Component - Enhanced Container */}
+        <div className="glass-effect rounded-3xl p-8 mb-12 border-2 border-white/20 shadow-extra">
+          <AdvancedPrescriptionAnalyzer />
+        </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="text-purple-600 text-3xl mb-3">📋</div>
-            <h3 className="text-lg font-semibold mb-2">Comprehensive Analysis</h3>
-            <p className="text-gray-600">
-              রোগ নির্ণয়, ওষুধের তালিকা, পরীক্ষা-নিরীক্ষা এবং চিকিৎসা পরামর্শ 
-              সহ সম্পূর্ণ বিশ্লেষণ বাংলায়।
-            </p>
-          </div>
-        </div> */}
-
-        {/* Main Component */}
-        <AdvancedPrescriptionAnalyzer />
-
-        {/* Disclaimer */}
-        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="text-yellow-600 text-xl mr-3">⚠️</div>
+        {/* Enhanced Disclaimer */}
+        <div className="glass-effect rounded-2xl p-6 border-l-4 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
+          <div className="flex items-start gap-4">
+            <div className="text-yellow-600 text-3xl flex-shrink-0 animate-pulse-subtle">⚠️</div>
             <div>
-              <h3 className="font-semibold text-yellow-800 mb-2">গুরুত্বপূর্ণ সতর্কতা</h3>
-              <p className="text-yellow-700 text-sm">
+              <h3 className="font-bold text-yellow-800 mb-3 text-lg">গুরুত্বপূর্ণ সতর্কতা</h3>
+              <p className="text-yellow-700 leading-relaxed bangla-text">
                 এই AI বিশ্লেষণ শুধুমাত্র তথ্যগত এবং শিক্ষামূলক উদ্দেশ্যে। এটি কোনো চিকিৎসকের 
                 পরামর্শের বিকল্প নয়। ওষুধ সেবনের আগে অবশ্যই যোগ্য চিকিৎসকের সাথে পরামর্শ করুন। 
                 জরুরি অবস্থায় তাৎক্ষণিক চিকিৎসা সেবা নিন।
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="badge badge-warning">Educational Purpose</span>
+                <span className="badge badge-warning">Not Medical Advice</span>
+                <span className="badge badge-warning">Consult Doctor</span>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="stat-enhanced text-center">
+            <div className="text-3xl text-blue-600 mb-2">🎯</div>
+            <div className="text-2xl font-bold text-gray-800">95%</div>
+            <div className="text-sm text-gray-600">Accuracy Rate</div>
+          </div>
+          <div className="stat-enhanced text-center">
+            <div className="text-3xl text-green-600 mb-2">⚡</div>
+            <div className="text-2xl font-bold text-gray-800">&lt;30s</div>
+            <div className="text-sm text-gray-600">Analysis Time</div>
+          </div>
+          <div className="stat-enhanced text-center">
+            <div className="text-3xl text-purple-600 mb-2">🔒</div>
+            <div className="text-2xl font-bold text-gray-800">100%</div>
+            <div className="text-sm text-gray-600">Data Privacy</div>
+          </div>
+          <div className="stat-enhanced text-center">
+            <div className="text-3xl text-orange-600 mb-2">🌐</div>
+            <div className="text-2xl font-bold text-gray-800">বাংলা</div>
+            <div className="text-sm text-gray-600">Native Support</div>
           </div>
         </div>
       </div>

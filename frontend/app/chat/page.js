@@ -711,7 +711,10 @@ export default function ChatPage() {
     'পেট ব্যথার কারণ কি?',
     'কাশির ঘরোয়া চিকিৎসা',
     'হার্টের সমস্যার লক্ষণ'
-  ]
+  ];
+
+  // Show quick questions only before first user message in current chat
+  const hasUserMessage = useMemo(() => messages.some(m => m.type === 'user'), [messages]);
 
   if (!currentUser) {
     return (
@@ -892,7 +895,7 @@ export default function ChatPage() {
                   
                   <motion.div 
                     className={`chat-bubble-enhanced ${message.type === 'user' 
-                      ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white border-primary-300' 
+                      ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-black border-primary-300' 
                       : prescriptionData 
                         ? 'bg-gradient-to-br from-success-50 to-success-100 text-success-800 border-success-200' 
                         : 'bg-gradient-to-br from-secondary-50 to-secondary-100 text-secondary-800 border-secondary-200'
@@ -959,63 +962,63 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Quick Questions */}
-          <motion.div 
-            className="p-4 lg:p-6 bg-gradient-to-r from-base-200/80 via-base-100/50 to-base-200/80 backdrop-blur-sm border-t border-base-300/50 relative overflow-hidden"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5"></div>
-            
-            <div className="relative">
-              <motion.p 
-                className="text-sm lg:text-base text-base-content/80 mb-3 font-medium flex items-center gap-2"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-              >
-                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                {prescriptionData ? 'প্রেসক্রিপশন সম্পর্কিত প্রশ্ন:' : 'দ্রুত প্রশ্ন:'}
-              </motion.p>
-              
-              <div className="flex flex-wrap gap-2 lg:gap-3">
-                {quickQuestions.slice(0, 8).map((question, index) => (
-                  <motion.button
-                    key={index}
-                    className={`btn btn-sm btn-outline ${prescriptionData 
-                      ? 'btn-outline-success hover:btn-success' 
-                      : 'btn-outline-primary hover:btn-primary'
-                    } text-xs lg:text-sm font-medium transition-all duration-300 
-                    hover:scale-105 hover:shadow-lg backdrop-blur-sm
-                    ${prescriptionData 
-                      ? 'hover:shadow-success/25' 
-                      : 'hover:shadow-primary/25'
-                    }`}
-                    onClick={() => {
-                      if (!isTyping && !isSending) {
-                        setInputMessage(question)
-                      }
-                    }}
-                    disabled={isTyping || isSending}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ 
-                      duration: 0.3, 
-                      delay: 0.4 + (index * 0.05),
-                      type: "spring",
-                      bounce: 0.3
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {question}
-                  </motion.button>
-                ))}
+          {/* Quick Questions: show only before first user message in chat */}
+          {!hasUserMessage && (
+            <motion.div 
+              className="p-4 lg:p-6 bg-gradient-to-r from-base-200/80 via-base-100/50 to-base-200/80 backdrop-blur-sm border-t border-base-300/50 relative overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5"></div>
+              <div className="relative">
+                <motion.p 
+                  className="text-sm lg:text-base text-base-content/80 mb-3 font-medium flex items-center gap-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                  {prescriptionData ? 'প্রেসক্রিপশন সম্পর্কিত প্রশ্ন:' : 'দ্রুত প্রশ্ন:'}
+                </motion.p>
+                <div className="flex flex-wrap gap-2 lg:gap-3">
+                  {quickQuestions.slice(0, 8).map((question, index) => (
+                    <motion.button
+                      key={index}
+                      className={`btn btn-sm btn-outline ${prescriptionData 
+                        ? 'btn-outline-success hover:btn-success' 
+                        : 'btn-outline-primary hover:btn-primary'
+                      } text-xs lg:text-sm font-medium transition-all duration-300 
+                      hover:scale-105 hover:shadow-lg backdrop-blur-sm
+                      ${prescriptionData 
+                        ? 'hover:shadow-success/25' 
+                        : 'hover:shadow-primary/25'
+                      }`}
+                      onClick={() => {
+                        if (!isTyping && !isSending) {
+                          setInputMessage(question)
+                        }
+                      }}
+                      disabled={isTyping || isSending}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ 
+                        duration: 0.3, 
+                        delay: 0.4 + (index * 0.05),
+                        type: "spring",
+                        bounce: 0.3
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {question}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Input */}
           <motion.form 

@@ -128,21 +128,13 @@ export default function ChatPage() {
   const { currentUser, getToken } = useAuth()
   const router = useRouter()
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
-
-  const debouncedScrollToBottom = useMemo(() => {
-    let timeoutId
-    return () => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(scrollToBottom, 100)
+  // Remove auto-scroll-to-bottom on page load
+  // Add scrollToTop function if needed
+  const scrollToTop = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.parentNode.scrollTop = 0;
     }
-  }, [scrollToBottom])
-
-  useEffect(() => {
-    debouncedScrollToBottom()
-  }, [messages, debouncedScrollToBottom])
+  }, [])
 
   useEffect(() => {
     if (currentUser) {
@@ -755,9 +747,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
       <Navigation />
-      <div className="flex h-screen pt-20">
+  <div className="flex h-screen pt-20">
         {/* Sidebar - Chat History - Enhanced Design */}
         <div className="hidden lg:block w-80 glass-effect border-r border-white/20 backdrop-blur-xl">
           <div className="p-6 border-b border-white/10">
@@ -846,7 +838,7 @@ export default function ChatPage() {
           </motion.div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gradient-to-br from-base-100 via-base-200/30 to-base-100 relative">
+    <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gradient-to-br from-base-100 via-base-200/30 to-base-100 relative">
             {/* Decorative Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-20 right-10 w-32 h-32 bg-primary/5 rounded-full blur-xl"></div>

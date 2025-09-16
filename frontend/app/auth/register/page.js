@@ -288,15 +288,6 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="form-control mt-4">
-            <label className="label cursor-pointer">
-              <span className="label-text text-sm">
-                I agree to the <a href="#" className="link link-primary">Terms of Service</a> and <a href="#" className="link link-primary">Privacy Policy</a>
-              </span>
-              <input type="checkbox" className="checkbox checkbox-primary" required />
-            </label>
-          </div>
-
           <div className="divider">OR</div>
 
           <div className="text-center">

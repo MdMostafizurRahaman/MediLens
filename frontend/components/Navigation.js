@@ -191,7 +191,7 @@ export default function Navigation() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="avatar placeholder">
+                {/* <div className="avatar placeholder">
                   {getUserProfileImage() ? (
                     <div className="w-10 h-10 rounded-full ring-2 ring-primary-300">
                       <img 
@@ -212,7 +212,7 @@ export default function Navigation() {
                       {getUserInitials()}
                     </div>
                   )}
-                </div>
+                </div> */}
                 <div className="flex flex-col items-start">
                   <div className="text-sm font-semibold text-gray-800">{getUserDisplayName()}</div>
                   <div className={`text-xs px-2 py-1 rounded-full ${roleBadge.color} flex items-center gap-1`}>
@@ -231,28 +231,6 @@ export default function Navigation() {
               >
                 <li className="px-3 py-2 border-b border-gray-100 mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="avatar placeholder">
-                      {getUserProfileImage() ? (
-                        <div className="w-12 h-12 rounded-full ring-2 ring-primary-300">
-                          <img 
-                            src={getUserProfileImage()} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover rounded-full"
-                            onError={(e) => {
-                              e.target.style.display = 'none'
-                              e.target.nextSibling.style.display = 'flex'
-                            }}
-                          />
-                          <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-full w-12 h-12 items-center justify-center font-bold text-lg hidden">
-                            {getUserInitials()}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg ring-2 ring-primary-300">
-                          {getUserInitials()}
-                        </div>
-                      )}
-                    </div>
                     <div>
                       <div className="font-semibold text-gray-800">{getUserDisplayName()}</div>
                       <div className="text-sm text-gray-500">{currentUser?.email}</div>

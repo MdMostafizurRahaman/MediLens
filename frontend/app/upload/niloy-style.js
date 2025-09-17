@@ -334,7 +334,7 @@ const AdvancedMedicalReport = ({ analysisData }) => {
           animate="visible"
           transition={{ duration: 0.6, delay: 0.7 }}
         >
-          <h3 className="text-lg font-bold text-red-800 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
             ⚠️ গুরুত্বপূর্ণ সতর্কতা
           </h3>
           <ul className="space-y-2">

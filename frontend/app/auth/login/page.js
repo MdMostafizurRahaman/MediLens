@@ -243,14 +243,14 @@ export default function LoginPage() {
           <div className="text-center">
             <p className="text-base-content/70">
               Don't have an account?{' '}
-              <Link href="/auth/register" className="link link-primary">
+              <Link href="/auth/register" className="link link-primary no-underline">
                 Sign up here
               </Link>
             </p>
           </div>
 
           <div className="text-center mt-4">
-            <Link href="/" className="link link-neutral text-sm">
+            <Link href="/" className="link link-neutral text-sm no-underline">
               ← Back to Home
             </Link>
           </div>

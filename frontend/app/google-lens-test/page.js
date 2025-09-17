@@ -35,12 +35,12 @@ export default function GoogleLensTestPage() {
         </div>
 
         {/* Enhanced Disclaimer */}
-        <div className="glass-effect rounded-2xl p-6 border-l-4 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
+        <div className=" bg-red-600 rounded-2xl p-6 border-l-4 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
           <div className="flex items-start gap-4">
             <div className="text-yellow-600 text-3xl flex-shrink-0 animate-pulse-subtle">⚠️</div>
             <div>
-              <h3 className="font-bold text-yellow-800 mb-3 text-lg">গুরুত্বপূর্ণ সতর্কতা</h3>
-              <p className="text-yellow-700 leading-relaxed bangla-text">
+              <h3 className="font-bold text-red-700 mb-3 text-lg">গুরুত্বপূর্ণ সতর্কতা</h3>
+              <p className="text-red-700 leading-relaxed bangla-text">
                 এই AI বিশ্লেষণ শুধুমাত্র তথ্যগত এবং শিক্ষামূলক উদ্দেশ্যে। এটি কোনো চিকিৎসকের 
                 পরামর্শের বিকল্প নয়। ওষুধ সেবনের আগে অবশ্যই যোগ্য চিকিৎসকের সাথে পরামর্শ করুন। 
                 জরুরি অবস্থায় তাৎক্ষণিক চিকিৎসা সেবা নিন।

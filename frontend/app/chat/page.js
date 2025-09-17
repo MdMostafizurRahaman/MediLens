@@ -812,10 +812,10 @@ export default function ChatPage() {
                     {prescriptionData ? '🔬' : '🤖'}
                   </div>
                   <div>
-                    <h1 className="text-xl lg:text-2xl font-bold text-gray-800">
+                    <h1 className="text-xl lg:text-2xl font-bold text-white">
                       {prescriptionData ? 'Prescription AI Assistant' : 'MediLens AI Assistant'}
                     </h1>
-                    <p className="text-gray-600 text-sm lg:text-base">
+                    <p className="text-white text-sm lg:text-base">
                       {prescriptionData ? 'আপনার প্রেসক্রিপশন বিষয়ক সহায়ক' : 'আপনার স্বাস্থ্য বিষয়ক সহায়ক'}
                     </p>
                   </div>

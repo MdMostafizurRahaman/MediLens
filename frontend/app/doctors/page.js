@@ -450,19 +450,19 @@ export default function DoctorsPage() {
           transition={{ duration: 0.6, delay: 0.8 }}
         >
           <a href="/google-lens-test" className="card bg-primary text-primary-content shadow-lg hover:shadow-xl transition-shadow">
-            <div className="card-body text-center">
-              <h3 className="card-title justify-center">� Gemini Vision AI</h3>
+            <div className="card-body text-center text-black">
+              <h3 className="card-title justify-center">🔬Analysis</h3>
               <p>Get your prescription analyzed</p>
             </div>
           </a>
           <a href="/chat" className="card bg-secondary text-secondary-content shadow-lg hover:shadow-xl transition-shadow">
-            <div className="card-body text-center">
+            <div className="card-body text-center text-black">
               <h3 className="card-title justify-center">💬 AI Health Assistant</h3>
               <p>Ask health questions in Bangla</p>
             </div>
           </a>
           <a href="/vitals" className="card bg-accent text-accent-content shadow-lg hover:shadow-xl transition-shadow">
-            <div className="card-body text-center">
+            <div className="card-body text-center text-black">
               <h3 className="card-title justify-center">🩺 Check Vitals</h3>
               <p>Monitor your health parameters</p>
             </div>

@@ -437,35 +437,37 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="stat bg-primary text-primary-content rounded-lg">
               <div className="stat-figure">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-black stroke-2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
-              <div className="stat-title text-primary-content/80">Account Status</div>
-              <div className="stat-value text-sm text-black">
-                {hasRole('doctor') ? '👨‍⚕️ Doctor' : '👤 Patient'}
+              <div className="stat-title text-black font-bold">Account Status</div>
+              <div className="stat-value text-sm text-black font-semibold">
+                {hasRole('admin') ? '👨‍💼 Admin' : hasRole('doctor') ? '👨‍⚕️ Doctor' : '👤 Patient'}
               </div>
-              <div className="stat-desc text-primary-content/60">
-                {hasRole('doctor') ? 'Doctor Account' : 'Patient Account'}
+              <div className="stat-desc text-black font-medium">
+                {hasRole('admin') ? 'Admin Account' : hasRole('doctor') ? 'Doctor Account' : 'Patient Account'}
               </div>
             </div>
 
             <div className="stat bg-secondary text-secondary-content rounded-lg">
               <div className="stat-figure">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-black stroke-2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path></svg>
               </div>
-              <div className="stat-title text-secondary-content/80">Last Updated</div>
-              <div className="stat-value text-sm">
-                {profileData?.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('en-US') : 'N/A'}
+              <div className="stat-title text-black font-bold">Last Updated</div>
+              <div className="stat-value text-sm text-black font-semibold">
+                {profileData?.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('en-US') : 
+                 profileData?.lastModified ? new Date(profileData.lastModified).toLocaleDateString('en-US') :
+                 new Date().toLocaleDateString('en-US')}
               </div>
-              <div className="stat-desc text-secondary-content/60">Profile Updated</div>
+              <div className="stat-desc text-black font-medium">Profile Updated</div>
             </div>
 
             <div className="stat bg-accent text-accent-content rounded-lg">
               <div className="stat-figure">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-black stroke-2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               </div>
-              <div className="stat-title text-accent-content/80">MediLens Member</div>
-              <div className="stat-value text-sm">2025</div>
-              <div className="stat-desc text-accent-content/60">Year Joined</div>
+              <div className="stat-title text-black font-bold">MediLens Member</div>
+              <div className="stat-value text-sm text-black font-semibold">2025</div>
+              <div className="stat-desc text-black font-medium">Year Joined</div>
             </div>
           </div>
 

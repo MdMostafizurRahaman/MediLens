@@ -24,6 +24,11 @@ export const AuthProvider = ({ children }) => {
       try {
         const user = JSON.parse(userInfo)
         setCurrentUser(user)
+        
+        // If user doesn't have firstName but has role, try to refresh user data
+        if (!user.firstName && user.role && user.email) {
+          refreshUserData(user.email, token, user.role)
+        }
       } catch (error) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
@@ -31,6 +36,19 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false)
   }, [])
+
+  const refreshUserData = async (email, token, role) => {
+    try {
+      const userInfo = await getUserDetails(email, token, role)
+      if (userInfo.firstName) {
+        const updatedUser = { email, role, ...userInfo }
+        setCurrentUser(updatedUser)
+        localStorage.setItem('userInfo', JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error)
+    }
+  }
 
   const signup = async (email, password, firstName, lastName, userType = 'user') => {
     const endpoint = userType === 'doctor' ? '/doctor/sign-up' : 
@@ -86,7 +104,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token)
       
       // Get user details
-      const userInfo = await getUserDetails(email, token)
+      const userInfo = await getUserDetails(email, token, role)
       const userData = {
         email,
         role,
@@ -105,9 +123,17 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const getUserDetails = async (email, token) => {
+  const getUserDetails = async (email, token, role) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/user/${email}`, {
+      // Use role-based endpoints
+      let endpoint = `/user/${email}`
+      if (role?.toLowerCase() === 'admin') {
+        endpoint = `/admin/${email}`
+      } else if (role?.toLowerCase() === 'doctor') {
+        endpoint = `/doctor/${email}`
+      }
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -116,6 +142,11 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         return await response.json()
+      } else {
+        console.error(`Error fetching ${role} details:`, response.status, response.statusText)
+        if (response.status === 404 && role?.toLowerCase() === 'admin') {
+          console.error('Admin user not found. Make sure user is registered as admin.')
+        }
       }
       return {}
     } catch (error) {
@@ -144,6 +175,13 @@ export const AuthProvider = ({ children }) => {
     return userRole === checkRole || userRole === `role_${checkRole}`
   }
 
+  // Update current user data
+  const updateUser = (updatedUserData) => {
+    const updatedUser = { ...currentUser, ...updatedUserData }
+    setCurrentUser(updatedUser)
+    localStorage.setItem('userInfo', JSON.stringify(updatedUser))
+  }
+
   const value = {
     currentUser,
     signup,
@@ -151,7 +189,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     getToken,
-    hasRole
+    hasRole,
+    updateUser
   }
 
   return (

@@ -53,10 +53,44 @@ export default function Navigation() {
   }
 
   const getUserDisplayName = () => {
-    if (currentUser?.firstName) {
-      return `${currentUser.firstName} ${currentUser.lastName || ''}`
+    // Try firstName + lastName combination first
+    if (currentUser?.firstName && currentUser?.lastName) {
+      return `${currentUser.firstName} ${currentUser.lastName}`
     }
-    return currentUser?.email?.split('@')[0] || 'User'
+    if (currentUser?.firstName) {
+      return currentUser.firstName
+    }
+    // Try doctor fields
+    if (currentUser?.name) {
+      return currentUser.name
+    }
+    if (currentUser?.fullName) {
+      return currentUser.fullName
+    }
+    // Try user object (sometimes doctor info is nested)
+    if (currentUser?.user?.firstName && currentUser?.user?.lastName) {
+      return `${currentUser.user.firstName} ${currentUser.user.lastName}`.trim()
+    }
+    if (currentUser?.user?.firstName) {
+      return currentUser.user.firstName
+    }
+    
+    // Force show name: create from email if nothing else available
+    if (currentUser?.email) {
+      const emailPrefix = currentUser.email.split('@')[0]
+      // Remove numbers and special characters to make it look more like a name
+      const cleanedPrefix = emailPrefix.replace(/[0-9]/g, '').replace(/[^a-zA-Z]/g, '')
+      let properName
+      if (cleanedPrefix.length > 2) {
+        properName = cleanedPrefix.charAt(0).toUpperCase() + cleanedPrefix.slice(1)
+      } else {
+        properName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)
+      }
+      return properName
+    }
+    
+    // Absolute fallback
+    return 'User'
   }
 
   const getUserInitials = () => {

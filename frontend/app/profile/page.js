@@ -10,7 +10,7 @@ import Navigation from '@/components/Navigation'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
 
 export default function ProfilePage() {
-  const { currentUser, hasRole, getToken, logout } = useAuth()
+  const { currentUser, hasRole, getToken, logout, updateUser } = useAuth()
   const [profileData, setProfileData] = useState(null)
   const [analysisHistory, setAnalysisHistory] = useState([])
   const [formData, setFormData] = useState({
@@ -90,7 +90,18 @@ export default function ProfilePage() {
       setLoading(true)
       const token = getToken()
       const email = currentUser?.email
-      const response = await fetch(`${API_BASE_URL}/user/${email}`, {
+      
+      // Use role-based endpoints for fetching data
+      let url
+      if (hasRole('admin')) {
+        url = `${API_BASE_URL}/admin/${email}`
+      } else if (hasRole('doctor')) {
+        url = `${API_BASE_URL}/doctor/${email}`
+      } else {
+        url = `${API_BASE_URL}/user/${email}`
+      }
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -306,15 +317,26 @@ export default function ProfilePage() {
 
     try {
       const token = getToken()
-      const url = `${API_BASE_URL}/user`
+      
+      // Use role-based endpoints
+      let url, method = 'PUT'
+      if (hasRole('admin')) {
+        url = `${API_BASE_URL}/admin` // Admin update doesn't need email in URL
+      } else if (hasRole('doctor')) {
+        url = `${API_BASE_URL}/doctor`
+      } else {
+        url = `${API_BASE_URL}/user`
+      }
+      
       // Prepare payload: medicalHistory and currentMedications as arrays
       const payload = {
         ...formData,
         medicalHistory: formData.medicalHistory,
         currentMedications: formData.currentMedications
       }
+      
       const response = await fetch(url, {
-        method: 'PUT',
+        method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -324,6 +346,14 @@ export default function ProfilePage() {
       if (response.ok) {
         setSuccess('Profile updated successfully!')
         setIsEditing(false)
+        
+        // Update currentUser in auth context to reflect name changes in navbar
+        updateUser({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email
+        })
+        
         await fetchProfileData() // Refresh data
       } else {
         const errorText = await response.text()
@@ -384,7 +414,19 @@ export default function ProfilePage() {
               Your Profile
             </h1>
             <div className="text-xl font-semibold text-base-content mb-2">
-              {currentUser?.firstName} {currentUser?.lastName}
+              {currentUser?.firstName || currentUser?.lastName
+                ? `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim()
+                : currentUser?.email
+                  ? (() => {
+                      const emailPrefix = currentUser.email.split('@')[0]
+                      const cleanedPrefix = emailPrefix.replace(/[0-9]/g, '').replace(/[^a-zA-Z]/g, '')
+                      if (cleanedPrefix.length > 2) {
+                        return cleanedPrefix.charAt(0).toUpperCase() + cleanedPrefix.slice(1)
+                      } else {
+                        return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)
+                      }
+                    })()
+                  : 'User'}
             </div>
             <p className="text-base-content/70">
               Manage your personal and health information
@@ -398,7 +440,7 @@ export default function ProfilePage() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
               <div className="stat-title text-primary-content/80">Account Status</div>
-              <div className="stat-value text-sm">
+              <div className="stat-value text-sm text-black">
                 {hasRole('doctor') ? '👨‍⚕️ Doctor' : '👤 Patient'}
               </div>
               <div className="stat-desc text-primary-content/60">
@@ -426,115 +468,6 @@ export default function ProfilePage() {
               <div className="stat-desc text-accent-content/60">Year Joined</div>
             </div>
           </div>
-
-          {/* Recent Analysis History */}
-          {/* <div className="card bg-gradient-to-br from-white to-purple-50 shadow-xl border border-purple-100 mb-8">
-            <div className="card-body">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-primary">
-                  📊 সাম্প্রতিক বিশ্লেষণ
-                </h2>
-                <button
-                  onClick={() => router.push('/analysis-history')}
-                  className="btn btn-outline btn-sm"
-                >
-                  সব দেখুন
-                </button>
-              </div>
-
-              {analysisHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">📝</div>
-                  <p className="text-base-content/70 mb-4">
-                    এখনো কোন বিশ্লেষণ করা হয়নি
-                  </p>
-                  <button
-                    onClick={() => router.push('/google-lens-test')}
-                    className="btn btn-primary btn-sm"
-                  >
-                    📸 প্রথম বিশ্লেষণ করুন
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {analysisHistory.map((analysis) => (
-                    <div key={analysis.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-purple-100">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-sm font-semibold text-purple-600">
-                            #{analysis.id}
-                          </span>
-                          <span className="text-sm text-base-content/70">
-                            📅 {new Date(analysis.analysisDate).toLocaleDateString('bn-BD')}
-                          </span>
-                        </div>
-                        
-                        {analysis.keyDiseases && analysis.keyDiseases.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {analysis.keyDiseases.slice(0, 2).map((disease, index) => (
-                              <span key={index} className="badge badge-primary badge-sm">
-                                {disease}
-                              </span>
-                            ))}
-                            {analysis.keyDiseases.length > 2 && (
-                              <span className="badge badge-ghost badge-sm">
-                                +{analysis.keyDiseases.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        
-                        <div className="text-xs text-base-content/60">
-                          💊 {analysis.medicines?.length || 0} টি ঔষধ
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => router.push(`/analysis/${analysis.id}`)}
-                          className="btn btn-primary btn-xs"
-                        >
-                          দেখুন
-                        </button>
-                        
-                        {!analysis.sentToChat && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                const token = getToken()
-                                const response = await fetch(`${API_BASE_URL}/analysis/${analysis.id}/send-to-chat`, {
-                                  method: 'POST',
-                                  headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'application/json',
-                                  },
-                                })
-                                
-                                if (response.ok) {
-                                  fetchAnalysisHistory() // Refresh list
-                                  alert('✅ চ্যাটে পাঠানো হয়েছে!')
-                                } else {
-                                  const errorText = await response.text()
-                                  console.error('Send to chat error:', errorText)
-                                  alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে: ' + errorText)
-                                }
-                              } catch (error) {
-                                console.error('Error sending to chat:', error)
-                                alert('❌ চ্যাটে পাঠাতে সমস্যা হয়েছে।')
-                              }
-                            }}
-                            className="btn btn-success btn-xs"
-                          >
-                            💬
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div> */}
 
           {error && (
             <div className="alert alert-error mb-4">

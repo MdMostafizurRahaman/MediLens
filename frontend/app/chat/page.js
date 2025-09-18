@@ -36,7 +36,7 @@ const MessageItem = memo(({ message, isTyping = false }) => (
               <span className="text-white text-lg">🤖</span>
             </div>
             <div className="flex-1">
-              <span className="text-sm font-semibold text-gray-800">MediLens AI</span>
+              <span className="text-sm font-semibold text-gray-800">MediBot</span>
               {message.timestamp && (
                 <span className="text-xs text-gray-500 ml-2">
                   {new Date(message.timestamp).toLocaleTimeString('bn-BD', {
@@ -591,7 +591,18 @@ export default function ChatPage() {
       if (!currentChatId) {
         currentChatId = await createNewChat(currentMessage)
         if (!currentChatId) {
-          throw new Error('Failed to create chat')
+          // Show a user-friendly fallback bot message instead of throwing
+          const fallbackResponse = {
+            id: 'bot-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            type: 'bot',
+            content: '⚠️ দুঃখিত, নতুন চ্যাট তৈরি করা যায়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।',
+            timestamp: new Date(),
+            sender: 'bot'
+          }
+          setMessages(prev => [...prev, fallbackResponse])
+          setIsTyping(false)
+          setIsSending(false)
+          return
         }
       }
 
@@ -767,7 +778,7 @@ export default function ChatPage() {
             </motion.button>
           </div>
           <div className="overflow-y-auto h-full p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
               <span className="text-lg">📝</span>
               Chat History
             </h3>
@@ -813,7 +824,7 @@ export default function ChatPage() {
                   </div>
                   <div>
                     <h1 className="text-xl lg:text-2xl font-bold text-white">
-                      {prescriptionData ? 'Prescription AI Assistant' : 'MediLens AI Assistant'}
+                      {prescriptionData ? 'Prescription AI Assistant' : 'MediBot'}
                     </h1>
                     <p className="text-white text-sm lg:text-base">
                       {prescriptionData ? 'আপনার প্রেসক্রিপশন বিষয়ক সহায়ক' : 'আপনার স্বাস্থ্য বিষয়ক সহায়ক'}
@@ -886,7 +897,7 @@ export default function ChatPage() {
                   
                   <div className={`chat-header mb-2 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
                     <span className="font-semibold text-base-content/80">
-                      {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : (prescriptionData ? 'প্রেসক্রিপশন AI' : 'MediLens AI')}
+                      {message.type === 'user' ? `${currentUser?.firstName || 'You'}` : (prescriptionData ? 'প্রেসক্রিপশন AI' : 'MediBot')}
                     </span>
                     <time className="text-xs text-base-content/50 ml-2 font-medium">
                       {message.timestamp.toLocaleTimeString('bn-BD')}

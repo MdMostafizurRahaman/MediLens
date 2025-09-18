@@ -28,9 +28,9 @@ export default function Navigation() {
 
   const getNavigationItems = () => {
     const baseItems = [
-      { href: '/google-lens-test', label: '🔬 Google Lens Analysis', icon: '🔬' },
+      { href: '/google-lens-test', label: '🔬 Prescription Analysis', icon: '🔬' },
       { href: '/analysis-history', label: '📋 My Analyses', icon: '📋' },
-      { href: '/chat', label: '💬 AI Assistant', icon: '💬' },
+      { href: '/chat', label: '💬 MediBot', icon: '💬' },
       { href: '/doctors', label: '👨‍⚕️ Find Doctors', icon: '👨‍⚕️' },
       { href: '/vitals', label: '🩺 Vital Signs', icon: '🩺' }
     ]
@@ -231,9 +231,9 @@ export default function Navigation() {
               >
                 <li className="px-3 py-2 border-b border-gray-100 mb-2">
                   <div className="flex items-center gap-3">
-                    <div>
-                      <div className="font-semibold text-gray-800">{getUserDisplayName()}</div>
-                      <div className="text-sm text-gray-500">{currentUser?.email}</div>
+                    <div className="text-gray-700 bg-white hover:bg-primary-50 hover:text-primary-600 rounded-xl p-4 transition-all duration-200 flex flex-col items-start min-w-0" style={{width: 'fit-content'}}>
+                      <div className="font-semibold text-gray-800 text-base whitespace-nowrap" style={{width: 'fit-content'}}>{getUserDisplayName()}</div>
+                      <div className="text-sm text-gray-500 whitespace-nowrap" style={{width: 'fit-content'}}>{currentUser?.email}</div>
                       <div className={`text-xs px-2 py-1 rounded-full ${roleBadge.color} flex items-center gap-1 mt-1 w-fit`}>
                         <span>{roleBadge.icon}</span>
                         <span>{roleBadge.text}</span>

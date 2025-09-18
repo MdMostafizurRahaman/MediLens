@@ -112,7 +112,7 @@ async function analyzeWithMedicalKnowledge(base64Image, mimeType, medicalKnowled
 
     // Enhanced prompt with medical knowledge
     const prompt = `
-    You are MediLens AI - an advanced medical prescription analysis system with access to a comprehensive medical knowledge base containing ${medicalKnowledge.totalTerms} medical terms.
+    You are MediBot - an advanced medical prescription analysis system with access to a comprehensive medical knowledge base containing ${medicalKnowledge.totalTerms} medical terms.
 
     MEDICAL KNOWLEDGE BASE CONTEXT:
     ${medicalContext}

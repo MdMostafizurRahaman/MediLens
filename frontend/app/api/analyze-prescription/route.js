@@ -19,7 +19,7 @@ export async function POST(request) {
 
     // Enhanced medical analysis prompt for MediLens Advanced System
     const prompt = `
-    You are MediLens AI - Bangladesh's most advanced medical prescription analysis system. You are trained on 500,000+ medical documents and specialize in Bengali medical terminology with state-of-the-art OCR text correction.
+    You are MediBot - Bangladesh's most advanced medical prescription analysis system. You are trained on 500,000+ medical documents and specialize in Bengali medical terminology with state-of-the-art OCR text correction.
     
     DOCUMENT TYPE: ${documentType || 'prescription'}
     TEXT TO ANALYZE:

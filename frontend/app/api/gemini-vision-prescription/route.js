@@ -58,7 +58,7 @@ async function analyzeWithGeminiVision(base64Image, mimeType) {
 
     // Enhanced prompt for direct image analysis
     const prompt = `
-    You are MediLens AI - an advanced medical prescription analysis system trained on extensive medical data.
+    You are MediBot - an advanced medical prescription analysis system trained on extensive medical data.
     
     Analyze this prescription image and extract all medical information. Then provide a comprehensive analysis in JSON format.
 

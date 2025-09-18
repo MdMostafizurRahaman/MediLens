@@ -57,7 +57,7 @@
 
 ### 🎯 Purpose
 
-MediLens aims to bridge the communication gap between healthcare providers and patients in Bangladesh by providing:
+MediBotms to bridge the communication gap between healthcare providers and patients in Bangladesh by providing:
 - Accurate prescription decoding
 - Medical terminology translation
 - AI-powered health consultations

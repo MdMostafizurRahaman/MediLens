@@ -142,7 +142,7 @@ export default function MediLensEnhancedUpload() {
   const analyzeWithAI = async (textToAnalyze, documentType) => {
     setIsAnalyzing(true)
     setError('')
-    setAnalysisStep('🧠 MediLens AI বিশ্লেষণ শুরু...')
+    setAnalysisStep('🧠 MediBot বিশ্লেষণ শুরু...')
     
     try {
       setAnalysisStep('🏥 মেডিকেল ডেটা প্রক্রিয়াকরণ...')

@@ -301,7 +301,7 @@ const MedicalReportDisplay = ({ reportData, fileName = "Medical Report" }) => {
           ⚕️ এই বিশ্লেষণ তথ্যমূলক উদ্দেশ্যে প্রদান করা হয়েছে। চিকিৎসার জন্য অভিজ্ঞ ডাক্তারের পরামর্শ নিন।
         </p>
         <p className="text-xs text-gray-400 mt-2">
-          MediLens AI Medical Analysis System | Powered by Gemini AI
+          MediBot Medical Analysis System | Powered by Gemini AI
         </p>
       </div>
     </div>

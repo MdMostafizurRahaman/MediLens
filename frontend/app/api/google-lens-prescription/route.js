@@ -169,7 +169,7 @@ async function analyzePrescriptionWithFineTunedModel(extractedText) {
 
     // Enhanced prompt that leverages training data
     const prompt = `
-    You are MediLens AI - an advanced medical prescription analysis system trained on extensive medical terminology data.
+    You are MediBot - an advanced medical prescription analysis system trained on extensive medical terminology data.
     
     EXTRACTED PRESCRIPTION TEXT (via Google Lens OCR):
     "${extractedText}"

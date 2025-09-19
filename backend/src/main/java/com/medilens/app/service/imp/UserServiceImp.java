@@ -113,12 +113,15 @@ public class UserServiceImp implements UserService {
             existingUser.setEmergencyContact(user.getEmergencyContact());
             existingUser.setAddress(user.getAddress());
             // Safely update medicalHistory to avoid orphan removal error
-            if (existingUser.getMedicalHistory() != null && user.getMedicalHistory() != null) {
-                existingUser.getMedicalHistory().clear();
-                existingUser.getMedicalHistory().addAll(user.getMedicalHistory());
-            } else {
-                existingUser.setMedicalHistory(user.getMedicalHistory());
-            }
+            // Do not modify medicalHistory collection as it's managed by prescription analysis operations
+            // medicalHistory should only be updated through PrescriptionAnalysis entity operations
+            // Comment out the problematic medicalHistory update to prevent orphan removal error
+            // if (existingUser.getMedicalHistory() != null && user.getMedicalHistory() != null) {
+            //     existingUser.getMedicalHistory().clear();
+            //     existingUser.getMedicalHistory().addAll(user.getMedicalHistory());
+            // } else {
+            //     existingUser.setMedicalHistory(user.getMedicalHistory());
+            // }
             existingUser.setAllergies(user.getAllergies());
             existingUser.setCurrentMedications(user.getCurrentMedications());
             User useredited = userRepository.save(existingUser);

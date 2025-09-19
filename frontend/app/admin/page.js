@@ -54,6 +54,7 @@ export default function AdminDashboard() {
       if (doctorsResponse.ok) {
         const doctors = await doctorsResponse.json()
         console.log('Doctors data:', doctors)
+        console.log('First doctor sample:', doctors[0])
         setPendingDoctors(doctors.filter(doc => doc.status === 'PENDING'))
         setActiveDoctors(doctors.filter(doc => doc.status === 'ACTIVE'))
         
@@ -156,6 +157,45 @@ export default function AdminDashboard() {
   const formatDegrees = (degrees) => {
     if (!degrees || degrees.length === 0) return 'Not specified'
     return degrees.join(', ')
+  }
+
+  const getDoctorDisplayName = (doctor) => {
+    // Try firstName and lastName first
+    if (doctor.firstName && doctor.lastName) {
+      return `Dr. ${doctor.firstName} ${doctor.lastName}`
+    }
+    
+    // Try firstName only
+    if (doctor.firstName) {
+      return `Dr. ${doctor.firstName}`
+    }
+    
+    // Try lastName only
+    if (doctor.lastName) {
+      return `Dr. ${doctor.lastName}`
+    }
+    
+    // Try email prefix
+    if (doctor.email) {
+      const emailPrefix = doctor.email.split('@')[0]
+      return `Dr. ${emailPrefix}`
+    }
+    
+    // Try user object fields
+    if (doctor.user) {
+      if (doctor.user.firstName && doctor.user.lastName) {
+        return `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`
+      }
+      if (doctor.user.firstName) {
+        return `Dr. ${doctor.user.firstName}`
+      }
+      if (doctor.user.lastName) {
+        return `Dr. ${doctor.user.lastName}`
+      }
+    }
+    
+    // Fallback
+    return 'Dr. [Name not available]'
   }
 
   if (!currentUser || !hasRole('admin')) {
@@ -276,13 +316,11 @@ export default function AdminDashboard() {
                     >
                       <div className="card-body">
                         <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="card-title text-primary">
-                              Dr. {doctor.firstName} {doctor.lastName}
-                            </h3>
-                            <p className="text-sm text-base-content/70 mb-2">📧 {doctor.email}</p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="flex-1">
+                          <h3 className="card-title text-primary">
+                            {getDoctorDisplayName(doctor)}
+                          </h3>
+                          <p className="text-sm text-base-content/70 mb-2">📧 {doctor.email}</p>                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                               <div>
                                 <p className="font-semibold">🎓 Degrees:</p>
                                 <p className="text-sm">{formatDegrees(doctor.degree)}</p>
@@ -378,7 +416,7 @@ export default function AdminDashboard() {
                       >
                         <div className="card-body">
                           <h3 className="card-title text-success">
-                            Dr. {doctor.firstName} {doctor.lastName}
+                            {getDoctorDisplayName(doctor)}
                           </h3>
                           <p className="text-sm text-base-content/70">📧 {doctor.email}</p>
                           

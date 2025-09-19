@@ -96,7 +96,7 @@ export default function Home() {
               {[
                 { number: '10,000+', label: 'Users Served', icon: '👥', color: 'from-success-400 to-success-600' },
                 { number: '50,000+', label: 'Prescriptions Analyzed', icon: '📋', color: 'from-warning-400 to-warning-600' },
-                { number: '99.9%', label: 'Accuracy Rate', icon: '🎯', color: 'from-accent-400 to-accent-600' },
+                { number: '93%', label: 'Accuracy Rate', icon: '🎯', color: 'from-accent-400 to-accent-600' },
                 { number: '24/7', label: 'AI Support', icon: '🤖', color: 'from-error-400 to-error-600' }
               ].map((stat, index) => (
                 <motion.div

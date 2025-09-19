@@ -326,8 +326,6 @@ export default function Hero() {
                       🚀
                     </motion.span>
                     Start Your Journey
-                    <span className="text-2xl mr-2">🚀</span>
-                    Get Started Free
                   </Link>
                 </motion.div>
                 <motion.div
@@ -336,17 +334,13 @@ export default function Hero() {
                 >
                   <Link href="/google-lens-test" className="btn btn-enhanced btn-lg px-8 py-4 text-lg shadow-glow-primary">
                     <span className="text-2xl mr-2">🔬</span>
-                    Try Google Lens AI
+                    Try Prescription Analysis
                   </Link>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Link href="/auth/login" className="btn btn-outline btn-lg px-8 py-4 text-lg border-2 border-gray-400 text-gray-600 hover:bg-gray-100 transition-all duration-300">
-                    <span className="text-2xl mr-2">👤</span>
-                    Login
-                  </Link>
                 </motion.div>
               </>
             )}
@@ -365,8 +359,8 @@ export default function Hero() {
                 className="flex items-center gap-2"
                 whileHover={{ scale: 1.1, color: '#3b82f6' }}
               >
-                <span className="text-lg">🛡️</span>
-                <span className="text-sm font-medium">HIPAA Compliant</span>
+                {/* <span className="text-lg">🛡️</span>
+                <span className="text-sm font-medium">HIPAA Compliant</span> */}
               </motion.div>
               <motion.div 
                 className="flex items-center gap-2"

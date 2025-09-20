@@ -220,7 +220,7 @@ export default function ChatPage() {
             return
           }
         }
-        
+        //render test
         setMessages([{
           id: 'welcome-' + Date.now(),
           type: 'bot',

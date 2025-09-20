@@ -58,12 +58,12 @@ export default function GoogleLensTestPage() {
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="stat-enhanced text-center">
             <div className="text-3xl text-blue-600 mb-2">🎯</div>
-            <div className="text-2xl font-bold text-gray-800">95%</div>
+            <div className="text-2xl font-bold text-gray-800">93%</div>
             <div className="text-sm text-gray-600">Accuracy Rate</div>
           </div>
           <div className="stat-enhanced text-center">
             <div className="text-3xl text-green-600 mb-2">⚡</div>
-            <div className="text-2xl font-bold text-gray-800">&lt;30s</div>
+            <div className="text-2xl font-bold text-gray-800">&lt;3 min</div>
             <div className="text-sm text-gray-600">Analysis Time</div>
           </div>
           <div className="stat-enhanced text-center">

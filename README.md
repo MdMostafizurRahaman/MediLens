@@ -91,8 +91,8 @@ MediBotms to bridge the communication gap between healthcare providers and patie
 #### Non-Functional Requirements
 
 ##### 🚀 Performance
-- **NFR-001**: Response time < 3 seconds for prescription analysis
-- **NFR-002**: Support for 1000+ concurrent users
+- **NFR-001**: Response time < 3 minutes for prescription analysis
+- **NFR-002**: Support for 100+ concurrent users
 - **NFR-003**: 99.9% uptime availability
 - **NFR-004**: Mobile responsiveness across all devices
 
@@ -879,3 +879,4 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+

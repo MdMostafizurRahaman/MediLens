@@ -164,7 +164,7 @@ async function analyzePrescriptionWithFineTunedModel(extractedText) {
       console.log('🎯 Using fine-tuned medical model')
     } catch (error) {
       console.log('⚠️ Fine-tuned model not available, using base model')
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
     }
 
     // Enhanced prompt that leverages training data

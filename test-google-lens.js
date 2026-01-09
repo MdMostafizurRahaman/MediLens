@@ -105,7 +105,7 @@ async function testGoogleLensAPI() {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
       
       // Test base model
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
       const testPrompt = 'Define the medical term: hypertension'
       const result = await model.generateContent(testPrompt)
       

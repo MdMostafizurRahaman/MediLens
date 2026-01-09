@@ -10,8 +10,10 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 const DUPLICATE_WINDOW = 2000 // 2 seconds to prevent duplicate requests
 
 export async function POST(request) {
+  let message = null
   try {
-    const { message, chatHistory, context, prescriptionData } = await request.json()
+    const { message: msg, chatHistory, context, prescriptionData } = await request.json()
+    message = msg
 
     if (!message) {
       return NextResponse.json({ error: 'No message provided' }, { status: 400 })
@@ -47,7 +49,7 @@ export async function POST(request) {
 
     // Use faster model for better performance
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-pro',
       generationConfig: {
         maxOutputTokens: 1000, // Limit for faster responses
         temperature: 0.7,
@@ -125,9 +127,38 @@ ${conversationContext}
 অনুগ্রহ করে উপরের নির্দেশনা অনুযায়ী উত্তর দিন:
 `
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const botResponse = response.text()
+    let botResponse
+    try {
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      botResponse = response.text()
+    } catch (geminiError) {
+      console.error('Gemini API error:', geminiError)
+      
+      // Check if it's a quota exceeded error
+      if (geminiError.message && (
+        geminiError.message.includes('quota') || 
+        geminiError.message.includes('limit') ||
+        geminiError.message.includes('429') ||
+        geminiError.message.includes('RESOURCE_EXHAUSTED')
+      )) {
+        console.log('Quota exceeded, using fallback response')
+        const fallbackResponse = getMedicalFallbackResponse(message)
+        return NextResponse.json({
+          success: true,
+          response: fallbackResponse,
+          source: 'fallback-quota-exceeded'
+        })
+      }
+      
+      // For other Gemini errors, still use fallback
+      const fallbackResponse = getMedicalFallbackResponse(message)
+      return NextResponse.json({
+        success: true,
+        response: fallbackResponse,
+        source: 'fallback-gemini-error'
+      })
+    }
 
     // Clean and format the response
     const cleanedResponse = botResponse

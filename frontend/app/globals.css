@@ -4,7 +4,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
-/* Bangla fonts */
+/* Bangla fonts - commented out due to missing font files */
+/*
 @font-face {
   font-family: 'Kalpurush';
   src: url('/fonts/Kalpurush.ttf') format('truetype');
@@ -18,6 +19,7 @@
   font-weight: normal;
   font-style: normal;
 }
+*/
 
 /* Root variables for consistent design */
 :root {

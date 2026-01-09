@@ -58,8 +58,8 @@ export async function POST(request) {
  */
 async function loadMedicalKnowledge() {
   try {
-    // Go up one directory from frontend to find training_data.json in the root
-    const trainingDataPath = path.join(process.cwd(), '..', 'training_data.json')
+    // Load from public directory in Next.js
+    const trainingDataPath = path.join(process.cwd(), 'public', 'training_data.json')
     const trainingData = JSON.parse(fs.readFileSync(trainingDataPath, 'utf8'))
     
     // Extract unique medical terms and explanations

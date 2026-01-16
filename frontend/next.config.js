@@ -10,6 +10,8 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['framer-motion', 'lucide-react']
   },
+  // Turbopack configuration for Next.js 16
+  turbopack: {},
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'

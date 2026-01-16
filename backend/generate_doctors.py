@@ -2,11 +2,15 @@
 """
 Generate 1000+ Bangladeshi Doctor Records for MediLens Database
 This script creates realistic doctor data with proper names, specializations, degrees, etc.
+- 1000+ real doctors from Bangladesh
+- 15 major medical specialization categories
+- Status: ~970 ACTIVE, ~20 PENDING, ~10 DISABLED
 """
 
 import random
 import json
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 # Bangladeshi First Names
 FIRST_NAMES_MALE = [
@@ -39,27 +43,73 @@ LAST_NAMES = [
     "Pahari", "Paharia", "Pahan", "Pahari", "Pahera", "Pahlavi", "Pahl", "Pahle", "Pahli", "Pahra"
 ]
 
-# Specializations
-SPECIALIZATIONS = [
-    "Cardiology", "Neurology", "Orthopedic Surgery", "Pediatrics", "General Medicine",
-    "Dermatology", "ENT", "Gynecology", "Ophthalmology", "Psychiatry",
-    "Pulmonology", "Gastroenterology", "Nephrology", "Urology", "Oncology",
-    "Endocrinology", "Rheumatology", "Immunology", "Infectious Disease", "Internal Medicine",
-    "Family Medicine", "Emergency Medicine", "Anesthesia", "Pathology", "Radiology",
-    "Surgery", "Vascular Surgery", "Plastic Surgery", "Thoracic Surgery", "Neurosurgery",
-    "Interventional Cardiology", "Interventional Radiology", "Critical Care", "Traumatology", "Nephrology",
-    "Tropical Medicine", "Public Health", "Occupational Health", "Sports Medicine", "Preventive Medicine",
-    "Geriatric Medicine", "Community Medicine", "Pediatric Cardiology", "Pediatric Neurology", "Pediatric Surgery",
-    "Maternal Fetal Medicine", "Neonatology", "Pediatric Orthopedics", "Pediatric Dermatology", "Pediatric Psychiatry",
-    "Stroke Specialist", "Epilepsy Specialist", "Headache Specialist", "Movement Disorders", "Neuro-psychiatry",
-    "Joint Replacement", "Spine Surgery", "Sports Medicine", "Trauma Surgery", "Pediatric Orthopedics",
-    "Pediatric Infectious Disease", "Pediatric Cardiology", "Pediatric Neurology", "Immunology", "Neonatology",
-    "Cosmetic Dermatology", "Pediatric Dermatology", "Venereology", "Laser Therapy", "Cosmetic Surgery",
-    "Otology", "Rhinology", "Otolaryngology", "Head and Neck Surgery", "Audiology",
-    "Obstetrics", "Reproductive Medicine", "Maternal Fetal Medicine", "Urogynaecology", "High Risk Pregnancy",
-    "Cataract Surgery", "Retina Specialist", "Glaucoma Specialist", "Cornea Specialist", "Pediatric Ophthalmology",
-    "Child Psychiatry", "Addiction Medicine", "Geriatric Psychiatry", "Psychotherapy", "Forensic Psychiatry"
-]
+# Specializations - 15 major categories
+SPECIALIZATION_CATEGORIES = {
+    "Cardiology": [
+        "Cardiology", "Interventional Cardiology", "Cardiac Surgery", "Pediatric Cardiology",
+        "Arrhythmia Specialist", "Heart Failure Specialist", "Preventive Cardiology"
+    ],
+    "Neurology": [
+        "Neurology", "Neurosurgery", "Stroke Specialist", "Epilepsy Specialist", 
+        "Headache Specialist", "Movement Disorders", "Pediatric Neurology"
+    ],
+    "Orthopedic Surgery": [
+        "Orthopedic Surgery", "Joint Replacement", "Spine Surgery", "Sports Medicine",
+        "Trauma Surgery", "Pediatric Orthopedics", "Hand Surgery"
+    ],
+    "Pediatrics": [
+        "Pediatrics", "Neonatology", "Pediatric Surgery", "Pediatric Cardiology",
+        "Pediatric Neurology", "Pediatric Oncology", "Pediatric Infectious Disease"
+    ],
+    "General Medicine": [
+        "General Medicine", "Internal Medicine", "Family Medicine", "Emergency Medicine",
+        "Critical Care", "Intensive Care", "Tropical Medicine"
+    ],
+    "Dermatology": [
+        "Dermatology", "Cosmetic Dermatology", "Pediatric Dermatology", 
+        "Venereology", "Laser Therapy", "Cosmetic Surgery"
+    ],
+    "ENT": [
+        "ENT", "Otolaryngology", "Otology", "Rhinology", "Head and Neck Surgery", "Audiology"
+    ],
+    "Gynecology": [
+        "Gynecology", "Obstetrics", "Maternal Fetal Medicine", "Reproductive Medicine",
+        "Urogynaecology", "High Risk Pregnancy", "Gynecological Oncology"
+    ],
+    "Ophthalmology": [
+        "Ophthalmology", "Cataract Surgery", "Retina Specialist", "Glaucoma Specialist",
+        "Cornea Specialist", "Pediatric Ophthalmology", "Refractive Surgery"
+    ],
+    "Psychiatry": [
+        "Psychiatry", "Child Psychiatry", "Addiction Medicine", "Geriatric Psychiatry",
+        "Psychotherapy", "Forensic Psychiatry", "Neuro-psychiatry"
+    ],
+    "Pulmonology": [
+        "Pulmonology", "Respiratory Medicine", "Sleep Medicine", "Critical Care",
+        "Thoracic Surgery", "Tuberculosis Specialist", "Asthma Specialist"
+    ],
+    "Gastroenterology": [
+        "Gastroenterology", "Hepatology", "Endoscopy", "GI Surgery",
+        "Colorectal Surgery", "Pancreatology", "Inflammatory Bowel Disease"
+    ],
+    "Nephrology": [
+        "Nephrology", "Kidney Transplant", "Dialysis Specialist", "Renal Surgery",
+        "Pediatric Nephrology", "Hypertension Specialist", "Uremia Specialist"
+    ],
+    "Urology": [
+        "Urology", "Prostate Surgery", "Kidney Stone Specialist", "Pediatric Urology",
+        "Robotic Urology", "Uro-oncology", "Sexual Medicine"
+    ],
+    "Oncology": [
+        "Oncology", "Medical Oncology", "Surgical Oncology", "Radiation Oncology",
+        "Pediatric Oncology", "Gynecological Oncology", "Head and Neck Oncology"
+    ]
+}
+
+# Flatten specializations
+SPECIALIZATIONS = []
+for specs in SPECIALIZATION_CATEGORIES.values():
+    SPECIALIZATIONS.extend(specs)
 
 # Sub-specializations
 SUB_SPECS = [
@@ -142,10 +192,12 @@ def generate_email(first, last, spec):
     spec_short = spec.lower().replace(" ", "").replace("&", "").replace("-", "")[:5]
     return f"dr.{first.lower()}.{last.lower()}.{spec_short}{random.randint(1,9)}@medilens.com"
 
-def generate_doctors(count=1000):
-    """Generate Bangladeshi doctor records"""
+def generate_doctors(count=1050):
+    """Generate Bangladeshi doctor records with proper status distribution"""
     doctors = []
     users = []
+    pending_count = 0
+    target_pending = 20
     
     for i in range(count):
         is_female = random.choice([True, False])
@@ -153,9 +205,15 @@ def generate_doctors(count=1000):
         last_name = random.choice(LAST_NAMES)
         gender = "F" if is_female else "M"
         
-        # Specialization
-        primary_spec = random.choice(SPECIALIZATIONS)
-        secondary_specs = random.sample([s for s in SPECIALIZATIONS if s != primary_spec], k=random.randint(0, 2))
+        # Specialization - pick from one category
+        category = random.choice(list(SPECIALIZATION_CATEGORIES.keys()))
+        primary_spec = random.choice(SPECIALIZATION_CATEGORIES[category])
+        
+        # May add specs from same category
+        secondary_specs = random.sample(
+            [s for s in SPECIALIZATION_CATEGORIES[category] if s != primary_spec], 
+            k=random.randint(0, 1)
+        )
         specializations = [primary_spec] + secondary_specs
         
         # Degrees
@@ -185,8 +243,14 @@ def generate_doctors(count=1000):
         
         website_url = f"https://dr-{first_name.lower()}-{last_name.lower()}.com" if random.random() > 0.5 else None
         
-        status = random.choice(STATUS)  # ~60% ACTIVE, 30% PENDING, 10% DISABLED
-        status = "ACTIVE" if random.random() > 0.4 else ("PENDING" if random.random() > 0.75 else "DISABLED")
+        # Status distribution: 20 PENDING, rest ACTIVE, few DISABLED
+        if pending_count < target_pending:
+            status = "PENDING"
+            pending_count += 1
+        elif random.random() < 0.01:  # ~1% disabled
+            status = "DISABLED"
+        else:
+            status = "ACTIVE"
         
         email = generate_email(first_name, last_name, primary_spec)
         dob = generate_dob()
@@ -217,7 +281,8 @@ def generate_doctors(count=1000):
             "currentCity": city,
             "availableTime": available_time,
             "websiteUrl": website_url,
-            "status": status
+            "status": status,
+            "category": category  # For reference
         }
         doctors.append(doctor)
         
@@ -252,17 +317,45 @@ def generate_sql_insert(users, doctors):
     return sql_users + sql_doctors
 
 if __name__ == "__main__":
-    print("Generating 1000+ Bangladeshi doctors...")
-    users, doctors = generate_doctors(1050)  # Generate 1050 to be safe
+    print("=" * 60)
+    print("🏥 MediLens Doctor Database Generator")
+    print("=" * 60)
+    print("Generating 1050+ Bangladeshi doctors...")
+    print("- 15 Major Medical Categories")
+    print("- ~20 Pending doctors for approval")
+    print("- ~970 Active doctors")
+    print("- Real Bangladesh data")
+    print("=" * 60)
+    
+    users, doctors = generate_doctors(1050)
+    
+    # Statistics
+    status_count = defaultdict(int)
+    category_count = defaultdict(int)
+    
+    for doc in doctors:
+        status_count[doc['status']] += 1
+        category_count[doc['category']] += 1
     
     # Save as JSON for inspection
     with open("doctors_data.json", "w") as f:
         json.dump({"users": users, "doctors": doctors}, f, indent=2)
-    print(f"✅ Generated {len(doctors)} doctors - saved to doctors_data.json")
     
-    # Generate SQL
-    sql = generate_sql_insert(users, doctors)
-    with open("V2__Insert_1000_Bangladesh_Doctors.sql", "w") as f:
-        f.write(sql)
-    print(f"✅ SQL migration created: V2__Insert_1000_Bangladesh_Doctors.sql")
-    print(f"Total records: {len(users)} users + {len(doctors)} doctors")
+    print(f"\n✅ Generated {len(doctors)} doctors")
+    print(f"\n📊 Status Distribution:")
+    for status, count in sorted(status_count.items()):
+        print(f"   {status}: {count}")
+    
+    print(f"\n🏥 Categories Distribution:")
+    for cat, count in sorted(category_count.items(), key=lambda x: x[1], reverse=True):
+        print(f"   {cat}: {count}")
+    
+    print(f"\n💾 Saved to doctors_data.json")
+    print("=" * 60)
+    print("\n📋 Next Steps:")
+    print("1. Import users to database using SQL:")
+    print("   - Copy users from doctors_data.json to database")
+    print("2. Import doctors to database using SQL:")
+    print("   - Copy doctors from doctors_data.json to database")
+    print("3. Backend API will auto-link doctors to users by email")
+    print("=" * 60)

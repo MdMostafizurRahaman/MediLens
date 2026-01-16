@@ -9,6 +9,7 @@ import com.medilens.app.model.Status;
 import com.medilens.app.model.User;
 import com.medilens.app.service.DoctorService;
 import com.medilens.app.service.UserService;
+import com.medilens.app.util.DoctorDataImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/doctor")
@@ -26,6 +29,8 @@ public class DoctorController {
     private DoctorService doctorService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private DoctorDataImporter doctorDataImporter;
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> singUp(@RequestBody User user) {
@@ -70,5 +75,55 @@ public class DoctorController {
     public ResponseEntity<?> updateDoctorActive(@PathVariable String email, @RequestBody Status status) throws NotFoundException {
         doctorService.updaeStatus(email, status);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Admin endpoint to import 1000+ doctors from JSON file
+     * POST /api/doctor/import
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/import")
+    public ResponseEntity<?> importDoctorsFromJSON() {
+        try {
+            doctorDataImporter.run();
+            return ResponseEntity.ok(Map.of(
+                "message", "Doctor import completed successfully",
+                "status", "SUCCESS"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "message", "Error during import: " + e.getMessage(),
+                "status", "ERROR"
+            ));
+        }
+    }
+
+    /**
+     * Admin endpoint to check database statistics
+     * GET /api/doctor/stats
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/stats")
+    public ResponseEntity<?> getDatabaseStats() {
+        List<DoctorDTO> allDoctors = doctorService.getAll();
+        
+        long activeCount = allDoctors.stream()
+            .filter(d -> d.getStatus() == Status.ACTIVE)
+            .count();
+        long pendingCount = allDoctors.stream()
+            .filter(d -> d.getStatus() == Status.PENDING)
+            .count();
+        long disabledCount = allDoctors.stream()
+            .filter(d -> d.getStatus() == Status.DISABLED)
+            .count();
+        
+        return ResponseEntity.ok(Map.of(
+            "totalDoctors", allDoctors.size(),
+            "active", activeCount,
+            "pending", pendingCount,
+            "disabled", disabledCount,
+            "categories", 15,
+            "message", "Database Status Report"
+        ));
     }
 }

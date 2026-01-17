@@ -1,2 +1,7 @@
 .env
 .env.local
+model/line-model
+model/word-model
+Training/
+Testing/
+Validation/

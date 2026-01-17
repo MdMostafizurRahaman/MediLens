@@ -69,10 +69,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "https://medilens-frontend.onrender.com", "https://medi-lens-amwt.vercel.app")); // frontend origin
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000", 
+            "https://medilens-frontend.onrender.com", 
+            "https://medi-lens-amwt.vercel.app",
+            "https://medilens-x6zm.onrender.com"
+        )); // frontend origins
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // Cache preflight for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config); // Apply to all endpoints

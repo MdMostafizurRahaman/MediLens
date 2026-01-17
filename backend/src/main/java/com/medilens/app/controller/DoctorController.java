@@ -86,9 +86,40 @@ public class DoctorController {
     public ResponseEntity<?> importDoctorsFromJSON() {
         try {
             doctorDataImporter.run();
+            
+            // Get updated stats
+            List<DoctorDTO> allDoctors = doctorService.getAll();
+            
             return ResponseEntity.ok(Map.of(
                 "message", "Doctor import completed successfully",
-                "status", "SUCCESS"
+                "status", "SUCCESS",
+                "totalDoctors", allDoctors.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "message", "Error during import: " + e.getMessage(),
+                "status", "ERROR"
+            ));
+        }
+    }
+    
+    /**
+     * Public endpoint to force import all remaining doctors (temporary for deployment)
+     * POST /api/doctor/import-all
+     */
+    @PostMapping("/import-all")
+    public ResponseEntity<?> forceImportAllDoctors() {
+        try {
+            doctorDataImporter.run();
+            
+            // Get updated stats
+            List<DoctorDTO> allDoctors = doctorService.getAll();
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Doctor import completed successfully",
+                "status", "SUCCESS",
+                "totalDoctors", allDoctors.size(),
+                "timestamp", java.time.LocalDateTime.now().toString()
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(

@@ -51,6 +51,28 @@ public class DoctorDataImporter implements CommandLineRunner {
             }
         } else {
             System.out.println("⏭️  Doctors already exist in database. Skipping import.");
+            verifyImport();
+        }
+    }
+    
+    /**
+     * Verify and complete any missing imports
+     */
+    private void verifyImport() {
+        try {
+            long existingDoctors = userRepository.findByRole(Role.ROLE_DOCTOR).size();
+            System.out.println("🔍 Database Verification:");
+            System.out.println("   👨‍⚕️ Total Doctors in Database: " + existingDoctors);
+            
+            if (existingDoctors < 1050) {
+                System.out.println("   ⚠️  PARTIAL: Some doctors imported (" + existingDoctors + ")");
+                System.out.println("   🔄 Attempting to import remaining doctors...");
+                importDoctorsFromJSON();
+            } else {
+                System.out.println("   ✅ COMPLETE: All doctors imported successfully!");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error during verification: " + e.getMessage());
         }
     }
 
@@ -79,38 +101,51 @@ public class DoctorDataImporter implements CommandLineRunner {
 
         // Import Users first
         for (Map<String, Object> userData : users) {
-            User user = createUserFromMap(userData);
-            
-            // Check if user already exists
-            Optional<User> existing = userRepository.getUserByEmail(user.getEmail());
-            if (!existing.isPresent()) {
-                userRepository.save(user);
-                userCount++;
-            } else {
-                skipped++;
-            }
+            try {
+                User user = createUserFromMap(userData);
+                
+                // Check if user already exists
+                Optional<User> existing = userRepository.getUserByEmail(user.getEmail());
+                if (!existing.isPresent()) {
+                    userRepository.save(user);
+                    userCount++;
+                } else {
+                    skipped++;
+                }
 
-            if (userCount % 100 == 0) {
-                System.out.println("   Imported " + userCount + " users...");
+                if (userCount % 100 == 0) {
+                    System.out.println("   Imported " + userCount + " users...");
+                }
+            } catch (Exception e) {
+                System.err.println("   ⚠️  Error importing user: " + e.getMessage());
             }
         }
 
         // Import Doctors
         for (Map<String, Object> doctorData : doctors) {
-            Doctor doctor = createDoctorFromMap(doctorData);
-            
-            // Link doctor to user
-            String email = (String) doctorData.get("email");
-            Optional<User> userOptional = userRepository.getUserByEmail(email);
-            
-            if (userOptional.isPresent()) {
-                doctor.setUser(userOptional.get());
-                doctorRepository.save(doctor);
-                doctorCount++;
-            }
-
-            if (doctorCount % 100 == 0) {
-                System.out.println("   Imported " + doctorCount + " doctors...");
+            try {
+                String email = (String) doctorData.get("email");
+                Optional<User> userOptional = userRepository.getUserByEmail(email);
+                
+                if (userOptional.isPresent()) {
+                    User user = userOptional.get();
+                    
+                    // Check if doctor profile already exists for this user
+                    if (user.getDoctor() == null) {
+                        Doctor doctor = createDoctorFromMap(doctorData);
+                        doctor.setUser(user);
+                        doctorRepository.save(doctor);
+                        doctorCount++;
+                        
+                        if (doctorCount % 100 == 0) {
+                            System.out.println("   Imported " + doctorCount + " doctors...");
+                        }
+                    } else {
+                        skipped++;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("   ⚠️  Error importing doctor: " + e.getMessage());
             }
         }
 

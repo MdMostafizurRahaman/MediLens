@@ -8,3 +8,4 @@ Validation/
 Notebook/Customized_Chatbot/*.csv
 Notebook/Customized_Chatbot/*.json
 .ipynb_checkpoints/
+Checkpoints/

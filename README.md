@@ -216,80 +216,6 @@ Before starting, ensure you have the following installed:
 - **PostgreSQL** (v13 or higher)
 - **Git** (latest version)
 
-### 🚀 Quick Start Guide
-
-#### 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/MdMostafizurRahaman/PrescribeCorrect.git
-cd PrescribeCorrect
-```
-
-#### 2️⃣ Environment Configuration
-
-Create environment files with the following templates:
-
-**Frontend Environment (`.env.local`):**
-```env
-# Google AI Configuration
-NEXT_PUBLIC_GOOGLE_AI_API_KEY=your_google_ai_api_key
-
-# Backend API URLs
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
-```
-
-**Backend Environment (application.properties):**
-```env
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/PrescribeCorrect 
-spring.datasource.username=your_db_username
-spring.datasource.password=your_db_password
-
-# JPA Configuration
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
-#### 3️⃣ Database Setup
-
-```bash
-# Create PostgreSQL database
-createdb PrescribeCorrect 
-
-# Connect to database and create tables (Spring Boot will auto-create)
-```
-
-#### 4️⃣ Backend Setup (Spring Boot)
-
-```bash
-cd backend
-
-# Install dependencies and build
-./mvnw clean install
-
-# Run the application
-./mvnw spring-boot:run
-```
-
-The backend will start on `http://localhost:8080`
-
-#### 5️⃣ Frontend Setup (Next.js)
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-The frontend will start on `http://localhost:3000`
-```
-
-## 📊 System Flow Diagrams
-
 ### 🔄 Complete System Flow
 
 ```mermaid
@@ -346,39 +272,6 @@ sequenceDiagram
     B->>F: API Response
     F->>U: Display Data
 ```
-
-### 🏥 Medical Analysis Workflow
-
-```mermaid
-flowchart LR
-    subgraph "Input Processing"
-        A[Image Upload] --> B[Quality Check]
-        B --> C[Format Validation]
-        C --> D[Size Optimization]
-    end
-    
-    subgraph "OCR Processing"
-        D --> E[Noise Reduction]
-        E --> F[Text Extraction]
-        F --> G[Character Recognition]
-        G --> H[Text Cleaning]
-    end
-    
-    subgraph "AI Analysis"
-        H --> I[Medical Term Detection]
-        I --> J[Context Analysis]
-        J --> K[Gemini AI Processing]
-        K --> L[Medical Interpretation]
-    end
-    
-    subgraph "Output Generation"
-        L --> M[Bengali Translation]
-        M --> N[Drug Information]
-        N --> O[Interaction Warnings]
-        O --> P[Final Report]
-    end
-```
-
 --- 
 
 ## 👥 User Roles & Access Control
@@ -414,6 +307,7 @@ flowchart LR
 ---
 
 </div>
+
 
 
 

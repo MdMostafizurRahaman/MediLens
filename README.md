@@ -36,7 +36,7 @@ MediBot to bridge the communication gap between healthcare providers and patient
 
 ##### 🏥 Core Medical Features
 - **FR-001**: Prescription Image Upload and Processing
-- **FR-002**: Advanced OCR with Medical Text Recognition
+- **FR-002**: Advanced HTR with Medical Text Recognition
 - **FR-003**: AI-Powered Medical Analysis and Interpretation
 - **FR-004**: Bengali-English Medical Translation
 - **FR-005**: Drug Interaction and Allergy Checking
@@ -54,27 +54,6 @@ MediBot to bridge the communication gap between healthcare providers and patient
 - **FR-013**: User Activity Monitoring
 - **FR-014**: System Performance Metrics
 - **FR-015**: Data Export and Reporting
-
-#### Non-Functional Requirements
-
-##### 🚀 Performance
-- **NFR-001**: Response time < 3 minutes for prescription analysis
-- **NFR-002**: Support for 100+ concurrent users
-- **NFR-003**: 99.9% uptime availability
-- **NFR-004**: Mobile responsiveness across all devices
-
-##### 🔒 Security
-- **NFR-005**: HTTPS encryption for all communications
-- **NFR-006**: JWT-based authentication with refresh tokens
-- **NFR-007**: Role-based access control (RBAC)
-- **NFR-008**: HIPAA-compliant data handling
-
-##### 🌐 Compatibility
-- **NFR-009**: Cross-browser compatibility (Chrome, Firefox, Safari, Edge)
-- **NFR-010**: Mobile device compatibility (iOS, Android)
-- **NFR-011**: API versioning for backward compatibility
-
----
 
 ## 🏗️ System Architecture
 
@@ -149,7 +128,6 @@ graph LR
 ### 🏥 Medical Analysis Features
 
 #### 📄 Advanced Prescription Analysis
-- **Smart OCR**: Enhanced image preprocessing with noise reduction
 - **Medical Text Recognition**: Specialized recognition for medical handwriting
 - **Drug Information**: Comprehensive drug database with Bengali translations
 - **Dosage Interpretation**: Intelligent parsing of dosage instructions
@@ -221,6 +199,7 @@ graph LR
 | Technology    | Purpose |
 |------------   |---------|
 | **HTR model** | Model for hand written prescription analysis |
+| **Gemini** | Model for better response |
 | **Python**    |ML model training and fine-tuning |
 
 ---
@@ -402,9 +381,6 @@ flowchart LR
 
 --- 
 
-```
-
-
 ## 👥 User Roles & Access Control
 
 ### 🔐 Role-Based Access System
@@ -438,6 +414,7 @@ flowchart LR
 ---
 
 </div>
+
 
 
 

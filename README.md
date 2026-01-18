@@ -40,7 +40,7 @@
 
 ## 🎯 Project Overview
 
-**MediLens** is an intelligent medical prescription analysis platform designed specifically for the Bangladeshi healthcare ecosystem. The system leverages advanced AI technologies, including fine-tuned Google Gemini models and sophisticated OCR capabilities, to provide accurate medical prescription analysis with comprehensive Bengali language support.
+**PrescribeCorrect** is an intelligent medical prescription analysis platform designed specifically for the Bangladeshi healthcare ecosystem. The system leverages advanced AI technologies, including fine-tuned Google Gemini models and sophisticated OCR capabilities, to provide accurate medical prescription analysis with comprehensive Bengali language support.
 
 ### 🌟 Key Highlights
 
@@ -253,7 +253,7 @@ graph LR
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Google Gemini** | 0.24.1 | AI model for medical analysis |
+| **HTR model** | 0.24.1 | Model for hand written prescribtion analysis |
 | **Python** | 3.8+ | ML model training and fine-tuning |
 
 ---
@@ -275,8 +275,8 @@ Before starting, ensure you have the following installed:
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/MdMostafizurRahaman/MediLens.git
-cd MediLens
+git clone https://github.com/MdMostafizurRahaman/PrescribeCorrect.git
+cd PrescribeCorrect
 ```
 
 #### 2️⃣ Environment Configuration
@@ -879,5 +879,6 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+
 
 

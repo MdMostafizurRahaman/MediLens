@@ -25,7 +25,7 @@ There are many existing models which convert handwritten images to digital text,
 
 MediBot to bridge the communication gap between healthcare providers and patients in Bangladesh by providing:
 - Accurate prescription decoding
-- Medical terminology translation
+- Intelligent patient question answering (Fine-tune with dataset)
 - AI-powered health consultations
 - Comprehensive medical record management
 
@@ -217,10 +217,10 @@ graph LR
 
 ### 🤖 AI/ML Technologies
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **HTR model** | 0.24.1 | Model for hand written prescription analysis |
-| **Python** | 3.8+ | ML model training and fine-tuning |
+| Technology    | Purpose |
+|------------   |---------|
+| **HTR model** | Model for hand written prescription analysis |
+| **Python**    |ML model training and fine-tuning |
 
 ---
 
@@ -269,24 +269,6 @@ spring.datasource.password=your_db_password
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
-# JWT Configuration
-app.jwtSecret=your_jwt_secret_key
-app.jwtExpirationInMs=86400000
-
-# Google AI Configuration
-google.ai.api.key=your_google_ai_api_key
-```
-
-**Python Environment (`.env`):**
-```env
-# Google AI Configuration
-GOOGLE_AI_API_KEY=your_google_ai_api_key
-
-# Model Configuration
-MODEL_NAME=gemini-1.5-flash
-TRAINING_DATA_PATH=./training_data.json
-```
 
 #### 3️⃣ Database Setup
 
@@ -454,67 +436,8 @@ flowchart LR
 
 ---
 
-## 🔐 Security Features
-
-### 🛡️ Comprehensive Security Measures
-
-- **🔒 JWT-based Authentication**: Secure token-based authentication with refresh tokens
-- **🛡️ Role-based Access Control**: Granular permission system for different user types
-- **🔐 API Key Protection**: Environment variable protection for sensitive keys
-- **📋 Data Encryption**: End-to-end encryption for prescription data
-- **🔍 Input Validation**: Comprehensive input sanitization and validation
-- **📊 Audit Logging**: Complete audit trail for all user actions
-- **🚫 Rate Limiting**: API rate limiting to prevent abuse
-- **🔒 HTTPS Enforcement**: Mandatory HTTPS for all communications
-
----
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2024 PrescribeCorrect  Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-<div align="center">
-
-### 🌟 Star this repository if you find it helpful!
-
-[![Stars](https://img.shields.io/github/stars/MdMostafizurRahaman/PrescribeCorrect ?style=social)](https://github.com/MdMostafizurRahaman/PrescribeCorrect /stargazers)
-[![Forks](https://img.shields.io/github/forks/MdMostafizurRahaman/PrescribeCorrect ?style=social)](https://github.com/MdMostafizurRahaman/PrescribeCorrect /network/members)
-[![Issues](https://img.shields.io/github/issues/MdMostafizurRahaman/PrescribeCorrect )](https://github.com/MdMostafizurRahaman/PrescribeCorrect /issues)
-
-**Made with ❤️ for the healthcare community in Bangladesh**
-
-*Empowering patients and healthcare providers through AI-powered medical technology*
-
----
-
-### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
-
 </div>
+
 
 
 

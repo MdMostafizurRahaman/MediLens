@@ -13,3 +13,4 @@ prescriptions/
 disease_dataset.csv
 medicine_dataset.csv
 tests_list.json
+.vscode/

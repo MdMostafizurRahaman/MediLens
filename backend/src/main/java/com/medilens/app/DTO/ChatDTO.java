@@ -1,8 +1,8 @@
-package com.medilens.app.dto;
+package com.PrescribeCorrect.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.medilens.app.model.ChatRole;
-import com.medilens.app.model.Message;
+import com.PrescribeCorrect.app.model.ChatRole;
+import com.PrescribeCorrect.app.model.Message;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

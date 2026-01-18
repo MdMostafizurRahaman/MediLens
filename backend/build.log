@@ -1,12 +1,12 @@
 [INFO] Scanning for projects...
 [INFO] 
-[INFO] --------------------------< com.medilens:app >--------------------------
-[INFO] Building Medilens 0.0.1-SNAPSHOT
+[INFO] --------------------------< com.PrescribeCorrect:app >--------------------------
+[INFO] Building PrescribeCorrect 0.0.1-SNAPSHOT
 [INFO]   from pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- clean:3.4.1:clean (default-clean) @ app ---
-[INFO] Deleting D:\Medilens\MediLens\backend\target
+[INFO] Deleting D:\PrescribeCorrect\PrescribeCorrect\backend\target
 [INFO] 
 [INFO] >>> spring-boot:3.5.3:run (default-cli) > test-compile @ app >>>
 [INFO] 
@@ -16,16 +16,16 @@
 [INFO] 
 [INFO] --- compiler:3.10.1:compile (default-compile) @ app ---
 [INFO] Changes detected - recompiling the module!
-[INFO] Compiling 42 source files to D:\Medilens\MediLens\backend\target\classes
-[INFO] /D:/Medilens/MediLens/backend/src/main/java/com/medilens/app/config/SecurityConfig.java: D:\Medilens\MediLens\backend\src\main\java\com\medilens\app\config\SecurityConfig.java uses or overrides a deprecated API.
-[INFO] /D:/Medilens/MediLens/backend/src/main/java/com/medilens/app/config/SecurityConfig.java: Recompile with -Xlint:deprecation for details.
+[INFO] Compiling 42 source files to D:\PrescribeCorrect\PrescribeCorrect\backend\target\classes
+[INFO] /D:/PrescribeCorrect/PrescribeCorrect/backend/src/main/java/com/PrescribeCorrect/app/config/SecurityConfig.java: D:\PrescribeCorrect\PrescribeCorrect\backend\src\main\java\com\PrescribeCorrect\app\config\SecurityConfig.java uses or overrides a deprecated API.
+[INFO] /D:/PrescribeCorrect/PrescribeCorrect/backend/src/main/java/com/PrescribeCorrect/app/config/SecurityConfig.java: Recompile with -Xlint:deprecation for details.
 [INFO] 
 [INFO] --- resources:3.3.1:testResources (default-testResources) @ app ---
-[INFO] skip non existing resourceDirectory D:\Medilens\MediLens\backend\src\test\resources
+[INFO] skip non existing resourceDirectory D:\PrescribeCorrect\PrescribeCorrect\backend\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.10.1:testCompile (default-testCompile) @ app ---
 [INFO] Changes detected - recompiling the module!
-[INFO] Compiling 1 source file to D:\Medilens\MediLens\backend\target\test-classes
+[INFO] Compiling 1 source file to D:\PrescribeCorrect\PrescribeCorrect\backend\target\test-classes
 [INFO] 
 [INFO] <<< spring-boot:3.5.3:run (default-cli) < test-compile @ app <<<
 [INFO] 
@@ -42,8 +42,8 @@
 
  :: Spring Boot ::                (v3.5.3)
 
-2026-01-09T15:55:47.551+06:00  INFO 26568 --- [           main] com.medilens.app.MedilensApplication     : Starting MedilensApplication using Java 23.0.1 with PID 26568 (D:\Medilens\MediLens\backend\target\classes started by USER in D:\Medilens\MediLens\backend)
-2026-01-09T15:55:47.553+06:00  INFO 26568 --- [           main] com.medilens.app.MedilensApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-01-09T15:55:47.551+06:00  INFO 26568 --- [           main] com.PrescribeCorrect.app.PrescribeCorrectApplication     : Starting PrescribeCorrectApplication using Java 23.0.1 with PID 26568 (D:\PrescribeCorrect\PrescribeCorrect\backend\target\classes started by USER in D:\PrescribeCorrect\PrescribeCorrect\backend)
+2026-01-09T15:55:47.553+06:00  INFO 26568 --- [           main] com.PrescribeCorrect.app.PrescribeCorrectApplication     : No active profile set, falling back to 1 default profile: "default"
 2026-01-09T15:55:48.108+06:00  INFO 26568 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
 2026-01-09T15:55:48.163+06:00  INFO 26568 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 49 ms. Found 5 JPA repository interfaces.
 2026-01-09T15:55:48.636+06:00  INFO 26568 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)

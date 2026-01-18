@@ -27,7 +27,7 @@ const AnalysisHistory = () => {
 
   const loadAnalyses = () => {
     try {
-      const stored = localStorage.getItem('medilens_analyses')
+      const stored = localStorage.getItem('PrescribeCorrect_analyses')
       if (stored) {
         const parsedAnalyses = JSON.parse(stored)
         setAnalyses(parsedAnalyses)
@@ -41,17 +41,17 @@ const AnalysisHistory = () => {
     try {
       const filtered = analyses.filter(analysis => analysis.id !== analysisId)
       setAnalyses(filtered)
-      localStorage.setItem('medilens_analyses', JSON.stringify(filtered))
+      localStorage.setItem('PrescribeCorrect_analyses', JSON.stringify(filtered))
       
       // Update latest analysis if it was deleted
-      const latest = localStorage.getItem('medilens_latest_analysis')
+      const latest = localStorage.getItem('PrescribeCorrect_latest_analysis')
       if (latest) {
         const latestParsed = JSON.parse(latest)
         if (latestParsed.id === analysisId) {
           if (filtered.length > 0) {
-            localStorage.setItem('medilens_latest_analysis', JSON.stringify(filtered[0]))
+            localStorage.setItem('PrescribeCorrect_latest_analysis', JSON.stringify(filtered[0]))
           } else {
-            localStorage.removeItem('medilens_latest_analysis')
+            localStorage.removeItem('PrescribeCorrect_latest_analysis')
           }
         }
       }
@@ -81,7 +81,7 @@ ${analysis.currentMedications?.map(med => `• ${med.name} - ${med.frequency}`).
     `
     
     // Store for chat context
-    localStorage.setItem('medilens_chat_context', JSON.stringify({
+    localStorage.setItem('PrescribeCorrect_chat_context', JSON.stringify({
       type: 'analysis_discussion',
       analysis: analysis,
       summary: chatSummary,

@@ -1,6 +1,6 @@
-package com.medilens.app.repository;
+package com.PrescribeCorrect.app.repository;
 
-import com.medilens.app.model.PrescriptionAnalysis;
+import com.PrescribeCorrect.app.model.PrescriptionAnalysis;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

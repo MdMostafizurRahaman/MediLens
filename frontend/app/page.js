@@ -88,7 +88,7 @@ export default function Home() {
                 Trusted by Thousands
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                Join the growing community of users who trust MediLens for their healthcare needs
+                Join the growing community of users who trust PrescribeCorrect for their healthcare needs
               </p>
             </motion.div>
 
@@ -158,7 +158,7 @@ export default function Home() {
                 What Our Users Say
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Real feedback from people who have transformed their healthcare experience with MediLens
+                Real feedback from people who have transformed their healthcare experience with PrescribeCorrect
               </p>
             </motion.div>
 
@@ -167,7 +167,7 @@ export default function Home() {
                 {
                   name: 'রহিম আহমেদ',
                   role: 'Patient',
-                  text: 'MediLens helped me understand my prescription completely. The Bangla translation was perfect!',
+                  text: 'PrescribeCorrect helped me understand my prescription completely. The Bangla translation was perfect!',
                   rating: 5,
                   avatar: '👨'
                 },
@@ -181,7 +181,7 @@ export default function Home() {
                 {
                   name: 'ডা. করিম হাসান',
                   role: 'Doctor',
-                  text: 'I recommend MediLens to my patients. It helps them follow prescriptions correctly.',
+                  text: 'I recommend PrescribeCorrect to my patients. It helps them follow prescriptions correctly.',
                   rating: 5,
                   avatar: '👨‍⚕️'
                 }

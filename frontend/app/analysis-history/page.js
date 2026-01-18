@@ -37,7 +37,7 @@ export default function AnalysisHistoryPage() {
 
   const loadLocalAnalyses = () => {
     try {
-      const stored = localStorage.getItem('medilens_analyses')
+      const stored = localStorage.getItem('PrescribeCorrect_analyses')
       if (stored) {
         const parsedAnalyses = JSON.parse(stored)
         setLocalAnalyses(parsedAnalyses)

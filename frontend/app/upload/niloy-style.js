@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Tesseract from 'tesseract.js'
 
-// Enhanced Medical Report Component for MediLens Advanced Analysis
+// Enhanced Medical Report Component for PrescribeCorrect Advanced Analysis
 const AdvancedMedicalReport = ({ analysisData }) => {
   if (!analysisData) return null
 
@@ -351,7 +351,7 @@ const AdvancedMedicalReport = ({ analysisData }) => {
   )
 }
 
-export default function MediLensAdvancedUpload() {
+export default function PrescribeCorrectAdvancedUpload() {
   const [extractedText, setExtractedText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -555,7 +555,7 @@ export default function MediLensAdvancedUpload() {
           </button>
           <div className="text-center">
             <h1 className="text-3xl font-bold flex items-center gap-3 justify-center">
-              🏥 MediLens - Advanced OCR Analysis
+              🏥 PrescribeCorrect - Advanced OCR Analysis
             </h1>
             <p className="text-white/90 mt-2">AI-Powered Medical Document Processing & Analysis</p>
           </div>

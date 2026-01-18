@@ -151,7 +151,7 @@ export default function RegisterPage() {
                 }}
               />
             </motion.div>
-            <h1 className="text-4xl font-bold text-gradient-accent mb-2">MediLens</h1>
+            <h1 className="text-4xl font-bold text-gradient-accent mb-2">PrescribeCorrect</h1>
             <p className="text-gray-600 text-lg font-medium">Create your account to get started</p>
             <motion.div
               className="h-1 w-24 bg-gradient-to-r from-accent-500 to-primary-500 mx-auto rounded-full mt-4"

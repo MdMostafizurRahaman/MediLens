@@ -1,8 +1,8 @@
 
-package com.medilens.app.dto;
+package com.PrescribeCorrect.app.dto;
 
 import java.util.List;
-import com.medilens.app.model.PrescriptionAnalysis;
+import com.PrescribeCorrect.app.model.PrescriptionAnalysis;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

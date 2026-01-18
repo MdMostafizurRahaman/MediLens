@@ -1,4 +1,4 @@
-package com.medilens.app.exception;
+package com.PrescribeCorrect.app.exception;
 
 public class NotFoundException extends Exception {
     public NotFoundException(String message) {

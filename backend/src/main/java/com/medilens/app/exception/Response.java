@@ -1,4 +1,4 @@
-package com.medilens.app.exception;
+package com.PrescribeCorrect.app.exception;
 
 
 import lombok.Getter;

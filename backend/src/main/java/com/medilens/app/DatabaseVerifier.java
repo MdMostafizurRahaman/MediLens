@@ -1,7 +1,7 @@
-package com.medilens.app;
+package com.PrescribeCorrect.app;
 
-import com.medilens.app.model.Role;
-import com.medilens.app.repository.UserRepository;
+import com.PrescribeCorrect.app.model.Role;
+import com.PrescribeCorrect.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

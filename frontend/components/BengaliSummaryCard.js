@@ -70,7 +70,7 @@ ${formattedSummary.shortDescription}
     const chatSummary = createChatSummary(formattedSummary)
     
     // Store detailed analysis for chat context
-    localStorage.setItem('medilens_chat_context', JSON.stringify({
+    localStorage.setItem('PrescribeCorrect_chat_context', JSON.stringify({
       type: 'analysis_discussion',
       analysis: analysis,
       summary: chatSummary,

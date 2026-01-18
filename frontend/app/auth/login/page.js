@@ -109,7 +109,7 @@ export default function LoginPage() {
             >
               🏥
             </motion.div>
-            <h1 className="text-4xl font-bold text-gradient-primary mb-2">MediLens</h1>
+            <h1 className="text-4xl font-bold text-gradient-primary mb-2">PrescribeCorrect</h1>
             <p className="text-gray-800 text-lg font-medium">Welcome back! Please sign in to your account</p>
             <motion.div
               className="h-1 w-20 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto rounded-full mt-3"

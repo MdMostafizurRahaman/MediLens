@@ -1,6 +1,6 @@
-package com.medilens.app.service.imp;
+package com.PrescribeCorrect.app.service.imp;
 
-import com.medilens.app.model.User;
+import com.PrescribeCorrect.app.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

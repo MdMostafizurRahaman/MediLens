@@ -183,7 +183,7 @@ export default function Navigation() {
               🏥
             </motion.div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-gradient">MediLens</span>
+              <span className="text-2xl font-bold text-gradient">PrescribeCorrect</span>
               <span className="text-xs text-primary-500 font-medium -mt-1">Your Prescription. Made Clear.</span>
             </div>
           </Link>

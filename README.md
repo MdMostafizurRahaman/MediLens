@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![MediLens Logo](https://img.shields.io/badge/MediLens-Medical%20AI-blue?style=for-the-badge&logo=health)
+![PrescribeCorrect  Logo](https://img.shields.io/badge/PrescribeCorrect -Medical%20AI-blue?style=for-the-badge&logo=health)
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.6-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-green?style=flat-square&logo=spring)](https://spring.io/projects/spring-boot)
@@ -295,7 +295,7 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
 **Backend Environment (application.properties):**
 ```env
 # Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/medilens
+spring.datasource.url=jdbc:postgresql://localhost:5432/PrescribeCorrect 
 spring.datasource.username=your_db_username
 spring.datasource.password=your_db_password
 
@@ -326,7 +326,7 @@ TRAINING_DATA_PATH=./training_data.json
 
 ```bash
 # Create PostgreSQL database
-createdb medilens
+createdb PrescribeCorrect 
 
 # Connect to database and create tables (Spring Boot will auto-create)
 ```
@@ -606,7 +606,7 @@ const response = await fetch('/api/medical-chat', {
 ## 📁 Project Structure
 
 ```
-MediLens/
+PrescribeCorrect /
 ├── 📁 frontend/                    # Next.js React application
 │   ├── 📁 app/                    # Next.js app router
 │   │   ├── 📄 page.js             # Homepage
@@ -630,7 +630,7 @@ MediLens/
 │   │   └── 📄 medical-terms.js    # Medical terminology
 │   └── 📄 .env.local              # Frontend environment variables
 ├── 📁 backend/                    # Spring Boot application
-│   ├── 📁 src/main/java/com/medilens/
+│   ├── 📁 src/main/java/com/PrescribeCorrect /
 │   │   ├── 📁 controller/         # REST controllers
 │   │   ├── 📁 service/            # Business logic
 │   │   ├── 📁 repository/         # Data access layer
@@ -763,8 +763,8 @@ services:
   postgres:
     image: postgres:13
     environment:
-      - POSTGRES_DB=medilens
-      - POSTGRES_USER=medilens
+      - POSTGRES_DB=PrescribeCorrect 
+      - POSTGRES_USER=PrescribeCorrect 
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -794,10 +794,10 @@ volumes:
 
 ### 🆘 Getting Help
 
-- **📋 GitHub Issues**: [Report bugs and request features](https://github.com/MdMostafizurRahaman/MediLens/issues)
-- **📧 Email Support**: medilens.support@example.com
-- **📖 Documentation**: [Full documentation](https://medilens-docs.example.com)
-- **💬 Community Forum**: [Join discussions](https://community.medilens.example.com)
+- **📋 GitHub Issues**: [Report bugs and request features](https://github.com/MdMostafizurRahaman/PrescribeCorrect /issues)
+- **📧 Email Support**: PrescribeCorrect .support@example.com
+- **📖 Documentation**: [Full documentation](https://PrescribeCorrect -docs.example.com)
+- **💬 Community Forum**: [Join discussions](https://community.PrescribeCorrect .example.com)
 
 ### 👨‍💻 Development Team
 
@@ -839,7 +839,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ```
 MIT License
 
-Copyright (c) 2024 MediLens Team
+Copyright (c) 2024 PrescribeCorrect  Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -866,9 +866,9 @@ SOFTWARE.
 
 ### 🌟 Star this repository if you find it helpful!
 
-[![Stars](https://img.shields.io/github/stars/MdMostafizurRahaman/MediLens?style=social)](https://github.com/MdMostafizurRahaman/MediLens/stargazers)
-[![Forks](https://img.shields.io/github/forks/MdMostafizurRahaman/MediLens?style=social)](https://github.com/MdMostafizurRahaman/MediLens/network/members)
-[![Issues](https://img.shields.io/github/issues/MdMostafizurRahaman/MediLens)](https://github.com/MdMostafizurRahaman/MediLens/issues)
+[![Stars](https://img.shields.io/github/stars/MdMostafizurRahaman/PrescribeCorrect ?style=social)](https://github.com/MdMostafizurRahaman/PrescribeCorrect /stargazers)
+[![Forks](https://img.shields.io/github/forks/MdMostafizurRahaman/PrescribeCorrect ?style=social)](https://github.com/MdMostafizurRahaman/PrescribeCorrect /network/members)
+[![Issues](https://img.shields.io/github/issues/MdMostafizurRahaman/PrescribeCorrect )](https://github.com/MdMostafizurRahaman/PrescribeCorrect /issues)
 
 **Made with ❤️ for the healthcare community in Bangladesh**
 

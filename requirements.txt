@@ -1,4 +1,4 @@
-# Python dependencies for MediLens Fine-tuning
+# Python dependencies for PrescribeCorrect Fine-tuning
 google-generativeai>=0.8.0
 pandas>=2.0.0
 python-dotenv>=1.0.0

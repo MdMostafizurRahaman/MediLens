@@ -1,7 +1,7 @@
-package com.medilens.app.repository;
+package com.PrescribeCorrect.app.repository;
 
-import com.medilens.app.model.Role;
-import com.medilens.app.model.User;
+import com.PrescribeCorrect.app.model.Role;
+import com.PrescribeCorrect.app.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

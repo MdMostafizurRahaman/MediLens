@@ -143,7 +143,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              MediLens
+              PrescribeCorrect
             </motion.h1>
             <motion.div
               className="h-1 w-32 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto rounded-full"
@@ -202,7 +202,7 @@ export default function Hero() {
                 <div className="text-5xl mb-6 text-center md:text-left animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>💡</div>
                 <h3 className="text-2xl font-bold text-success-700 mb-4">Our Solution</h3>
                 <p className="text-gray-700 leading-relaxed text-lg">
-                  MediLens is a smart, cross-platform web application that helps users decode their 
+                  PrescribeCorrect is a smart, cross-platform web application that helps users decode their 
                   prescriptions, understand their health conditions, and access relevant medical guidance—all 
                   exclusively in Bangla.
                 </p>
@@ -220,7 +220,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1 }}
           >
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">Why Choose MediLens?</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">Why Choose PrescribeCorrect?</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto ">
               {[
                 { icon: '🤖', label: 'AI Powered', color: 'from-primary-400 to-primary-600', desc: 'Advanced AI Analysis' },

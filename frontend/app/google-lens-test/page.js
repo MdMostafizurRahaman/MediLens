@@ -83,6 +83,6 @@ export default function GoogleLensTestPage() {
 }
 
 export const metadata = {
-  title: 'Google Lens Prescription Analysis - MediLens',
+  title: 'Google Lens Prescription Analysis - PrescribeCorrect',
   description: 'Advanced prescription analysis using Google Lens API and fine-tuned medical AI',
 }

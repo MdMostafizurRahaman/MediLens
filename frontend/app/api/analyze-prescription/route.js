@@ -17,7 +17,7 @@ export async function POST(request) {
   const geminiModelName = process.env.GEMINI_MODEL_NAME || 'gemini-1.5-pro'
   const model = genAI.getGenerativeModel({ model: geminiModelName })
 
-    // Enhanced medical analysis prompt for MediLens Advanced System
+    // Enhanced medical analysis prompt for PrescribeCorrect Advanced System
     const prompt = `
     You are MediBot - Bangladesh's most advanced medical prescription analysis system. You are trained on 500,000+ medical documents and specialize in Bengali medical terminology with state-of-the-art OCR text correction.
     

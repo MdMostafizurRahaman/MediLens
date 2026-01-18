@@ -15,7 +15,7 @@ const poppins = Poppins({
 })
 
 export const metadata = {
-  title: 'MediLens - Your Prescription Made Clear',
+  title: 'PrescribeCorrect - Your Prescription Made Clear',
   description: 'AI-powered prescription analysis and medical guidance in Bangla',
 }
 

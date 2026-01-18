@@ -1,8 +1,8 @@
-package com.medilens.app.service;
+package com.PrescribeCorrect.app.service;
 
-import com.medilens.app.dto.PrescriptionAnalysisDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.PrescriptionAnalysis;
+import com.PrescribeCorrect.app.dto.PrescriptionAnalysisDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.PrescriptionAnalysis;
 
 import java.util.List;
 

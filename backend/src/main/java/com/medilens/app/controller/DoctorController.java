@@ -1,15 +1,15 @@
-package com.medilens.app.controller;
+package com.PrescribeCorrect.app.controller;
 
-import com.medilens.app.dto.DoctorDTO;
-import com.medilens.app.dto.UserDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Doctor;
-import com.medilens.app.model.Role;
-import com.medilens.app.model.Status;
-import com.medilens.app.model.User;
-import com.medilens.app.service.DoctorService;
-import com.medilens.app.service.UserService;
-import com.medilens.app.util.DoctorDataImporter;
+import com.PrescribeCorrect.app.dto.DoctorDTO;
+import com.PrescribeCorrect.app.dto.UserDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Doctor;
+import com.PrescribeCorrect.app.model.Role;
+import com.PrescribeCorrect.app.model.Status;
+import com.PrescribeCorrect.app.model.User;
+import com.PrescribeCorrect.app.service.DoctorService;
+import com.PrescribeCorrect.app.service.UserService;
+import com.PrescribeCorrect.app.util.DoctorDataImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

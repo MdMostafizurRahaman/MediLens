@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate 1000+ Bangladeshi Doctor Records for MediLens Database
+Generate 1000+ Bangladeshi Doctor Records for PrescribeCorrect Database
 This script creates realistic doctor data with proper names, specializations, degrees, etc.
 - 1000+ real doctors from Bangladesh
 - 15 major medical specialization categories
@@ -190,7 +190,7 @@ def generate_dob():
 def generate_email(first, last, spec):
     """Generate unique email"""
     spec_short = spec.lower().replace(" ", "").replace("&", "").replace("-", "")[:5]
-    return f"dr.{first.lower()}.{last.lower()}.{spec_short}{random.randint(1,9)}@medilens.com"
+    return f"dr.{first.lower()}.{last.lower()}.{spec_short}{random.randint(1,9)}@PrescribeCorrect.com"
 
 def generate_doctors(count=1050):
     """Generate Bangladeshi doctor records with proper status distribution"""
@@ -318,7 +318,7 @@ def generate_sql_insert(users, doctors):
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🏥 MediLens Doctor Database Generator")
+    print("🏥 PrescribeCorrect Doctor Database Generator")
     print("=" * 60)
     print("Generating 1050+ Bangladeshi doctors...")
     print("- 15 Major Medical Categories")

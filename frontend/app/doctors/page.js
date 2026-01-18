@@ -73,11 +73,11 @@ export default function DoctorsPage() {
         const activeDoctors = doctorsData.filter(doctor => doctor.status === 'ACTIVE')
         setDoctors(activeDoctors)
       } else {
-        setError('Failed to fetch doctors')
+        //setError('Failed to fetch doctors')
       }
     } catch (error) {
       console.error('Error fetching doctors:', error)
-      setError('Error loading doctors')
+      // setError('Error loading doctors')
     } finally {
       setLoading(false)
     }

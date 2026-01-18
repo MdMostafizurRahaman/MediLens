@@ -202,7 +202,7 @@ export default function Features() {
           ))}
         </div>
 
-        {/* What Makes MediLens Unique Section */}
+        {/* What Makes PrescribeCorrect Unique Section */}
         <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -211,7 +211,7 @@ export default function Features() {
           viewport={{ once: true }}
         >
           <h3 className="text-responsive-md text-gradient font-display mb-12">
-            What Makes MediLens Unique?
+            What Makes PrescribeCorrect Unique?
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -267,7 +267,7 @@ export default function Features() {
               Ready to Transform Your Healthcare Experience?
             </h4>
             <p className="text-gray-600 mb-6">
-              Join thousands of users who trust MediLens for their medical needs
+              Join thousands of users who trust PrescribeCorrect for their medical needs
             </p>
             <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center"

@@ -1,14 +1,14 @@
-package com.medilens.app.service.imp;
+package com.PrescribeCorrect.app.service.imp;
 
-import com.medilens.app.dto.ChatDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Chat;
-import com.medilens.app.model.Message;
-import com.medilens.app.model.User;
-import com.medilens.app.repository.ChatRepository;
-import com.medilens.app.repository.MessageRepository;
-import com.medilens.app.repository.UserRepository;
-import com.medilens.app.service.ChatService;
+import com.PrescribeCorrect.app.dto.ChatDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Chat;
+import com.PrescribeCorrect.app.model.Message;
+import com.PrescribeCorrect.app.model.User;
+import com.PrescribeCorrect.app.repository.ChatRepository;
+import com.PrescribeCorrect.app.repository.MessageRepository;
+import com.PrescribeCorrect.app.repository.UserRepository;
+import com.PrescribeCorrect.app.service.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

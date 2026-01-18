@@ -8,10 +8,10 @@
 		<version>3.5.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.medilens</groupId>
+	<groupId>com.PrescribeCorrect</groupId>
 	<artifactId>app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Medilens</name>
+	<name>PrescribeCorrect</name>
 	<description>A prescription decoding and medical assistance platform tailored for Bangladesh.</description>
 	<url/>
 	<licenses>

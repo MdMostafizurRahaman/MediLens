@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Tesseract from 'tesseract.js'
 
-export default function MediLensAdvancedUpload() {
+export default function PrescribeCorrectAdvancedUpload() {
   const [extractedText, setExtractedText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -237,7 +237,7 @@ export default function MediLensAdvancedUpload() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              🏥 MediLens Advanced Analysis Report
+              🏥 PrescribeCorrect Advanced Analysis Report
             </h2>
             <div className="text-right">
               <div className="text-sm opacity-90">Analysis Quality</div>
@@ -551,7 +551,7 @@ export default function MediLensAdvancedUpload() {
           </button>
           <div className="text-center">
             <h1 className="text-3xl font-bold flex items-center gap-3 justify-center">
-              🏥 MediLens - Enhanced AI Analysis
+              🏥 PrescribeCorrect - Enhanced AI Analysis
             </h1>
             <p className="text-white/90 mt-2">Advanced OCR & Comprehensive Medical Intelligence</p>
           </div>
@@ -720,7 +720,7 @@ export default function MediLensAdvancedUpload() {
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center h-full flex flex-col justify-center">
                 <div className="text-8xl mb-6">🔬</div>
                 <h3 className="text-2xl font-bold text-gray-700 mb-4">
-                  MediLens Enhanced AI বিশ্লেষণের জন্য প্রস্তুত
+                  PrescribeCorrect Enhanced AI বিশ্লেষণের জন্য প্রস্তুত
                 </h3>
                 <p className="text-gray-500 mb-8">
                   প্রেসক্রিপশনের ছবি আপলোড করুন এবং উন্নত AI বিশ্লেষণ শুরু করুন
@@ -764,7 +764,7 @@ export default function MediLensAdvancedUpload() {
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            🚀 MediLens Enhanced Features
+            🚀 PrescribeCorrect Enhanced Features
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white/80 p-6 rounded-xl border border-white/50">

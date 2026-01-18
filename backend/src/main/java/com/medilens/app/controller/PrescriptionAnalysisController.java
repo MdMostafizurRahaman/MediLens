@@ -1,9 +1,9 @@
-package com.medilens.app.controller;
+package com.PrescribeCorrect.app.controller;
 
-import com.medilens.app.dto.PrescriptionAnalysisDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.PrescriptionAnalysis;
-import com.medilens.app.service.PrescriptionAnalysisService;
+import com.PrescribeCorrect.app.dto.PrescriptionAnalysisDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.PrescriptionAnalysis;
+import com.PrescribeCorrect.app.service.PrescriptionAnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1,14 +1,14 @@
-package com.medilens.app.service.imp;
+package com.PrescribeCorrect.app.service.imp;
 
-import com.medilens.app.dto.ChatDTO;
-import com.medilens.app.dto.UserDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Chat;
-import com.medilens.app.model.Role;
-import com.medilens.app.model.User;
-import com.medilens.app.repository.UserRepository;
-import com.medilens.app.service.ChatService;
-import com.medilens.app.service.UserService;
+import com.PrescribeCorrect.app.dto.ChatDTO;
+import com.PrescribeCorrect.app.dto.UserDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Chat;
+import com.PrescribeCorrect.app.model.Role;
+import com.PrescribeCorrect.app.model.User;
+import com.PrescribeCorrect.app.repository.UserRepository;
+import com.PrescribeCorrect.app.service.ChatService;
+import com.PrescribeCorrect.app.service.UserService;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

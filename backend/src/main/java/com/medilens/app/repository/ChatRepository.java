@@ -1,6 +1,6 @@
-package com.medilens.app.repository;
+package com.PrescribeCorrect.app.repository;
 
-import com.medilens.app.model.Chat;
+import com.PrescribeCorrect.app.model.Chat;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,7 +1,7 @@
-package com.medilens.app.dto;
+package com.PrescribeCorrect.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.medilens.app.model.Status;
+import com.PrescribeCorrect.app.model.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

@@ -1,6 +1,6 @@
-package com.medilens.app.config;
+package com.PrescribeCorrect.app.config;
 
-import com.medilens.app.security.JwtAuthFilter;
+import com.PrescribeCorrect.app.security.JwtAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,9 +71,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
             "http://localhost:3000", 
-            "https://medilens-frontend.onrender.com", 
+            "https://PrescribeCorrect-frontend.onrender.com", 
             "https://medi-lens-amwt.vercel.app",
-            "https://medilens-x6zm.onrender.com"
+            "https://PrescribeCorrect-x6zm.onrender.com"
         )); // frontend origins
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

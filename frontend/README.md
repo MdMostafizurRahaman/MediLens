@@ -1,4 +1,4 @@
-# MediLens Frontend
+# PrescribeCorrect Frontend
 
 A modern, responsive web application for medical prescription analysis and healthcare assistance in Bangladesh.
 

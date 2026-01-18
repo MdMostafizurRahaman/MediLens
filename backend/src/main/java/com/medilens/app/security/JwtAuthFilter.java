@@ -1,7 +1,7 @@
-package com.medilens.app.security;
+package com.PrescribeCorrect.app.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.medilens.app.service.imp.UserDetailsServiceImp;
+import com.PrescribeCorrect.app.service.imp.UserDetailsServiceImp;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

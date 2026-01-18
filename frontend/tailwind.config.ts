@@ -266,7 +266,7 @@ const config: Config = {
   daisyui: {
     themes: [
       {
-        medilens: {
+        PrescribeCorrect: {
           primary: '#0ea5e9',
           'primary-focus': '#0284c7',
           'primary-content': '#ffffff',
@@ -294,7 +294,7 @@ const config: Config = {
         },
       },
       {
-        'medilens-dark': {
+        'PrescribeCorrect-dark': {
           primary: '#38bdf8',
           'primary-focus': '#0ea5e9',
           'primary-content': '#0f172a',

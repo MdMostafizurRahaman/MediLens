@@ -11,7 +11,7 @@ function loadTrainingData() {
 
   try {
     // Try correct path first
-    const correctPath = 'D:\\Medilens\\MediLens\\training_data.json'
+    const correctPath = 'D:\\PrescribeCorrect\\PrescribeCorrect\\training_data.json'
     console.log('Looking for training data at:', correctPath)
     
     let rawData

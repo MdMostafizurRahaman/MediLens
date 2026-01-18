@@ -52,7 +52,7 @@ export default function ProfilePage() {
   const fetchAnalysisHistory = async () => {
     try {
       // First load from localStorage (works for all users)
-      const localAnalyses = localStorage.getItem('medilens_analyses')
+      const localAnalyses = localStorage.getItem('PrescribeCorrect_analyses')
       if (localAnalyses) {
         const parsedLocal = JSON.parse(localAnalyses)
         setAnalysisHistory(prev => [...parsedLocal.slice(0, 3), ...prev])
@@ -465,7 +465,7 @@ export default function ProfilePage() {
               <div className="stat-figure">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-black stroke-2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               </div>
-              <div className="stat-title text-black font-bold">MediLens Member</div>
+              <div className="stat-title text-black font-bold">PrescribeCorrect Member</div>
               <div className="stat-value text-sm text-black font-semibold">2025</div>
               <div className="stat-desc text-black font-medium">Year Joined</div>
             </div>

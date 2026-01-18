@@ -1,4 +1,4 @@
-package com.medilens.app.model;
+package com.PrescribeCorrect.app.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;

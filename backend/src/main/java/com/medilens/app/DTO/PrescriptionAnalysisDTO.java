@@ -1,4 +1,4 @@
-package com.medilens.app.dto;
+package com.PrescribeCorrect.app.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

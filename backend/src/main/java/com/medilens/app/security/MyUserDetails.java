@@ -1,4 +1,4 @@
-package com.medilens.app.security;
+package com.PrescribeCorrect.app.security;
 
 public class MyUserDetails {
 }

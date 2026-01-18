@@ -1,4 +1,4 @@
-package com.medilens.app.model;
+package com.PrescribeCorrect.app.model;
 
 public enum ChatRole {
     USER,

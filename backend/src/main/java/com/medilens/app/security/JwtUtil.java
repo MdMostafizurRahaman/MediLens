@@ -1,4 +1,4 @@
-package com.medilens.app.security;
+package com.PrescribeCorrect.app.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

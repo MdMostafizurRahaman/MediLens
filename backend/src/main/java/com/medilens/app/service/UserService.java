@@ -1,10 +1,10 @@
-package com.medilens.app.service;
+package com.PrescribeCorrect.app.service;
 
-import com.medilens.app.dto.ChatDTO;
-import com.medilens.app.dto.UserDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Chat;
-import com.medilens.app.model.User;
+import com.PrescribeCorrect.app.dto.ChatDTO;
+import com.PrescribeCorrect.app.dto.UserDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Chat;
+import com.PrescribeCorrect.app.model.User;
 import org.apache.coyote.BadRequestException;
 
 import java.util.List;

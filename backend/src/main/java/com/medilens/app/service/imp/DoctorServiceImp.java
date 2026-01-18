@@ -1,14 +1,14 @@
-package com.medilens.app.service.imp;
+package com.PrescribeCorrect.app.service.imp;
 
-import com.medilens.app.dto.DoctorDTO;
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Doctor;
-import com.medilens.app.model.Role;
-import com.medilens.app.model.Status;
-import com.medilens.app.model.User;
-import com.medilens.app.repository.DoctorRepository;
-import com.medilens.app.repository.UserRepository;
-import com.medilens.app.service.DoctorService;
+import com.PrescribeCorrect.app.dto.DoctorDTO;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Doctor;
+import com.PrescribeCorrect.app.model.Role;
+import com.PrescribeCorrect.app.model.Status;
+import com.PrescribeCorrect.app.model.User;
+import com.PrescribeCorrect.app.repository.DoctorRepository;
+import com.PrescribeCorrect.app.repository.UserRepository;
+import com.PrescribeCorrect.app.service.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

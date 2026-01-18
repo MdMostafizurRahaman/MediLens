@@ -1,9 +1,9 @@
-package com.medilens.app.controller;
+package com.PrescribeCorrect.app.controller;
 
-import com.medilens.app.dto.UserDTO;
-import com.medilens.app.model.User;
-import com.medilens.app.security.JwtUtil;
-import com.medilens.app.service.UserService;
+import com.PrescribeCorrect.app.dto.UserDTO;
+import com.PrescribeCorrect.app.model.User;
+import com.PrescribeCorrect.app.security.JwtUtil;
+import com.PrescribeCorrect.app.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

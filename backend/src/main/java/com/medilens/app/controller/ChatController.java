@@ -1,10 +1,10 @@
-package com.medilens.app.controller;
+package com.PrescribeCorrect.app.controller;
 
-import com.medilens.app.exception.NotFoundException;
-import com.medilens.app.model.Chat;
-import com.medilens.app.model.Message;
-import com.medilens.app.repository.ChatRepository;
-import com.medilens.app.service.ChatService;
+import com.PrescribeCorrect.app.exception.NotFoundException;
+import com.PrescribeCorrect.app.model.Chat;
+import com.PrescribeCorrect.app.model.Message;
+import com.PrescribeCorrect.app.repository.ChatRepository;
+import com.PrescribeCorrect.app.service.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

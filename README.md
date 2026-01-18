@@ -11,7 +11,7 @@ There are many existing models which convert handwritten images to digital text,
 ### 🌟 Key Highlights
 
 - **✍️ Advanced Handwritten Text Recognition (HTR)**: Custom fine-tuned HTR model trained on real prescription samples to accurately decode handwritten medicines
-- **🤖 AI-Powered Analysis**: Fine-tuned Google Gemini model on 2 lakh conversation data
+- **🤖 AI-Powered Analysis**: Fine-tuned Google Gemini model on conversation dataset
 - **🌏 Bilingual Support**: Complete English and Bengali language integration
 - **📱 Multi-Platform**: Responsive web application with mobile-first design
 - **🔒 Secure & Compliant**: HIPAA-compliant security measures and data protection
@@ -307,6 +307,7 @@ sequenceDiagram
 ---
 
 </div>
+
 
 
 

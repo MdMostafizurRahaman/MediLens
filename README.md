@@ -1,20 +1,4 @@
 # 🏥 PrescribeCorrect - AI-Powered Medical Prescription Analysis Platform
-
-<div align="center">
-
-![PrescribeCorrect  Logo](https://img.shields.io/badge/PrescribeCorrect -Medical%20AI-blue?style=for-the-badge&logo=health)
-
-[![Next.js](https://img.shields.io/badge/Next.js-15.4.6-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-green?style=flat-square&logo=spring)](https://spring.io/projects/spring-boot)
-[![Google Gemini AI](https://img.shields.io/badge/Google%20Gemini-AI%20Powered-orange?style=flat-square&logo=google)](https://ai.google.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?style=flat-square&logo=postgresql)](https://postgresql.org/)
-
-*A comprehensive medical prescription analysis system tailored for Bangladesh healthcare with bilingual support*
-
-</div>
-
----
-
 ## 📖 Table of Contents
 
 - [🎯 Project Overview](#-project-overview)
@@ -40,7 +24,11 @@
 
 ## 🎯 Project Overview
 
-**PrescribeCorrect** is an intelligent medical prescription analysis platform designed specifically for the Bangladeshi healthcare ecosystem. The system leverages advanced AI technologies, including fine-tuned Google Gemini models and sophisticated OCR capabilities, to provide accurate medical prescription analysis with comprehensive Bengali language support.
+As we all know that doctors have illegible handwriting and it is difficult for individuals from non-medical background to understand the disease and the medicines mentioned in the report. Most of the times, even pharmacists find it difficult to decipher the handwriting written in medical reports. This is the problem we have been observing from decades and many have suffered due to this problem. In the modern era, few doctors have started to provide digitized prescriptions to maintain records, but most doctors still provide traditionally handwritten prescriptions on their printed letterhead. This is one of the main reasons we want to work on this problem.
+
+Moreover, it is difficult to store and access physical documents in an efficient manner, search through them efficiently and to share them with others. Thus, a lot of important data gets lost or does not get reviewed because documents(prescription) never get transferred to digital format. This is another reason for us to work on this problem.
+
+There are many existing models which convert handwritten images to digital text, but our aim is to go an extra mile and identify the keywords or medical terms from the prescriptions such as the disease, medicines prescribed, medical tests suggested, etc.
 
 ### 🌟 Key Highlights
 
@@ -879,6 +867,7 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+
 
 
 

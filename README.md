@@ -1,4 +1,4 @@
-# 🏥 PrescribeCoeerct - AI-Powered Medical Prescription Analysis Platform
+# 🏥 PrescribeCorrect - AI-Powered Medical Prescription Analysis Platform
 
 <div align="center">
 
@@ -879,6 +879,7 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+
 
 
 

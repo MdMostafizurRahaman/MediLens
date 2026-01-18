@@ -45,7 +45,7 @@ There are many existing models which convert handwritten images to digital text,
 
 ### 🎯 Purpose
 
-MediBotms to bridge the communication gap between healthcare providers and patients in Bangladesh by providing:
+MediBot to bridge the communication gap between healthcare providers and patients in Bangladesh by providing:
 - Accurate prescription decoding
 - Medical terminology translation
 - AI-powered health consultations
@@ -241,7 +241,7 @@ graph LR
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **HTR model** | 0.24.1 | Model for hand written prescribtion analysis |
+| **HTR model** | 0.24.1 | Model for hand written prescription analysis |
 | **Python** | 3.8+ | ML model training and fine-tuning |
 
 ---
@@ -346,18 +346,6 @@ npm run dev
 ```
 
 The frontend will start on `http://localhost:3000`
-
-#### 6️⃣ AI Model Setup (Python)
-
-```bash
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Fine-tune the model (optional)
-python Fine_tune.py
-
-# Test the model
-python check_models.py
 ```
 
 ## 📊 System Flow Diagrams
@@ -451,98 +439,10 @@ flowchart LR
     end
 ```
 
----
+--- 
 
-## 🧠 AI Model Details
-
-### 🤖 Google Gemini Integration
-
-#### Model Specifications
-- **Base Model**: Google Gemini-1.5-flash
-- **Training Data**: 50,000+ medical terms and definitions
-- **Languages**: English and Bengali
-- **Specialization**: Medical terminology, prescription analysis, drug interactions
-
-#### Training Data Structure
-
-The model is trained on comprehensive medical data including:
-
-```json
-{
-  "text_input": "What category is the medical term 'sinus tachycardia' in?",
-  "text_output": "Medical Term - Cardiovascular condition indicating rapid heart rate originating from sinus node"
-}
 ```
 
-#### OCR Engine Details
-
-```javascript
-// Tesseract.js configuration for medical text
-const ocrConfig = {
-  logger: m => console.log(m),
-  tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,()-+/: ',
-  tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
-  preserve_interword_spaces: '1'
-}
-```
-
----
-
-## 🌐 API Documentation
-
-### 📋 API Endpoints Overview
-
-| Endpoint | Method | Description | Authentication |
-|----------|--------|-------------|----------------|
-| `/api/auth/login` | POST | User authentication | No |
-| `/api/auth/register` | POST | User registration | No |
-| `/api/analyze-prescription` | POST | Prescription analysis | Yes |
-| `/api/medical-chat` | POST | Medical consultation | Yes |
-| `/api/get-analyses` | GET | User analysis history | Yes |
-| `/api/enhanced-ocr` | POST | OCR text extraction | Yes |
-
-### 🔍 Example API Usage
-
-#### Prescription Analysis
-
-```javascript
-// POST /api/analyze-prescription
-const formData = new FormData();
-formData.append('image', prescriptionFile);
-formData.append('language', 'bn'); // Bengali language
-
-const response = await fetch('/api/analyze-prescription', {
-  method: 'POST',
-  body: formData,
-  headers: {
-    'Authorization': `Bearer ${userToken}`
-  }
-});
-
-const result = await response.json();
-```
-
-#### Medical Chat
-
-```javascript
-// POST /api/medical-chat
-const chatData = {
-  message: "আমার মাথা ব্যথা করছে", // Bengali: "I have a headache"
-  language: 'bn',
-  userId: userID
-};
-
-const response = await fetch('/api/medical-chat', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${userToken}`
-  },
-  body: JSON.stringify(chatData)
-});
-```
-
----
 
 ## 👥 User Roles & Access Control
 
@@ -590,236 +490,6 @@ const response = await fetch('/api/medical-chat', {
 - **🔒 HTTPS Enforcement**: Mandatory HTTPS for all communications
 
 ---
-
-## 📁 Project Structure
-
-```
-PrescribeCorrect /
-├── 📁 frontend/                    # Next.js React application
-│   ├── 📁 app/                    # Next.js app router
-│   │   ├── 📄 page.js             # Homepage
-│   │   ├── 📄 layout.js           # Root layout
-│   │   ├── 📁 api/                # API routes
-│   │   │   ├── 📁 analyze-prescription/
-│   │   │   ├── 📁 medical-chat/
-│   │   │   ├── 📁 enhanced-ocr/
-│   │   │   └── 📁 auth/
-│   │   ├── 📁 upload/             # Upload pages
-│   │   ├── 📁 chat/               # Chat interface
-│   │   ├── 📁 auth/               # Authentication pages
-│   │   └── 📁 admin/              # Admin dashboard
-│   ├── 📁 components/             # Reusable UI components
-│   │   ├── 📄 Navigation.js       # Navigation component
-│   │   ├── 📄 Hero.js             # Hero section
-│   │   ├── 📄 Features.js         # Features showcase
-│   │   └── 📄 EnhancedOCR.js      # OCR component
-│   ├── 📁 lib/                    # Utility libraries
-│   │   ├── 📄 auth-context.js     # Authentication context
-│   │   └── 📄 medical-terms.js    # Medical terminology
-│   └── 📄 .env.local              # Frontend environment variables
-├── 📁 backend/                    # Spring Boot application
-│   ├── 📁 src/main/java/com/PrescribeCorrect /
-│   │   ├── 📁 controller/         # REST controllers
-│   │   ├── 📁 service/            # Business logic
-│   │   ├── 📁 repository/         # Data access layer
-│   │   ├── 📁 model/              # Entity models
-│   │   ├── 📁 config/             # Configuration classes
-│   │   └── 📁 security/           # Security configuration
-│   ├── 📁 src/main/resources/     # Application resources
-│   │   ├── 📄 application.properties # App configuration
-│   │   └── 📁 db/                 # Database scripts
-│   └── 📄 pom.xml                 # Maven dependencies
-├── 📄 Fine_tune.py                # AI model fine-tuning script
-├── 📄 training_data.json          # Medical terminology dataset (50K+ terms)
-├── 📄 check_models.py             # Model validation script
-├── 📄 requirements.txt            # Python dependencies
-├── 📄 .env                        # Python environment variables
-├── 📄 README.md                   # This comprehensive documentation
-└── 📄 .gitignore                  # Git ignore rules
-```
-
----
-
-## 🧪 Testing Strategy
-
-### 🔬 Comprehensive Testing Approach
-
-#### Frontend Testing
-```javascript
-// Component testing with React Testing Library
-import { render, screen, fireEvent } from '@testing-library/react';
-import { UploadComponent } from '@/components/UploadComponent';
-
-describe('UploadComponent', () => {
-  test('handles file upload correctly', async () => {
-    render(<UploadComponent />);
-    
-    const fileInput = screen.getByLabelText(/upload/i);
-    const file = new File(['prescription'], 'prescription.jpg', {
-      type: 'image/jpeg'
-    });
-    
-    fireEvent.change(fileInput, { target: { files: [file] } });
-    
-    expect(screen.getByText(/processing/i)).toBeInTheDocument();
-  });
-});
-```
-
-#### Backend Testing
-```java
-@SpringBootTest
-@AutoConfigureTestDatabase
-class PrescriptionAnalysisControllerTest {
-    
-    @Autowired
-    private TestRestTemplate restTemplate;
-    
-    @Test
-    void analyzePrescription_ShouldReturnValidResponse() {
-        // Test implementation
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-}
-```
-
----
-
-## 📈 Performance Metrics
-
-### 🚀 Performance Benchmarks
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| **Page Load Time** | < 2s | 1.8s |
-| **Prescription Analysis** | < 3s | 2.5s |
-| **API Response Time** | < 500ms | 350ms |
-| **OCR Processing** | < 2s | 1.6s |
-| **Mobile Performance** | 90+ | 92 |
-
----
-
-## 🚀 Deployment
-
-### 🐳 Docker Deployment
-
-```dockerfile
-# Frontend Dockerfile
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-
-FROM node:18-alpine AS runner
-WORKDIR /app
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-### 🌐 Production Environment
-
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
-services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend
-
-  backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=PrescribeCorrect 
-      - POSTGRES_USER=PrescribeCorrect 
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
----
-
-## 🚨 Important Security Notes
-
-### ⚠️ Critical Security Guidelines
-
-- **🔒 Never commit API keys** to version control
-- **🛡️ Keep .env files secure** and local only
-- **🔄 Regularly update dependencies** for security patches
-- **📊 Monitor API usage** and costs
-- **🔐 Use HTTPS** in production environments
-- **🛡️ Implement rate limiting** to prevent abuse
-- **📋 Validate all inputs** to prevent injection attacks
-- **🔍 Regular security audits** and penetration testing
-
----
-
-## 📞 Support & Community
-
-### 🆘 Getting Help
-
-- **📋 GitHub Issues**: [Report bugs and request features](https://github.com/MdMostafizurRahaman/PrescribeCorrect /issues)
-- **📧 Email Support**: PrescribeCorrect .support@example.com
-- **📖 Documentation**: [Full documentation](https://PrescribeCorrect -docs.example.com)
-- **💬 Community Forum**: [Join discussions](https://community.PrescribeCorrect .example.com)
-
-### 👨‍💻 Development Team
-
-- **🚀 Lead Developer**: Md Mostafizur Rahaman
-- **🤖 AI/ML Engineer**: [Name]
-- **🎨 Frontend Developer**: [Name]
-- **⚙️ Backend Developer**: [Name]
-- **🎨 UI/UX Designer**: [Name]
-
----
-
-## 🤝 Contributing
-
-### 💡 How to Contribute
-
-1. **🍴 Fork the repository**
-2. **🌿 Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **💻 Make your changes**
-4. **🧪 Add tests** for new functionality
-5. **✅ Ensure all tests pass**: `npm test`
-6. **📝 Commit your changes**: `git commit -m 'Add amazing feature'`
-7. **🚀 Push to the branch**: `git push origin feature/amazing-feature`
-8. **📋 Open a Pull Request**
-
-### 📋 Development Guidelines
-
-- Follow the existing code style and conventions
-- Write comprehensive tests for new features
-- Update documentation for any API changes
-- Include Bengali translations where applicable
-- Ensure mobile responsiveness for UI changes
-
----
-
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
@@ -867,6 +537,7 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+
 
 
 

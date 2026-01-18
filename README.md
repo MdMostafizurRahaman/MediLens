@@ -1,26 +1,4 @@
 # 🏥 PrescribeCorrect - AI-Powered Medical Prescription Analysis Platform
-## 📖 Table of Contents
-
-- [🎯 Project Overview](#-project-overview)
-- [📋 Software Requirements Specification (SRS)](#-software-requirements-specification-srs)
-- [🏗️ System Architecture](#️-system-architecture)
-- [🚀 Features](#-features)
-- [🔧 Technology Stack](#-technology-stack)
-- [⚙️ Installation & Setup](#️-installation--setup)
-- [📊 System Flow Diagrams](#-system-flow-diagrams)
-- [🧠 AI Model Details](#-ai-model-details)
-- [📱 User Interfaces](#-user-interfaces)
-- [🔐 Security & Authentication](#-security--authentication)
-- [🌐 API Documentation](#-api-documentation)
-- [🎨 UI/UX Design](#-uiux-design)
-- [🧪 Testing](#-testing)
-- [📈 Performance Metrics](#-performance-metrics)
-- [🚀 Deployment](#-deployment)
-- [🔄 Maintenance & Updates](#-maintenance--updates)
-- [👥 Contributing](#-contributing)
-- [📄 License](#-license)
-
----
 
 ## 🎯 Project Overview
 
@@ -537,6 +515,7 @@ SOFTWARE.
 ### 🏥 Transforming Healthcare in Bangladesh, One Prescription at a Time
 
 </div>
+
 
 
 
